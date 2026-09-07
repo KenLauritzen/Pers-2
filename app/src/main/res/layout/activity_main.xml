@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#12201F"
+    android:padding="10dp">
+
+    <!-- Header: date, session start, Day/Session toggle -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="10dp">
+
+        <TextView
+            android:id="@+id/tvHeader"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:textColor="#8FA39E"
+            android:textSize="12sp"
+            android:maxLines="2" />
+
+        <TextView
+            android:id="@+id/btnSort"
+            android:layout_width="58dp"
+            android:layout_height="32dp"
+            android:gravity="center"
+            android:text="Sort"
+            android:textSize="12sp"
+            android:textColor="#8FA39E"
+            android:background="@drawable/bg_pill_off"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginEnd="6dp" />
+
+        <TextView
+            android:id="@+id/btnViewDay"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:gravity="center"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:text="Day"
+            android:textSize="12sp"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <TextView
+            android:id="@+id/btnViewSession"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:gravity="center"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:text="Ses"
+            android:textSize="12sp"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginStart="3dp" />
+
+        <!-- Independent of the Day/Ses pair: switches the right-hand column
+             from each label's own figure to a running total down the rows. -->
+        <TextView
+            android:id="@+id/btnCum"
+            android:layout_width="56dp"
+            android:layout_height="32dp"
+            android:gravity="center"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:text="Goal"
+            android:textSize="11sp"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginStart="3dp" />
+    </LinearLayout>
+
+    <!-- Shown after applying a layout, when the library has drifted from it -->
+    <LinearLayout
+        android:id="@+id/diffBanner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:visibility="gone"
+        android:background="@drawable/bg_row_track"
+        android:paddingStart="12dp"
+        android:paddingEnd="4dp"
+        android:layout_marginBottom="6dp">
+
+        <TextView
+            android:id="@+id/diffText"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:textColor="#A9BDB8"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/diffDismiss"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:text="Dismiss"
+            android:textColor="#E8A33D"
+            android:textSize="12sp"
+            android:clickable="true"
+            android:focusable="true" />
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rowsList"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:scrollbars="none" />
+
+    <!-- Note field for the run that just finished; hidden unless enabled -->
+    <LinearLayout
+        android:id="@+id/noteBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        android:layout_marginTop="8dp">
+
+        <EditText
+            android:id="@+id/editNote"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="46dp"
+            android:hint="Note for last run (optional)"
+            android:textColorHint="#5C736E"
+            android:textColor="#F1EDE3"
+            android:textSize="14sp"
+            android:background="@drawable/bg_row_idle"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:inputType="text"
+            android:importantForAutofill="no"
+            android:layout_marginEnd="6dp" />
+
+        <Button
+            android:id="@+id/btnSaveNote"
+            android:layout_width="wrap_content"
+            android:layout_height="46dp"
+            android:text="Add"
+            android:textAllCaps="false"
+            android:textColor="#1A1206"
+            android:textSize="13sp"
+            android:background="@drawable/bg_button_work" />
+    </LinearLayout>
+
+    <!-- Thin divider separating the totals from the timer rows -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="6dp"
+        android:background="#2E4A46" />
+
+    <!-- Row A: mirrors row_timer.xml exactly — same 34dp icon gap, same
+         0.42/0.36/0.22 split and same padding — so each total sits under the
+         column it sums. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:layout_marginTop="4dp"
+        android:weightSum="1">
+
+        <View
+            android:layout_width="34dp"
+            android:layout_height="1dp" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_weight="0.30"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <Button
+                android:id="@+id/btnMinus5"
+                android:layout_width="52dp"
+                android:layout_height="42dp"
+                android:layout_marginEnd="4dp"
+                android:text="-5m"
+                android:textAllCaps="false"
+                android:textColor="#F1EDE3"
+                android:textSize="12sp"
+                android:padding="0dp"
+                android:background="@drawable/bg_button_small" />
+
+            <Button
+                android:id="@+id/btnPlus5"
+                android:layout_width="52dp"
+                android:layout_height="42dp"
+                android:text="+5m"
+                android:textAllCaps="false"
+                android:textColor="#F1EDE3"
+                android:textSize="12sp"
+                android:padding="0dp"
+                android:background="@drawable/bg_button_small" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvTotalElapsed"
+            android:layout_width="0dp"
+            android:layout_weight="0.40"
+            android:layout_height="wrap_content"
+            android:gravity="end"
+            android:text=""
+            android:textColor="#E8A33D"
+            android:fontFamily="monospace"
+            android:textSize="24sp"
+            android:maxLines="1"
+            android:includeFontPadding="false" />
+
+        <TextView
+            android:id="@+id/tvTotalGoal"
+            android:layout_width="0dp"
+            android:layout_weight="0.30"
+            android:layout_height="wrap_content"
+            android:gravity="end"
+            android:text=""
+            android:textColor="#A9BDB8"
+            android:fontFamily="monospace"
+            android:textSize="19sp"
+            android:maxLines="1"
+            android:includeFontPadding="false" />
+
+    </LinearLayout>
+
+    <!-- Row B: Stop double the width of the buttons either side -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="6dp"
+        android:weightSum="4">
+
+        <Button
+            android:id="@+id/btnSettings"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="46dp"
+            android:layout_marginEnd="4dp"
+            android:text="Settings"
+            android:textAllCaps="false"
+            android:textColor="#8FA39E"
+            android:textSize="12sp"
+            android:padding="0dp"
+            android:background="@drawable/bg_button_small" />
+
+        <Button
+            android:id="@+id/btnStop"
+            android:layout_width="0dp"
+            android:layout_weight="2"
+            android:layout_height="46dp"
+            android:layout_marginEnd="4dp"
+            android:text="Stop"
+            android:textAllCaps="false"
+            android:textColor="#F1EDE3"
+            android:textSize="14sp"
+            android:padding="0dp"
+            android:background="@drawable/bg_button_small" />
+
+        <Button
+            android:id="@+id/btnDone"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="46dp"
+            android:text="Exit"
+            android:textAllCaps="false"
+            android:textColor="#8FA39E"
+            android:textSize="12sp"
+            android:padding="0dp"
+            android:background="@drawable/bg_button_small" />
+    </LinearLayout>
+
+</LinearLayout>

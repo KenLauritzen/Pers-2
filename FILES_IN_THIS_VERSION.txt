@@ -1,0 +1,65 @@
+Focus v37 — complete file list.
+
+Fixes clipped clock times. "@11:00a" is seven characters where "@9:30a" is six,
+so double-digit hours overflowed and displayed as "@11:" — the minutes were cut
+without any sign they were missing.
+
+  Row split moved from 30/40/30 (was 34/40/26). The 4% comes from the label;
+  the timer column is untouched and all fonts stay as they were.
+
+  The column now ellipsises too, so if anything ever overflows again it shows
+  as "…" rather than looking like a shorter value.
+
+Labels ellipsise a little sooner as a result — "Social Building" and similar
+were already truncating at the old width.
+
+Changed from v36: row_timer.xml, activity_main.xml, strings.xml.
+No new or deleted files.
+
+If a file exists in your repo but is NOT listed below, delete it.
+
+Current files:
+.github/workflows/build.yml
+FILES_IN_THIS_VERSION.txt
+IDEAS.md
+README.md
+app/build.gradle
+app/proguard-rules.pro
+app/src/main/AndroidManifest.xml
+app/src/main/java/com/focusledger/timer/AppState.kt
+app/src/main/java/com/focusledger/timer/LabelStore.kt
+app/src/main/java/com/focusledger/timer/LayoutStore.kt
+app/src/main/java/com/focusledger/timer/LogStore.kt
+app/src/main/java/com/focusledger/timer/MainActivity.kt
+app/src/main/java/com/focusledger/timer/NotesActivity.kt
+app/src/main/java/com/focusledger/timer/SettingsActivity.kt
+app/src/main/java/com/focusledger/timer/SettingsStore.kt
+app/src/main/java/com/focusledger/timer/TimerForegroundService.kt
+app/src/main/java/com/focusledger/timer/TimerStore.kt
+app/src/main/res/drawable/bg_button_active.xml
+app/src/main/res/drawable/bg_button_other.xml
+app/src/main/res/drawable/bg_button_small.xml
+app/src/main/res/drawable/bg_button_work.xml
+app/src/main/res/drawable/bg_pill_off.xml
+app/src/main/res/drawable/bg_pill_on.xml
+app/src/main/res/drawable/bg_row_active.xml
+app/src/main/res/drawable/bg_row_idle.xml
+app/src/main/res/drawable/bg_row_track.xml
+app/src/main/res/drawable/ic_launcher.xml
+app/src/main/res/drawable/ic_note.xml
+app/src/main/res/layout/activity_main.xml
+app/src/main/res/layout/activity_notes.xml
+app/src/main/res/layout/activity_settings.xml
+app/src/main/res/layout/dialog_label_edit.xml
+app/src/main/res/layout/dialog_layout_picker.xml
+app/src/main/res/layout/row_add_label.xml
+app/src/main/res/layout/row_layout_entry.xml
+app/src/main/res/layout/row_note_entry.xml
+app/src/main/res/layout/row_timer.xml
+app/src/main/res/values/strings.xml
+app/src/main/res/values/themes.xml
+app/src/main/res/xml/file_paths.xml
+app/workledger.keystore
+build.gradle
+gradle.properties
+settings.gradle

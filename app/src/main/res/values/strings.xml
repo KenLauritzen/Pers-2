@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Kept short: the launcher truncates anything much longer, so a name like
+      "Work Ledger v31" showed only a fragment. The version stays visible so
+      it's obvious which build is installed.
+    -->
+    <string name="app_name">Focus v37</string>
+
+    <!-- Full name, for places with room for it -->
+    <string name="app_name_full">Focus \u2014 Work Ledger</string>
+</resources>

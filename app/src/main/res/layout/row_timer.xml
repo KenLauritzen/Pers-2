@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rowRoot"
+    android:layout_width="match_parent"
+    android:layout_height="64dp"
+    android:layout_marginBottom="3dp"
+    android:background="@drawable/bg_row_track"
+    android:clickable="true"
+    android:focusable="true">
+
+    <!-- Progress fill: amber up to goal, green beyond, grey remainder -->
+    <LinearLayout
+        android:id="@+id/barContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:weightSum="1">
+
+        <!-- Progress up to the goal: green -->
+        <View
+            android:id="@+id/barProgress"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0"
+            android:background="#2A4A2E" />
+
+        <!-- Time beyond the goal: burnt red -->
+        <View
+            android:id="@+id/barOver"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0"
+            android:background="#4A2A18" />
+
+        <View
+            android:id="@+id/barRest"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+    </LinearLayout>
+
+    <!-- Content sits on top of the bar. Three weighted columns rather than a
+         centred timer, so the label and the duration can't occupy the same
+         space no matter how long either gets. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:weightSum="1">
+
+        <ImageView
+            android:id="@+id/rowNote"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:padding="6dp"
+            android:src="@drawable/ic_note"
+            android:contentDescription="Notes"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <TextView
+            android:id="@+id/rowLabel"
+            android:layout_width="0dp"
+            android:layout_weight="0.30"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:text="Timer"
+            android:textColor="#F1EDE3"
+            android:textSize="17sp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <!-- Right-aligned so the colons stay put as the hours digit appears -->
+        <TextView
+            android:id="@+id/rowTime"
+            android:layout_width="0dp"
+            android:layout_weight="0.40"
+            android:layout_height="wrap_content"
+            android:gravity="end"
+            android:text="00:00"
+            android:textColor="#E8A33D"
+            android:fontFamily="monospace"
+            android:textSize="32sp"
+            android:maxLines="1"
+            android:includeFontPadding="false" />
+
+        <TextView
+            android:id="@+id/rowGoal"
+            android:layout_width="0dp"
+            android:layout_weight="0.30"
+            android:layout_height="wrap_content"
+            android:gravity="end"
+            android:text=""
+            android:textColor="#A9BDB8"
+            android:fontFamily="monospace"
+            android:textSize="22sp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:includeFontPadding="false" />
+
+    </LinearLayout>
+
+    <!-- Border drawn last so it sits above the fill -->
+    <View
+        android:id="@+id/rowBorder"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_row_idle" />
+
+</FrameLayout>

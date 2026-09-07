@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- No outer ScrollView: the page itself never scrolls, only the label list. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#12201F"
+    android:padding="12dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Labels, goals and recorded time are all edited from the main screen \u2014 long-press a row."
+        android:textColor="#5C736E"
+        android:textSize="12sp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Both number settings on one row -->
+    <LinearLayout
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical"
+        android:layout_marginTop="10dp">
+        <TextView
+            android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Remind (min)"
+            android:textColor="#F1EDE3" android:textSize="13sp" />
+        <EditText
+            android:id="@+id/editInterval"
+            android:layout_width="62dp" android:layout_height="40dp"
+            android:gravity="center" android:inputType="number"
+            android:textColor="#F1EDE3" android:textSize="14sp"
+            android:background="@drawable/bg_row_track"
+            android:importantForAutofill="no"
+            android:layout_marginEnd="12dp" />
+        <TextView
+            android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Hide (sec)"
+            android:textColor="#F1EDE3" android:textSize="13sp" />
+        <EditText
+            android:id="@+id/editTimeout"
+            android:layout_width="62dp" android:layout_height="40dp"
+            android:gravity="center" android:inputType="number"
+            android:textColor="#F1EDE3" android:textSize="14sp"
+            android:background="@drawable/bg_row_track"
+            android:importantForAutofill="no" />
+    </LinearLayout>
+
+    <!-- Both reminder toggles on one row -->
+    <LinearLayout
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical"
+        android:layout_marginTop="8dp">
+        <TextView
+            android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Pop over"
+            android:textColor="#F1EDE3" android:textSize="13sp" />
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchHeadsUp"
+            android:layout_width="wrap_content" android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp" />
+        <TextView
+            android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Sound"
+            android:textColor="#F1EDE3" android:textSize="13sp" />
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchSound"
+            android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical"
+        android:layout_marginTop="6dp">
+        <TextView
+            android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Offer a note after each run"
+            android:textColor="#F1EDE3" android:textSize="13sp" />
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchNote"
+            android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <!-- Export sits with Cancel and Save -->
+    <LinearLayout
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:weightSum="3"
+        android:layout_marginTop="10dp">
+        <Button
+            android:id="@+id/btnExport"
+            android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="46dp" android:layout_marginEnd="4dp"
+            android:text="Export" android:textAllCaps="false"
+            android:textColor="#F1EDE3" android:textSize="13sp"
+            android:background="@drawable/bg_button_small" />
+        <Button
+            android:id="@+id/btnCancel"
+            android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="46dp" android:layout_marginEnd="4dp"
+            android:text="Cancel" android:textAllCaps="false"
+            android:textColor="#F1EDE3" android:textSize="13sp"
+            android:background="@drawable/bg_button_small" />
+        <Button
+            android:id="@+id/btnSave"
+            android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="46dp"
+            android:text="Save" android:textAllCaps="false"
+            android:textColor="#1A1206" android:textSize="13sp"
+            android:textStyle="bold"
+            android:background="@drawable/bg_button_work" />
+    </LinearLayout>
+
+</LinearLayout>

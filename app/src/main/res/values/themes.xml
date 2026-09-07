@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- AppCompat, not MaterialComponents: Material silently converts every
+         <Button> into a MaterialButton and tints its background with
+         colorPrimary, which overrides the custom drawables. -->
+    <style name="Theme.FocusLedger" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="colorPrimary">#E8A33D</item>
+        <item name="colorPrimaryDark">#12201F</item>
+        <item name="colorAccent">#6FAFC4</item>
+        <item name="android:windowBackground">#12201F</item>
+    </style>
+</resources>
