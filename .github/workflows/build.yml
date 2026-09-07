@@ -1,0 +1,61 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      # Reads the app name straight out of strings.xml, so the version never
+      # has to be maintained in two places. "Focus v35" becomes "Focus_v35".
+      - name: Work out the version
+        id: ver
+        run: |
+          RAW=$(grep -oP '(?<=<string name="app_name">)[^<]+' app/src/main/res/values/strings.xml)
+          SAFE=$(echo "$RAW" | tr ' ' '_' | tr -cd '[:alnum:]_.-')
+          echo "name=$SAFE" >> "$GITHUB_OUTPUT"
+          echo "Building $SAFE"
+
+      - name: Build debug APK
+        id: build
+        run: |
+          set -o pipefail
+          gradle assembleDebug 2>&1 | tee build.log
+
+      - name: Show compile errors only
+        if: failure()
+        run: |
+          echo "================ COMPILE ERRORS ================"
+          grep -E "^e: |^ERROR|AAPT: error" build.log || echo "(no 'e:' lines found - see full log above)"
+          echo "================================================"
+
+      # Rename the APK itself as well as the artifact, so the file you install
+      # is self-identifying rather than another app-debug.apk in Downloads.
+      - name: Name the APK for its version
+        run: |
+          mv app/build/outputs/apk/debug/app-debug.apk \
+             "app/build/outputs/apk/debug/${{ steps.ver.outputs.name }}.apk"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.ver.outputs.name }}
+          path: app/build/outputs/apk/debug/${{ steps.ver.outputs.name }}.apk
+          if-no-files-found: error
