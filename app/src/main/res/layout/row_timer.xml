@@ -66,19 +66,43 @@
             android:clickable="true"
             android:focusable="true" />
 
-        <TextView
-            android:id="@+id/rowLabel"
+        <!-- Label with an optional second figure beneath it. The container
+             centres its children, so with no second line the label sits
+             centred exactly as before. -->
+        <LinearLayout
+            android:id="@+id/rowLabelBox"
             android:layout_width="0dp"
             android:layout_weight="0.30"
             android:layout_height="wrap_content"
             android:layout_marginStart="4dp"
-            android:text="Timer"
-            android:textColor="#F1EDE3"
-            android:textSize="17sp"
-            android:maxLines="1"
-            android:ellipsize="end"
+            android:orientation="vertical"
+            android:gravity="center_vertical"
             android:clickable="true"
-            android:focusable="true" />
+            android:focusable="true">
+
+            <TextView
+                android:id="@+id/rowLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Timer"
+                android:textColor="#F1EDE3"
+                android:textSize="17sp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:includeFontPadding="false" />
+
+            <TextView
+                android:id="@+id/rowSub"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:fontFamily="monospace"
+                android:textSize="13sp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:includeFontPadding="false"
+                android:visibility="gone" />
+        </LinearLayout>
 
         <!-- Right-aligned so the colons stay put as the hours digit appears -->
         <TextView

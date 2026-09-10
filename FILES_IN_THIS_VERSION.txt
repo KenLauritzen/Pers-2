@@ -1,26 +1,29 @@
-Focus v43 — complete file list.
+Focus v44 — complete file list.
 
-The progress bar is considerably more visible.
+A second, smaller figure under the label.
 
-  progress  #2A4A2E -> #3A6841
-  overage   #4A2A18 -> #8C4726
+  A fifth pill sits leftmost in the header. Tap it to choose any of the six
+  column modes, or None. Position is what marks it as secondary — its colour
+  follows what it's showing, same as the primary pill.
 
-Measured against the track each sits on, the old colours scored 1.47 and 1.14
-contrast — and 1.0 means indistinguishable. The overage red was effectively
-invisible, so going past a goal barely changed the row. Both now sit above 2.1.
+  The header now shows just "6:00a" rather than "Start 6:00a". That word was
+  the width the new pill needed.
 
-The limit is text legibility, since everything on the row sits on top of the
-bar. These values keep the 32sp timer above the 3:1 large text needs and the
-label above 5:1. There's room to go brighter if it still reads as subtle — the
-timer's contrast is what gives first.
+  Rows get a taller minimum (52dp, was 44dp) when a second figure is showing,
+  since two lines need about 43dp and the old floor would have clipped on a
+  short screen. Slightly fewer rows fit before scrolling.
 
-Also: the "goal exactly met" figure was #C97064, which scored 1.85 on the
-brighter bar. It now uses the same peach as the overage, which reads at 3.5+.
-The text already tells them apart — "0:00" versus "-0:15".
+  With None selected, the second line is removed and the label centres exactly
+  as before.
 
-UPLOAD ONLY THESE THREE:
+Useful pairings: Start with ETA shows plan against reality without toggling.
+Goal with Rem shows target and remainder together.
+
+UPLOAD ONLY THESE FIVE:
   app/src/main/res/layout/row_timer.xml
+  app/src/main/res/layout/activity_main.xml
   app/src/main/java/com/focusledger/timer/MainActivity.kt
+  app/src/main/java/com/focusledger/timer/SettingsStore.kt
   app/src/main/res/values/strings.xml
 
 Nothing to delete this version.

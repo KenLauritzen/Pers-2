@@ -23,6 +23,23 @@
             android:textSize="12sp"
             android:maxLines="2" />
 
+        <!-- Secondary column: leftmost of the five, which is what marks it as
+             secondary. Its colour follows whatever it's showing, same as the
+             primary, so the colour stays meaningful. -->
+        <TextView
+            android:id="@+id/btnCum2"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:gravity="center"
+            android:paddingStart="9dp"
+            android:paddingEnd="9dp"
+            android:minWidth="44dp"
+            android:text="\u2014"
+            android:textSize="11sp"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginEnd="3dp" />
+
         <TextView
             android:id="@+id/btnSort"
             android:layout_width="58dp"

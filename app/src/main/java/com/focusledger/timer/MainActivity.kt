@@ -46,15 +46,17 @@ class MainActivity : AppCompatActivity() {
     private var dragHelper: ItemTouchHelper? = null
     private var rowHeightPx = 0
 
-    /**
-     * Running totals down [displayed], one per row, recomputed whenever the
-     * values change. Cached rather than summed per row so a freshly scrolled
-     * row gets the same figure as one that was already on screen.
-     */
-    private var cumulative = listOf<Long>()
-
-    /** Same, but excluding the row itself — what the clock modes need. */
-    private var cumulativeBefore = listOf<Long>()
+    // Running totals down [displayed], recomputed whenever values change and
+    // cached so a freshly scrolled row gets the same figure as one already on
+    // screen. Inclusive and exclusive of each row, on both bases: the
+    // exclusive ones are what the clock modes need, since a row's projected
+    // time is everything above it, not including itself.
+    // The exclusive ones are what the clock modes need: a row's projected
+    // time is everything above it, not including itself.
+    private var goalInc = listOf<Long>()
+    private var goalBefore = listOf<Long>()
+    private var remInc = listOf<Long>()
+    private var remBefore = listOf<Long>()
 
 
     private val amber = 0xFFE8A33D.toInt()
@@ -125,6 +127,7 @@ class MainActivity : AppCompatActivity() {
             SettingsStore.setSessionView(this, true); refreshValues(); updateChrome()
         }
         binding.btnCum.setOnClickListener { showColumnPicker() }
+        binding.btnCum2.setOnClickListener { showSecondaryPicker() }
         binding.tvHeader.setOnClickListener { showStartTimePicker() }
 
         binding.btnSaveNote.setOnClickListener {
@@ -148,8 +151,15 @@ class MainActivity : AppCompatActivity() {
     private fun measureAndRebuild() {
         val d = resources.displayMetrics.density
         val available = binding.rowsList.height
+
+        // Two lines of label need about 43dp, so the old 44dp floor would
+        // clip on a short screen. With a second figure showing, rows get a
+        // taller minimum and the list scrolls a little sooner — which is the
+        // trade you accept by turning it on.
+        val minDp = if (SettingsStore.getSecondaryMode(this) == SettingsStore.COL_NONE) 44 else 52
+
         rowHeightPx = if (available > 0)
-            ((available / 10) - (3 * d)).toInt().coerceIn((44 * d).toInt(), (64 * d).toInt())
+            ((available / 10) - (3 * d)).toInt().coerceIn((minDp * d).toInt(), (64 * d).toInt())
         else (56 * d).toInt()
         rebuild()
     }
@@ -170,8 +180,8 @@ class MainActivity : AppCompatActivity() {
             val goal = library.firstOrNull { it.name == name }?.goalMinutes ?: 0
             TimerStore.getRemainingMs(this, name, goal)
         }
-        // Before notifying: onBindViewHolder reads the cumulative list, so it
-        // has to match the new displayed list rather than the previous one.
+        // Before notifying: onBindViewHolder reads the running totals, so they
+        // must match the new displayed list rather than the previous one.
         computeCumulative()
         adapter.notifyDataSetChanged()
         refreshValues()
@@ -763,7 +773,8 @@ class MainActivity : AppCompatActivity() {
         // The header now carries the day's planned start time rather than the
         // date — it's what the Start column projects from, and tapping it
         // opens the picker. The date is on the phone's status bar anyway.
-        binding.tvHeader.text = "Start  ${fmtClock(dayStartMs())}"
+        // Just the time: the word "Start" cost the width the fifth pill needed.
+        binding.tvHeader.text = fmtClock(dayStartMs())
 
         binding.btnViewDay.setBackgroundResource(
             if (isSession) R.drawable.bg_pill_off else R.drawable.bg_pill_on
@@ -774,6 +785,23 @@ class MainActivity : AppCompatActivity() {
         binding.btnSort.text = SettingsStore.SORT_SHORT[SettingsStore.getSortMode(this)]
         binding.btnViewDay.setTextColor(if (isSession) muted else amber)
         binding.btnViewSession.setTextColor(if (isSession) blueGrey else muted)
+
+        val secondary = SettingsStore.getSecondaryMode(this)
+        binding.btnCum2.text =
+            if (secondary == SettingsStore.COL_NONE) "\u2014"
+            else SettingsStore.COLUMN_SHORT[secondary]
+        binding.btnCum2.setBackgroundResource(
+            if (secondary == SettingsStore.COL_NONE) R.drawable.bg_pill_off
+            else R.drawable.bg_pill_on
+        )
+        binding.btnCum2.setTextColor(
+            when (secondary) {
+                SettingsStore.COL_NONE -> muted
+                SettingsStore.COL_REMAIN, SettingsStore.COL_SUM_REMAIN -> colRemain
+                SettingsStore.COL_START, SettingsStore.COL_ETA -> colClock
+                else -> colGoal
+            }
+        )
 
         val colMode = SettingsStore.getColumnMode(this)
         binding.btnCum.text = SettingsStore.COLUMN_SHORT[colMode]
@@ -791,6 +819,58 @@ class MainActivity : AppCompatActivity() {
         binding.btnStop.alpha = if (running) 1f else 0.4f
     }
 
+    /**
+     * The figure for one column mode on one row: its text and its colour.
+     *
+     * Shared by the right-hand column and the smaller line under the label, so
+     * the two can't drift apart in how they format or colour a value.
+     */
+    private fun columnFigure(
+        mode: Int,
+        entry: LabelEntry,
+        position: Int,
+        remainingMs: Long
+    ): Pair<String, Int> {
+        val isSum = mode == SettingsStore.COL_SUM_GOAL || mode == SettingsStore.COL_SUM_REMAIN
+        val isClock = mode == SettingsStore.COL_START || mode == SettingsStore.COL_ETA
+
+        if (isClock) {
+            // No goal means no place in the plan, so no projected time.
+            if (entry.goalMinutes <= 0) return "" to goalGrey
+
+            val before = if (mode == SettingsStore.COL_ETA) remBefore else goalBefore
+            val base = if (mode == SettingsStore.COL_START) dayStartMs()
+                       else System.currentTimeMillis()
+            val projected = base + (before.getOrNull(position) ?: 0L)
+            val mark = if (mode == SettingsStore.COL_START) "@" else "~"
+
+            // A Start time already passed says the plan has slipped.
+            val colour = if (mode == SettingsStore.COL_START &&
+                             projected < System.currentTimeMillis()) goalGrey else colClock
+            return "$mark${fmtClock(projected)}" to colour
+        }
+
+        if (isSum) {
+            val inc = if (mode == SettingsStore.COL_SUM_REMAIN) remInc else goalInc
+            val running = inc.getOrNull(position) ?: 0L
+            val colour = if (mode == SettingsStore.COL_SUM_REMAIN) colRemain else colGoal
+            return (if (running > 0L) "\u03a3${fmtGoalMs(running)}" else "") to colour
+        }
+
+        if (entry.goalMinutes <= 0) return "" to goalGrey
+
+        return if (mode == SettingsStore.COL_REMAIN) {
+            when {
+                // Past the goal, how far past — "0:00" doesn't say that.
+                remainingMs < 0L -> "-${fmtGoalMs(-remainingMs)}" to colOver
+                remainingMs == 0L -> fmtGoalMs(0L) to colOver
+                else -> fmtGoalMs(remainingMs) to colRemain
+            }
+        } else {
+            fmtGoal(entry.goalMinutes) to colGoal
+        }
+    }
+
     /** Picks what the right-hand column shows, independent of the sort order. */
     private fun showColumnPicker() {
         AlertDialog.Builder(this)
@@ -806,6 +886,26 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
+    /** Picks the smaller second figure under the label, or turns it off. */
+    private fun showSecondaryPicker() {
+        val current = SettingsStore.getSecondaryMode(this)
+        val checked = if (current == SettingsStore.COL_NONE) 0 else current + 1
+        AlertDialog.Builder(this)
+            .setTitle("Second figure under the label")
+            .setSingleChoiceItems(SettingsStore.SECONDARY_NAMES, checked) { dialog, which ->
+                SettingsStore.setSecondaryMode(
+                    this, if (which == 0) SettingsStore.COL_NONE else which - 1
+                )
+                dialog.dismiss()
+                // Re-measure, not just rebuild: the row's minimum height
+                // depends on whether a second line is showing.
+                measureAndRebuild()
+                updateChrome()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
     /**
      * Running total down the rows, in the order they're displayed.
      *
@@ -814,28 +914,31 @@ class MainActivity : AppCompatActivity() {
      * Otherwise it accumulates goals. Labels with no goal add nothing, so the
      * total simply repeats on those rows.
      */
+    /**
+     * Running totals on both bases, since the primary and secondary columns
+     * can want different ones. Cheap: two passes over a list of ten.
+     */
     private fun computeCumulative() {
-        val mode = SettingsStore.getColumnMode(this)
-
-        // Which quantity is being accumulated. Remaining for SRem and ETA,
-        // goals for SGoal and Start.
-        val useRemaining = mode == SettingsStore.COL_SUM_REMAIN || mode == SettingsStore.COL_ETA
-
-        val inc = mutableListOf<Long>()
-        val before = mutableListOf<Long>()
-        var running = 0L
-        displayed.forEach { e ->
-            before.add(running)          // total of everything above this row
-            running += when {
-                e.goalMinutes <= 0 -> 0L
-                useRemaining ->
-                    TimerStore.getRemainingMs(this, e.name, e.goalMinutes).coerceAtLeast(0L)
-                else -> e.goalMinutes * 60_000L
+        fun sums(useRemaining: Boolean): Pair<List<Long>, List<Long>> {
+            val inc = mutableListOf<Long>()
+            val before = mutableListOf<Long>()
+            var running = 0L
+            displayed.forEach { e ->
+                before.add(running)      // everything above this row
+                running += when {
+                    e.goalMinutes <= 0 -> 0L
+                    useRemaining ->
+                        TimerStore.getRemainingMs(this, e.name, e.goalMinutes).coerceAtLeast(0L)
+                    else -> e.goalMinutes * 60_000L
+                }
+                inc.add(running)         // including this row
             }
-            inc.add(running)             // total including this row
+            return inc to before
         }
-        cumulative = inc
-        cumulativeBefore = before
+        val g = sums(false)
+        val r = sums(true)
+        goalInc = g.first;   goalBefore = g.second
+        remInc = r.first;    remBefore = r.second
     }
 
     /** Today's planned start, as a timestamp. */
@@ -966,65 +1069,26 @@ class MainActivity : AppCompatActivity() {
         val remainingMs =
             if (entry.goalMinutes > 0) TimerStore.getRemainingMs(this, label, entry.goalMinutes)
             else 0L
-        val colMode = SettingsStore.getColumnMode(this)
-        val isSum = colMode == SettingsStore.COL_SUM_GOAL || colMode == SettingsStore.COL_SUM_REMAIN
-        val isClock = colMode == SettingsStore.COL_START || colMode == SettingsStore.COL_ETA
-
-        // A sigma prefix marks the running totals. Colour alone can't carry
-        // the distinction reliably — it fails in sunlight and for colour-blind
-        // readers — and the two sums would otherwise look identical.
-        // Clock modes project forward from a base: Start from the planned
-        // start of the day, ETA from right now. Both add the total of
-        // everything above this row, not including it.
-        val projectedMs = if (isClock) {
-            val base = if (colMode == SettingsStore.COL_START) dayStartMs()
-                       else System.currentTimeMillis()
-            base + (cumulativeBefore.getOrNull(position) ?: 0L)
-        } else 0L
-
-        hGoal.text = when {
-            // A label with no goal isn't part of the plan, so it has no
-            // projected time. Showing one would repeat the row above and read
-            // as though it were scheduled.
-            isClock && entry.goalMinutes <= 0 -> ""
-            isClock -> {
-                val mark = if (colMode == SettingsStore.COL_START) "@" else "~"
-                "$mark${fmtClock(projectedMs)}"
-            }
-            isSum -> {
-                val running = cumulative.getOrNull(position) ?: 0L
-                if (running > 0L) "\u03a3${fmtGoalMs(running)}" else ""
-            }
-            entry.goalMinutes <= 0 -> ""
-            // Past the goal, show how far past rather than a floored 0:00 —
-            // "-0:15" says something "0:00" doesn't.
-            colMode == SettingsStore.COL_REMAIN && remainingMs < 0L ->
-                "-${fmtGoalMs(-remainingMs)}"
-            colMode == SettingsStore.COL_REMAIN -> fmtGoalMs(remainingMs)
-            else -> fmtGoal(entry.goalMinutes)
-        }
-        val isRemainKind = colMode == SettingsStore.COL_REMAIN ||
-            colMode == SettingsStore.COL_SUM_REMAIN
-
-        hGoal.setTextColor(
-            when {
-                isClock && entry.goalMinutes <= 0 -> goalGrey
-                // A Start time that has already passed says the plan has
-                // slipped, so it dims rather than reading as still valid.
-                isClock && colMode == SettingsStore.COL_START &&
-                    projectedMs < System.currentTimeMillis() -> goalGrey
-                isClock -> colClock
-                entry.goalMinutes <= 0 && !isSum -> goalGrey
-                // Sits on the burnt-red overage bar, so it needs to be lighter
-                // and warmer than the bar rather than another red.
-                // Both sit on a bright bar where the darker red scored under
-                // 2:1. "0:00" and "-0:15" already tell the two apart, so the
-                // colour doesn't have to.
-                colMode == SettingsStore.COL_REMAIN && remainingMs <= 0L -> colOver
-                isRemainKind -> colRemain
-                else -> colGoal
-            }
+        val (goalText, goalColour) = columnFigure(
+            SettingsStore.getColumnMode(this), entry, position, remainingMs
         )
+        hGoal.text = goalText
+        hGoal.setTextColor(goalColour)
+
+        // Second, smaller figure under the label when one is chosen.
+        h.sub?.let { hSub ->
+            val secondary = SettingsStore.getSecondaryMode(this)
+            if (secondary == SettingsStore.COL_NONE) {
+                hSub.visibility = View.GONE     // label recentres on its own
+            } else {
+                val (subText, subColour) = columnFigure(secondary, entry, position, remainingMs)
+                hSub.text = subText
+                hSub.setTextColor(subColour)
+                // Stays in the layout even when the value is empty, so the
+                // label doesn't sit at a different height row to row.
+                hSub.visibility = View.VISIBLE
+            }
+        }
 
         hBorder.setBackgroundResource(
             if (isActive) R.drawable.bg_row_active else R.drawable.bg_row_idle
@@ -1046,6 +1110,8 @@ class MainActivity : AppCompatActivity() {
         inner class Holder(view: View) : RecyclerView.ViewHolder(view) {
             // Null on the "+ New label" row, which has none of these.
             val label: TextView? = view.findViewById(R.id.rowLabel)
+            val sub: TextView? = view.findViewById(R.id.rowSub)
+            val labelBox: View? = view.findViewById(R.id.rowLabelBox)
             val time: TextView? = view.findViewById(R.id.rowTime)
             val goal: TextView? = view.findViewById(R.id.rowGoal)
             val border: View? = view.findViewById(R.id.rowBorder)
@@ -1088,7 +1154,7 @@ class MainActivity : AppCompatActivity() {
                 if (wasRunning) offerNote()
                 rebuild(); syncService()
             }
-            holder.label?.setOnClickListener {
+            (holder.labelBox ?: holder.label)?.setOnClickListener {
                 onLabelTapped(holder.bindingAdapterPosition)
             }
             holder.note?.setOnClickListener {

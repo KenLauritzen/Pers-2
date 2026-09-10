@@ -16,35 +16,6 @@ starts.
 
 ---
 
-## 6. Make the show/hide toggle understandable  — CLOSED, hiding removed in idea 24
-
-**What:** Settings has a ◉ / ○ toggle at the right of each label row. ○ means
-the label does **not** appear on the main screen at all — not further down, not
-by scrolling; its row simply isn't drawn. It stays in the library, keeps its
-goal, and keeps every minute already logged against it.
-
-That wasn't clear from the UI, so make it obvious. Options: a one-line caption
-above the list, a column header, or replacing the circles with something more
-literal (an eye icon, or the words Show/Hide).
-
-**Why:** The control changes what the main screen contains, which is a
-significant effect for an unlabelled circle. It was mistaken for decoration.
-
-**Notes:**
-- Keeping the feature — useful for labels that only matter some of the time
-  (seasonal projects, a course that finishes, holiday-only categories).
-- Nothing is lost by hiding: the log is untouched and unhiding restores the
-  row with its history and manual position intact (see 1.1).
-
-**Open questions — to answer before building:**
-
-| # | Question | Leaning | Answer |
-|---|---|---|---|
-| 6.1 | Eye icon, Show/Hide words, or keep circles with a caption explaining them? | Words | **Open** — likely superseded by idea 7, where the control becomes a schedule rather than a toggle. |
-| 6.2 | Should hidden labels sort to the bottom of the Settings list so the active ones group together? | Yes | **Yes — group not-showing-today labels at the bottom.** |
-
----
-
 ## 7. Scheduled layouts
 
 *Rewritten. This was originally "scheduled visibility" — a schedule attached to
@@ -148,45 +119,6 @@ the good parts stay one tap away and stale ones fade out without being deleted.
 | 9.4 | Do "was a favorite" lines appear in the Favorites view, greyed, or drop out entirely? | Drop out of the default view, with a toggle to include them | |
 | 9.5 | What counts as a "line" — every newline you type, or sentence detection? | Newlines only; sentence detection guesses wrong too often | |
 | 9.6 | Should favorites be searchable by text later on? | Yes, but a separate idea once this exists | |
-
----
-
-## 10. Single bottom control row  — partly superseded by idea 11
-
-**What:** Collapse the two bottom rows into one. Currently there's
-`[−5m] [+5m] [total] [Stop]` on one row and `[Settings] [Done for now]` on
-another.
-
-Proposed single row:
-
-`[⚙] [−5] [+5]` `[total]` `[Stop] [Exit]`
-
-- `−5` / `+5` as narrow as they can be and still be tappable — around 44dp,
-  dropping the "m".
-- "Done for now" becomes **Exit** — shorter and no less clear.
-- "Settings" becomes a **⚙ gear icon**, roughly 44dp square.
-- Total keeps the flexible middle space.
-
-**Why:** Two rows of buttons cost about 55dp of vertical space for six
-controls that fit on one. That space goes back to the timer rows, which is
-where it matters — and it should be reclaimed before idea 7 adds a
-`+ Other labels` row at the bottom of the list.
-
-**Notes:**
-- Should precede idea 7 for exactly that reason: 7 adds a row to the main
-  screen, so the space wants finding first.
-- Six controls on one row on an S24 Ultra: gear 44dp, −5/+5 44dp each, Stop
-  and Exit around 60dp each, leaving roughly 130dp for the total. Comfortable.
-- `Exit` still gets its confirmation dialog — the wording change doesn't make
-  it a one-tap action.
-
-**Open questions — to answer before building:**
-
-| # | Question | Leaning | Answer |
-|---|---|---|---|
-| 10.1 | Left-to-right order? | Separate gear from Exit | **Gear at the far left**, then −5/+5, the total in the flexible middle, then Stop and Exit at the right. Keeps the widest possible gap between the gear and Exit so a mis-tap can't end the session. |
-| 10.2 | Should Stop stay a word, or also become an icon (■) to save more width? | Keep the word — it's the most-used control | |
-| 10.3 | Does Exit need its own icon instead of a word? | Word — an exit icon is easily confused with Stop | |
 
 ---
 
@@ -410,160 +342,44 @@ markers, the green and red bar, and the amber border on the running row.
 
 ---
 
-## 35. Delete a logged run  ✅ built in v38
+## 41. A second figure under the label  ✅ built in v44
 
-**What:** Remove an individual entry from a label's history, from the Notes
-screen — either the Delete button in the edit dialog, or a long-press on the
-entry.
+**What:** A fifth pill, leftmost in the header, choosing a second smaller
+figure that sits beneath the label. Any of the six column modes, or `None`.
 
-**Why:** A run started by mistake, or against the wrong label, currently stays
-in the log forever. Editing its note doesn't remove the time.
+```
+  Fitness                00:00     @9:30a
+  Σ1:30
 
-**How it turned out:**
-- The confirmation names the entry exactly — date, time, duration and note —
-  since one run looks much like another in a list.
-- **A run from today also comes off today's counters**, so the main screen and
-  the log agree. Totals are kept as running counters rather than derived from
-  the CSV, so without this they would silently disagree.
-- **An older run only loses its line.** The day it belonged to rolled over long
-  ago and has no counter left to adjust. The confirmation says which case
-  applies rather than leaving it to be inferred.
-- Any adjustment recorded against the run is included in what's subtracted.
-- Deleting shifts every line index after it, so the screen re-reads the file
-  rather than reusing what it held.
+  Home Org               00:00    @11:00a
+  Σ2:15
+```
 
----
-
-## 36. Show how far past a goal, not a floored zero  ✅ built in v38
-
-**What:** In `Rem` mode, a label past its goal showed `0:00`. It now shows the
-overage as a negative — `-0:15` — in a bright peach `#FFAE73`.
-
-**Why:** `0:00` says only "no time left". `-0:15` says how far past, which is
-the more useful figure and the one that was missing.
+**Why:** The pairings answer questions a single column can't. `Start` against
+`ETA` shows the slip between plan and reality without toggling. `Goal` against
+`Rem` shows target and remainder together.
 
 **Notes:**
-- The colour had to clear the burnt-red overage bar behind it, so another red
-  would have blended. Peach is lighter and warmer than the bar.
-- `0:00` exactly — goal met precisely — keeps the old red, since it's neither
-  a shortfall nor an overage.
-- **The clock modes needed no change.** `ETA` counts from now, so an overrun
-  has already moved "now" later and every projection with it. `Start` is a
-  fixed plan by definition and shouldn't reflect what's happened.
-- `SRem` still floors each label at zero before summing, so being over on one
-  label doesn't cancel time still owed on another.
+- **Position marks it as secondary**, not colour. The pill's colour follows
+  what it's showing, exactly like the primary, so colour keeps meaning "what
+  kind of figure this is" rather than "which pill this is".
+- The header lost the word "Start" before the time to make room — `6:00a`
+  rather than `Start 6:00a`. The pill needed about 44dp and that bought it.
+- **Rows get a taller minimum (52dp, was 44dp) when a second figure shows.**
+  Two lines need roughly 43dp, so the old floor would have clipped on a short
+  screen. Fewer rows fit before scrolling, which is the trade for turning it
+  on.
+- With `None`, the second view is `GONE` and the label centres exactly as
+  before.
+- When a row has a value but the figure is empty — a goalless label in `Goal`
+  mode — the line stays in the layout so the label doesn't sit at a different
+  height row to row.
 
----
-
-## 37. Deleting a run left the time behind  ✅ fixed in v39
-
-**The bug:** A 17-second run plus a −5-minute adjustment left a label at
-−4:43. Deleting the run from the Notes screen changed nothing.
-
-**Two causes, compounding:**
-
-1. **The log stored whole minutes.** A 17-second run was written as `0`
-   minutes, so deleting it subtracted `0 × 60000 = 0` ms. The counters keep
-   exact milliseconds; the log was rounding them away, so a run under 30
-   seconds was worth nothing to delete.
-2. **Standalone adjustments were hidden.** `readRunsForLabel` deliberately
-   skipped rows with zero duration and a non-zero adjustment. The row actually
-   holding the −5 was never on screen and couldn't be deleted — or even seen,
-   which is why the total looked inexplicable.
-
-So the only visible row was worth zero, and the row that mattered was
-invisible.
-
-**A third problem found while fixing it:** both note writers rebuilt a row from
-its first six fields, which would have silently discarded the new `duration_ms`
-column every time a note was saved.
-
-**The fix:**
-- A seventh CSV column, `duration_ms`, carrying exact elapsed time.
-  `duration_minutes` stays for readability. Existing files have their header
-  upgraded in place; existing rows keep six fields and fall back to the rounded
-  value, which is the best available for time already logged.
-- Adjustments are listed, marked `adjustment -5m` in a distinct colour, and can
-  be deleted like anything else. They show regardless of the "runs with no
-  note" filter, since they never carry a note and hiding them is what made the
-  original problem unexplainable.
-- Deletion subtracts `duration_ms + adjustment`, so it exactly reverses what
-  the row contributed.
-- Both note writers now preserve every column after the note.
-
-**Worth noting:** rows logged before v39 have no exact millisecond figure, so
-deleting one subtracts its rounded minutes. Nothing can recover precision that
-was never written down.
-
----
-
-## 38. No projected time for a label with no goal  ✅ built in v40
-
-**What:** In `Start` and `ETA`, a label whose goal is zero now shows nothing
-in the right-hand column.
-
-**Why:** It contributed nothing to the projection, so it repeated whatever the
-row above showed — which read as though it were scheduled at that time. Blank
-says the truth: it isn't part of the plan.
-
-**Notes:**
-- Applied to `ETA` as well as `Start`. The reasoning is identical, and having
-  one blank while the other repeated a time would be inconsistent.
-- Matches how the other modes already behave: `Goal` and `Rem` are blank
-  without a goal.
-- `SGoal` and `SRem` still show the running total on such a row, which is
-  correct — a sum is about everything above it, not the row itself.
-- Goals cannot be negative: floored at zero when adjusted in the popup, when
-  read from `labels.txt`, and when restored from a layout.
-
----
-
-## 39. Larger type on the Notes screen  ✅ built in v42
-
-**What:** The notes list was 12sp for the timestamp and 14sp for the note.
-Both up roughly 60%: **19sp** and **22sp**. "adjustment" abbreviated to
-"adj".
-
-**Why:** The note text is the content of that screen and was the smallest type
-in the app.
-
-**Notes — what the larger size forced:**
-- At 19sp monospace, the timestamp line ran past the screen edge. Rather than
-  hold the font down, the string got shorter: `6:41 AM` → `6:41a`, the
-  separator from `   ·   ` to ` · `, and the adjustment from `  (+15m)` to
-  ` +15m`.
-- Worst case — a run over an hour that also carries an adjustment — is still
-  marginally wide and will wrap to a second line. It doesn't clip, and the
-  combination is rare.
-- The empty-state message, input caption, note input and filter label were all
-  scaled to match, or they'd have looked tiny beside 22sp entries.
-
----
-
-## 40. A more visible progress bar  ✅ built in v43
-
-**What:** Both bar segments brightened.
-
-| | Was | Now | Contrast against the track |
-|---|---|---|---|
-| Progress | `#2A4A2E` | `#3A6841` | 1.47 → 2.25 |
-| Overage | `#4A2A18` | `#8C4726` | 1.14 → 2.12 |
-
-**Why:** A contrast ratio of 1.0 means indistinguishable. The overage red was
-at **1.14** against the track it sat on — so passing a goal barely changed the
-row's appearance, which defeated the point of having the bar at all.
-
-**Notes:**
-- The ceiling here is text legibility, not taste. Everything on the row sits
-  *on* the bar, so brightening it costs contrast for the label, timer and
-  right-hand figure. These values keep the 32sp timer above the 3:1 needed for
-  large text and the label above 5:1.
-- **Found while measuring:** the "goal exactly met" colour `#C97064` scored
-  1.85 on the brighter bar — unreadable. Both the at-goal and past-goal cases
-  now use the peach `#FFAE73`, which reads at 3.5+. The text already
-  distinguishes them (`0:00` versus `-0:15`), so the colour needn't.
-- If these still read as too subtle, there's room to go brighter, but the
-  timer's contrast is what will give first.
+**Worth noting:** this forced a useful refactor. The column rendering was
+inline in `bindValues`; it's now a single `columnFigure(mode, entry, position)`
+returning text and colour, shared by both figures. They can't drift apart in
+formatting or colour, and the running totals are computed on both bases every
+tick rather than only for the selected mode.
 
 ---
 
@@ -743,54 +559,32 @@ for a few more characters.
 
 ---
 
-## 11. Column totals, and Stop moved to the bottom row  ✅ built in v19
+## 6. Make the show/hide toggle understandable  — CLOSED, hiding removed in idea 24
 
-**Revises idea 3 (built in v17) and conflicts with idea 10 — see below.**
+**What:** Settings has a ◉ / ○ toggle at the right of each label row. ○ means
+the label does **not** appear on the main screen at all — not further down, not
+by scrolling; its row simply isn't drawn. It stays in the library, keeps its
+goal, and keeps every minute already logged against it.
 
-**What:** Two totals, each sitting directly beneath the column it sums, so
-their meaning is positional rather than remembered.
+That wasn't clear from the UI, so make it obvious. Options: a one-line caption
+above the list, a column header, or replacing the circles with something more
+literal (an eye icon, or the words Show/Hide).
 
-```
-[ label      ] [ elapsed ] [ goal/remaining ]   <- timer rows
-[-5m] [+5m]    [  total  ] [     total      ]   <- row A
-[ Settings ]   [    Stop (2x wide)    ] [ Done ]  <- row B
-```
-
-- **Middle total** — sum of elapsed time across all labels. Follows the
-  Day/Session toggle: day totals when Day is selected, session totals when
-  Session is.
-- **Right total** — sum of goals normally, sum of remaining when sorted by
-  Remain. Matches whatever the column above it is showing.
-- Both in **h:mm only** — no seconds. They're summaries, not stopwatches.
-- `−5m` / `+5m` stay at the left of row A, under the label column.
-- **Stop moves down** to row B, twice the width of Settings and Done for now
-  either side of it.
-
-**Why:** A total under its column reads instantly. The single total from idea 3
-sits between the buttons and doesn't line up with anything, so you have to
-recall whether it means goals or remaining. Stop is also better placed in the
-button row than mixed in with numbers.
+**Why:** The control changes what the main screen contains, which is a
+significant effect for an unlabelled circle. It was mistaken for decoration.
 
 **Notes:**
-- Supersedes idea 3's single `tvTotal`: that view moves right and becomes the
-  goal/remaining total, and a second total is added under the elapsed column.
-- **Conflicts with idea 10**, which proposed collapsing everything to one row
-  with a gear icon and "Exit". Those two can't both happen as written — see
-  11.1. The gear icon and the "Exit" wording could still apply to row B.
-- Column alignment has to match `row_timer.xml` exactly, which uses a
-  FrameLayout with the timer centred and the goal at the end. The totals row
-  needs the same three-part structure or they won't line up.
-- Seconds dropped means the totals only change once a minute, which also makes
-  them calmer to look at while a timer runs.
+- Keeping the feature — useful for labels that only matter some of the time
+  (seasonal projects, a course that finishes, holiday-only categories).
+- Nothing is lost by hiding: the log is untouched and unhiding restores the
+  row with its history and manual position intact (see 1.1).
 
 **Open questions — to answer before building:**
 
 | # | Question | Leaning | Answer |
 |---|---|---|---|
-| 11.1 | Does idea 10 still apply — gear icon instead of "Settings", and "Exit" instead of "Done for now" — on row B? | Yes to both | **"Done for now" → "Exit".** "Settings" stays a word: the 1:2:1 weighting leaves it about 90dp, plenty of room, so the gear isn't needed for space. |
-| 11.2 | Should the elapsed total also floor at zero, given adjustments can make a label negative? | No | **No flooring** — the elapsed total shows the true sum, negatives included. |
-| 11.3 | Do the totals cover every label in the library, or only those shown? | Every label | **Every label in the library**, consistent with 3.1. |
-| 11.4 | Should the totals be visually distinct from the timer rows — a divider line, or dimmer text? | Divider | **Thin divider above row A**, plus slightly smaller type than the timer rows. |
+| 6.1 | Eye icon, Show/Hide words, or keep circles with a caption explaining them? | Words | **Open** — likely superseded by idea 7, where the control becomes a schedule rather than a toggle. |
+| 6.2 | Should hidden labels sort to the bottom of the Settings list so the active ones group together? | Yes | **Yes — group not-showing-today labels at the bottom.** |
 
 ---
 
@@ -839,6 +633,96 @@ from a time record into a work journal.
 | 8.4 | Can you edit the note on a *past* run? | Editable | **Editable** — tap any entry to open its note in a dialog. |
 | 8.5 | How far back does the history load? | Everything | **Everything**, oldest first so the newest sits beside the input. Revisit if it ever gets slow. |
 | 8.6 | If a run is split at midnight, does its note attach to both halves or just the second? | Final segment | **Final segment only**, same as adjustments. |
+
+---
+
+## 10. Single bottom control row  — partly superseded by idea 11
+
+**What:** Collapse the two bottom rows into one. Currently there's
+`[−5m] [+5m] [total] [Stop]` on one row and `[Settings] [Done for now]` on
+another.
+
+Proposed single row:
+
+`[⚙] [−5] [+5]` `[total]` `[Stop] [Exit]`
+
+- `−5` / `+5` as narrow as they can be and still be tappable — around 44dp,
+  dropping the "m".
+- "Done for now" becomes **Exit** — shorter and no less clear.
+- "Settings" becomes a **⚙ gear icon**, roughly 44dp square.
+- Total keeps the flexible middle space.
+
+**Why:** Two rows of buttons cost about 55dp of vertical space for six
+controls that fit on one. That space goes back to the timer rows, which is
+where it matters — and it should be reclaimed before idea 7 adds a
+`+ Other labels` row at the bottom of the list.
+
+**Notes:**
+- Should precede idea 7 for exactly that reason: 7 adds a row to the main
+  screen, so the space wants finding first.
+- Six controls on one row on an S24 Ultra: gear 44dp, −5/+5 44dp each, Stop
+  and Exit around 60dp each, leaving roughly 130dp for the total. Comfortable.
+- `Exit` still gets its confirmation dialog — the wording change doesn't make
+  it a one-tap action.
+
+**Open questions — to answer before building:**
+
+| # | Question | Leaning | Answer |
+|---|---|---|---|
+| 10.1 | Left-to-right order? | Separate gear from Exit | **Gear at the far left**, then −5/+5, the total in the flexible middle, then Stop and Exit at the right. Keeps the widest possible gap between the gear and Exit so a mis-tap can't end the session. |
+| 10.2 | Should Stop stay a word, or also become an icon (■) to save more width? | Keep the word — it's the most-used control | |
+| 10.3 | Does Exit need its own icon instead of a word? | Word — an exit icon is easily confused with Stop | |
+
+---
+
+## 11. Column totals, and Stop moved to the bottom row  ✅ built in v19
+
+**Revises idea 3 (built in v17) and conflicts with idea 10 — see below.**
+
+**What:** Two totals, each sitting directly beneath the column it sums, so
+their meaning is positional rather than remembered.
+
+```
+[ label      ] [ elapsed ] [ goal/remaining ]   <- timer rows
+[-5m] [+5m]    [  total  ] [     total      ]   <- row A
+[ Settings ]   [    Stop (2x wide)    ] [ Done ]  <- row B
+```
+
+- **Middle total** — sum of elapsed time across all labels. Follows the
+  Day/Session toggle: day totals when Day is selected, session totals when
+  Session is.
+- **Right total** — sum of goals normally, sum of remaining when sorted by
+  Remain. Matches whatever the column above it is showing.
+- Both in **h:mm only** — no seconds. They're summaries, not stopwatches.
+- `−5m` / `+5m` stay at the left of row A, under the label column.
+- **Stop moves down** to row B, twice the width of Settings and Done for now
+  either side of it.
+
+**Why:** A total under its column reads instantly. The single total from idea 3
+sits between the buttons and doesn't line up with anything, so you have to
+recall whether it means goals or remaining. Stop is also better placed in the
+button row than mixed in with numbers.
+
+**Notes:**
+- Supersedes idea 3's single `tvTotal`: that view moves right and becomes the
+  goal/remaining total, and a second total is added under the elapsed column.
+- **Conflicts with idea 10**, which proposed collapsing everything to one row
+  with a gear icon and "Exit". Those two can't both happen as written — see
+  11.1. The gear icon and the "Exit" wording could still apply to row B.
+- Column alignment has to match `row_timer.xml` exactly, which uses a
+  FrameLayout with the timer centred and the goal at the end. The totals row
+  needs the same three-part structure or they won't line up.
+- Seconds dropped means the totals only change once a minute, which also makes
+  them calmer to look at while a timer runs.
+
+**Open questions — to answer before building:**
+
+| # | Question | Leaning | Answer |
+|---|---|---|---|
+| 11.1 | Does idea 10 still apply — gear icon instead of "Settings", and "Exit" instead of "Done for now" — on row B? | Yes to both | **"Done for now" → "Exit".** "Settings" stays a word: the 1:2:1 weighting leaves it about 90dp, plenty of room, so the gear isn't needed for space. |
+| 11.2 | Should the elapsed total also floor at zero, given adjustments can make a label negative? | No | **No flooring** — the elapsed total shows the true sum, negatives included. |
+| 11.3 | Do the totals cover every label in the library, or only those shown? | Every label | **Every label in the library**, consistent with 3.1. |
+| 11.4 | Should the totals be visually distinct from the timer rows — a divider line, or dimmer text? | Divider | **Thin divider above row A**, plus slightly smaller type than the timer rows. |
 
 ---
 
@@ -993,6 +877,57 @@ unreadable at that point.
 
 ---
 
+## 17. Drag to reorder in Manual mode  ✅ built in v26
+
+**What:** In Manual mode, long-pressing the **note icon** at the left of a row
+picks that row up so it can be dragged to a new position. Sits alongside the
+existing gesture: tapping a label opens the picker to insert another label
+above it.
+
+Two ways to reorder, each better at something — insert-before is precise when
+you know exactly where a label should go; dragging is faster for nudging a row
+a couple of places.
+
+**Why:** Moving a row several positions currently takes a tap, a scroll through
+the picker, and a selection. Dragging is one gesture.
+
+**Notes:**
+- **Long-press is getting crowded.** Long-pressing the row already opens the
+  ±15/±5 adjuster; long-pressing the icon would start a drag. The targets are
+  34dp apart, so an imprecise press does the wrong thing — see 17.1.
+- **Needs different plumbing.** Rows are inflated into a plain LinearLayout
+  inside a ScrollView. Drag-and-drop with auto-scroll at the edges really
+  wants a **RecyclerView with ItemTouchHelper**, which means rewriting how
+  rows are built and cached in `MainActivity.buildRows`.
+- Built ahead of idea 7 rather than alongside it, since it's useful now and
+  idea 7 may not be needed at all. Idea 7 will have to work with the adapter
+  when it comes.
+- Only active in Manual mode. In the sorted modes the position is computed, so
+  a drag would have nowhere to persist to — same rule the tap gesture uses.
+- Dropping a row writes new `manualOrder` values for everything, exactly as
+  `applyManualOrder` already does.
+
+**Open questions — to answer before building:**
+
+| # | Question | Leaning | Answer |
+|---|---|---|---|
+| 17.1 | Long-press on the icon starts a drag, long-press on the row opens the adjuster — too easy to confuse? | Resolved | **No longer an issue** — idea 18 removed the long-press adjuster, so the gesture is free. The whole row can be the drag handle. |
+| 17.2 | Should dragging work in the sorted modes by switching to Manual first? | No | **No** — dragging is disabled outside Manual mode. |
+| 17.3 | Visual feedback while dragging? | Lift and shadow | **The dragged row lifts** (elevation) and goes slightly translucent; the rest is left alone. |
+| 17.4 | Should the same drag exist in the Settings label list? | Eventually | **Not yet** — main screen only. Settings still uses long-press insert-above. |
+
+**How it turned out:**
+- `MainActivity` now drives a `RecyclerView` with a `TimerAdapter`, replacing
+  the hand-inflated LinearLayout and its eight parallel view caches.
+- Per-second updates go through `bindValues`, shared with `onBindViewHolder`,
+  so a freshly scrolled row and a ticking one can't drift apart.
+- `itemAnimator` is off: with a refresh every second, animations would make
+  the list twitch constantly.
+- Drops persist via `applyManualOrder`, and now report failure rather than
+  silently reverting on next launch.
+
+---
+
 ## 18. Move time adjustment from long-press to Settings  ✅ built in v24
 
 **What:** The long-press adjuster on the main screen is gone. Adjusting the
@@ -1048,57 +983,6 @@ mode is active.
   blunt.
 - The active row no longer brightens its goal text, since the state colour now
   carries that information.
-
----
-
-## 17. Drag to reorder in Manual mode  ✅ built in v26
-
-**What:** In Manual mode, long-pressing the **note icon** at the left of a row
-picks that row up so it can be dragged to a new position. Sits alongside the
-existing gesture: tapping a label opens the picker to insert another label
-above it.
-
-Two ways to reorder, each better at something — insert-before is precise when
-you know exactly where a label should go; dragging is faster for nudging a row
-a couple of places.
-
-**Why:** Moving a row several positions currently takes a tap, a scroll through
-the picker, and a selection. Dragging is one gesture.
-
-**Notes:**
-- **Long-press is getting crowded.** Long-pressing the row already opens the
-  ±15/±5 adjuster; long-pressing the icon would start a drag. The targets are
-  34dp apart, so an imprecise press does the wrong thing — see 17.1.
-- **Needs different plumbing.** Rows are inflated into a plain LinearLayout
-  inside a ScrollView. Drag-and-drop with auto-scroll at the edges really
-  wants a **RecyclerView with ItemTouchHelper**, which means rewriting how
-  rows are built and cached in `MainActivity.buildRows`.
-- Built ahead of idea 7 rather than alongside it, since it's useful now and
-  idea 7 may not be needed at all. Idea 7 will have to work with the adapter
-  when it comes.
-- Only active in Manual mode. In the sorted modes the position is computed, so
-  a drag would have nowhere to persist to — same rule the tap gesture uses.
-- Dropping a row writes new `manualOrder` values for everything, exactly as
-  `applyManualOrder` already does.
-
-**Open questions — to answer before building:**
-
-| # | Question | Leaning | Answer |
-|---|---|---|---|
-| 17.1 | Long-press on the icon starts a drag, long-press on the row opens the adjuster — too easy to confuse? | Resolved | **No longer an issue** — idea 18 removed the long-press adjuster, so the gesture is free. The whole row can be the drag handle. |
-| 17.2 | Should dragging work in the sorted modes by switching to Manual first? | No | **No** — dragging is disabled outside Manual mode. |
-| 17.3 | Visual feedback while dragging? | Lift and shadow | **The dragged row lifts** (elevation) and goes slightly translucent; the rest is left alone. |
-| 17.4 | Should the same drag exist in the Settings label list? | Eventually | **Not yet** — main screen only. Settings still uses long-press insert-above. |
-
-**How it turned out:**
-- `MainActivity` now drives a `RecyclerView` with a `TimerAdapter`, replacing
-  the hand-inflated LinearLayout and its eight parallel view caches.
-- Per-second updates go through `bindValues`, shared with `onBindViewHolder`,
-  so a freshly scrolled row and a ticking one can't drift apart.
-- `itemAnimator` is off: with a refresh every second, animations would make
-  the list twitch constantly.
-- Drops persist via `applyManualOrder`, and now report failure rather than
-  silently reverting on next launch.
 
 ---
 
@@ -1230,33 +1114,6 @@ compiled**, and the totals row was no longer being updated at all.
 Restored here. The lesson is that replacing a range of a file by its start and
 end markers is only safe if you know everything in between — a targeted
 replacement of the specific function would not have had this failure mode.
----
-
-## 25. Right-hand column picker  ✅ built in v29
-
-**What:** The header pill is now a four-way picker rather than an on/off
-toggle, and its label shows what's selected:
-
-| Button | Column shows |
-|---|---|
-| `Goal` | each label's own goal |
-| `Rem` | each label's time remaining |
-| `SGoal` | goals summed down the rows |
-| `SRem` | remaining summed down the rows |
-
-**Why:** The column used to be driven partly by the sort mode — sorting by
-Remain forced it to show remaining. That coupling was implicit and limiting:
-there was no way to sort by remaining while still reading goals, or to
-accumulate goals while sorted alphabetically. Sorting and what the column shows
-are now independent.
-
-**Notes:**
-- Replaces idea 21's two-toggle design and idea 22's rename in one go.
-- Colour still signals meaning: green for goals, blue for remaining, red once a
-  goal is passed, and a separate shade for either running total.
-- The totals row follows the column, so the pair stays consistent.
-
----
 
 ---
 
@@ -1412,6 +1269,34 @@ what blocks the cleaner split in idea 23.
 |---|---|---|---|
 | 24.1 | Standalone or folded into 23? | Fold in | **Folded in.** One rework of Settings rather than two. |
 | 24.2 | Strip `visible` from `labels.txt`? | Leave it | **Left in place**, still written and parsed but never acted on. Keeps older builds readable if you ever roll back. |
+
+---
+
+## 25. Right-hand column picker  ✅ built in v29
+
+**What:** The header pill is now a four-way picker rather than an on/off
+toggle, and its label shows what's selected:
+
+| Button | Column shows |
+|---|---|
+| `Goal` | each label's own goal |
+| `Rem` | each label's time remaining |
+| `SGoal` | goals summed down the rows |
+| `SRem` | remaining summed down the rows |
+
+**Why:** The column used to be driven partly by the sort mode — sorting by
+Remain forced it to show remaining. That coupling was implicit and limiting:
+there was no way to sort by remaining while still reading goals, or to
+accumulate goals while sorted alphabetically. Sorting and what the column shows
+are now independent.
+
+**Notes:**
+- Replaces idea 21's two-toggle design and idea 22's rename in one go.
+- Colour still signals meaning: green for goals, blue for remaining, red once a
+  goal is passed, and a separate shade for either running total.
+- The totals row follows the column, so the pair stays consistent.
+
+---
 
 ---
 
@@ -1653,3 +1538,160 @@ undifferentiated grid. Direction is the thing most worth signalling.
   blue `#6FAFC4`.
 - **A `Done` button** beside Delete, so closing no longer means tapping outside
   the dialog and hoping.
+
+---
+
+## 35. Delete a logged run  ✅ built in v38
+
+**What:** Remove an individual entry from a label's history, from the Notes
+screen — either the Delete button in the edit dialog, or a long-press on the
+entry.
+
+**Why:** A run started by mistake, or against the wrong label, currently stays
+in the log forever. Editing its note doesn't remove the time.
+
+**How it turned out:**
+- The confirmation names the entry exactly — date, time, duration and note —
+  since one run looks much like another in a list.
+- **A run from today also comes off today's counters**, so the main screen and
+  the log agree. Totals are kept as running counters rather than derived from
+  the CSV, so without this they would silently disagree.
+- **An older run only loses its line.** The day it belonged to rolled over long
+  ago and has no counter left to adjust. The confirmation says which case
+  applies rather than leaving it to be inferred.
+- Any adjustment recorded against the run is included in what's subtracted.
+- Deleting shifts every line index after it, so the screen re-reads the file
+  rather than reusing what it held.
+
+---
+
+## 36. Show how far past a goal, not a floored zero  ✅ built in v38
+
+**What:** In `Rem` mode, a label past its goal showed `0:00`. It now shows the
+overage as a negative — `-0:15` — in a bright peach `#FFAE73`.
+
+**Why:** `0:00` says only "no time left". `-0:15` says how far past, which is
+the more useful figure and the one that was missing.
+
+**Notes:**
+- The colour had to clear the burnt-red overage bar behind it, so another red
+  would have blended. Peach is lighter and warmer than the bar.
+- `0:00` exactly — goal met precisely — keeps the old red, since it's neither
+  a shortfall nor an overage.
+- **The clock modes needed no change.** `ETA` counts from now, so an overrun
+  has already moved "now" later and every projection with it. `Start` is a
+  fixed plan by definition and shouldn't reflect what's happened.
+- `SRem` still floors each label at zero before summing, so being over on one
+  label doesn't cancel time still owed on another.
+
+---
+
+## 37. Deleting a run left the time behind  ✅ fixed in v39
+
+**The bug:** A 17-second run plus a −5-minute adjustment left a label at
+−4:43. Deleting the run from the Notes screen changed nothing.
+
+**Two causes, compounding:**
+
+1. **The log stored whole minutes.** A 17-second run was written as `0`
+   minutes, so deleting it subtracted `0 × 60000 = 0` ms. The counters keep
+   exact milliseconds; the log was rounding them away, so a run under 30
+   seconds was worth nothing to delete.
+2. **Standalone adjustments were hidden.** `readRunsForLabel` deliberately
+   skipped rows with zero duration and a non-zero adjustment. The row actually
+   holding the −5 was never on screen and couldn't be deleted — or even seen,
+   which is why the total looked inexplicable.
+
+So the only visible row was worth zero, and the row that mattered was
+invisible.
+
+**A third problem found while fixing it:** both note writers rebuilt a row from
+its first six fields, which would have silently discarded the new `duration_ms`
+column every time a note was saved.
+
+**The fix:**
+- A seventh CSV column, `duration_ms`, carrying exact elapsed time.
+  `duration_minutes` stays for readability. Existing files have their header
+  upgraded in place; existing rows keep six fields and fall back to the rounded
+  value, which is the best available for time already logged.
+- Adjustments are listed, marked `adjustment -5m` in a distinct colour, and can
+  be deleted like anything else. They show regardless of the "runs with no
+  note" filter, since they never carry a note and hiding them is what made the
+  original problem unexplainable.
+- Deletion subtracts `duration_ms + adjustment`, so it exactly reverses what
+  the row contributed.
+- Both note writers now preserve every column after the note.
+
+**Worth noting:** rows logged before v39 have no exact millisecond figure, so
+deleting one subtracts its rounded minutes. Nothing can recover precision that
+was never written down.
+
+---
+
+## 38. No projected time for a label with no goal  ✅ built in v40
+
+**What:** In `Start` and `ETA`, a label whose goal is zero now shows nothing
+in the right-hand column.
+
+**Why:** It contributed nothing to the projection, so it repeated whatever the
+row above showed — which read as though it were scheduled at that time. Blank
+says the truth: it isn't part of the plan.
+
+**Notes:**
+- Applied to `ETA` as well as `Start`. The reasoning is identical, and having
+  one blank while the other repeated a time would be inconsistent.
+- Matches how the other modes already behave: `Goal` and `Rem` are blank
+  without a goal.
+- `SGoal` and `SRem` still show the running total on such a row, which is
+  correct — a sum is about everything above it, not the row itself.
+- Goals cannot be negative: floored at zero when adjusted in the popup, when
+  read from `labels.txt`, and when restored from a layout.
+
+---
+
+## 39. Larger type on the Notes screen  ✅ built in v42
+
+**What:** The notes list was 12sp for the timestamp and 14sp for the note.
+Both up roughly 60%: **19sp** and **22sp**. "adjustment" abbreviated to
+"adj".
+
+**Why:** The note text is the content of that screen and was the smallest type
+in the app.
+
+**Notes — what the larger size forced:**
+- At 19sp monospace, the timestamp line ran past the screen edge. Rather than
+  hold the font down, the string got shorter: `6:41 AM` → `6:41a`, the
+  separator from `   ·   ` to ` · `, and the adjustment from `  (+15m)` to
+  ` +15m`.
+- Worst case — a run over an hour that also carries an adjustment — is still
+  marginally wide and will wrap to a second line. It doesn't clip, and the
+  combination is rare.
+- The empty-state message, input caption, note input and filter label were all
+  scaled to match, or they'd have looked tiny beside 22sp entries.
+
+---
+
+## 40. A more visible progress bar  ✅ built in v43
+
+**What:** Both bar segments brightened.
+
+| | Was | Now | Contrast against the track |
+|---|---|---|---|
+| Progress | `#2A4A2E` | `#3A6841` | 1.47 → 2.25 |
+| Overage | `#4A2A18` | `#8C4726` | 1.14 → 2.12 |
+
+**Why:** A contrast ratio of 1.0 means indistinguishable. The overage red was
+at **1.14** against the track it sat on — so passing a goal barely changed the
+row's appearance, which defeated the point of having the bar at all.
+
+**Notes:**
+- The ceiling here is text legibility, not taste. Everything on the row sits
+  *on* the bar, so brightening it costs contrast for the label, timer and
+  right-hand figure. These values keep the 32sp timer above the 3:1 needed for
+  large text and the label above 5:1.
+- **Found while measuring:** the "goal exactly met" colour `#C97064` scored
+  1.85 on the brighter bar — unreadable. Both the at-goal and past-goal cases
+  now use the peach `#FFAE73`, which reads at 3.5+. The text already
+  distinguishes them (`0:00` versus `-0:15`), so the colour needn't.
+- If these still read as too subtle, there's room to go brighter, but the
+  timer's contrast is what will give first.

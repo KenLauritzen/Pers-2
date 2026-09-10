@@ -17,6 +17,7 @@ object SettingsStore {
     private const val KEY_LAST_LABEL = "last_label"
     private const val KEY_SHOW_EMPTY_RUNS = "show_empty_runs"
     private const val KEY_CUMULATIVE = "column_mode"
+    private const val KEY_SECONDARY = "column_mode_secondary"
     private const val KEY_START_HOUR = "day_start_hour"
     private const val KEY_START_MINUTE = "day_start_minute"
 
@@ -72,6 +73,20 @@ object SettingsStore {
     fun getColumnMode(c: Context) = p(c).getInt(KEY_CUMULATIVE, COL_GOAL)
     fun setColumnMode(c: Context, v: Int) =
         p(c).edit().putInt(KEY_CUMULATIVE, v.coerceIn(0, 5)).apply()
+
+    /** No second figure. */
+    const val COL_NONE = -1
+
+    /**
+     * A second, smaller figure under the label. Off by default — the row is
+     * dense enough that a second number should be asked for.
+     */
+    fun getSecondaryMode(c: Context) = p(c).getInt(KEY_SECONDARY, COL_NONE)
+    fun setSecondaryMode(c: Context, v: Int) =
+        p(c).edit().putInt(KEY_SECONDARY, if (v < 0) COL_NONE else v.coerceIn(0, 5)).apply()
+
+    /** Picker entries for the secondary, with "None" first. */
+    val SECONDARY_NAMES = arrayOf("None \u2014 no second figure") + COLUMN_NAMES
 
     /**
      * The hour the day is planned from, used by the Start column. Persists
