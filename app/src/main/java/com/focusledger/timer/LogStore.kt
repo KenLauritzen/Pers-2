@@ -11,7 +11,13 @@ import java.util.Locale
  * Append-only CSV log of timer runs.
  *
  * Schema:
- *   session_start,run_start,label,duration_minutes,adjusted,note
+ *   session_start,run_start,label,duration_minutes,adjusted,note,duration_ms
+ *
+ * duration_ms carries the exact elapsed milliseconds. duration_minutes is
+ * rounded and stays for readability, but rounding makes it useless for
+ * reversing a run: a 17-second run rounds to 0, and subtracting 0 leaves the
+ * time behind. Rows written before this column exists fall back to the
+ * rounded value.
  *
  * - One row per completed run (stop, or switching to another timer).
  * - Runs crossing midnight are split into one row per date.
@@ -22,6 +28,10 @@ object LogStore {
 
     private const val FILE_NAME = "timer_log.csv"
     private const val HEADER =
+        "session_start,run_start,label,duration_minutes,adjusted,note,duration_ms"
+
+    /** The 6-column header used before duration_ms was added. */
+    private const val HEADER_V1 =
         "session_start,run_start,label,duration_minutes,adjusted,note"
 
     private val stamp = SimpleDateFormat("yyyy-MM-dd'T'HH:mm", Locale.US)
@@ -33,6 +43,17 @@ object LogStore {
         if (!f.exists() || f.length() == 0L) {
             f.parentFile?.mkdirs()
             f.writeText(HEADER + "\n")
+            return
+        }
+        // Upgrade an existing file's header in place. Existing rows keep six
+        // fields and still parse; only the column name is added, so the file
+        // stays sensible opened in a spreadsheet.
+        try {
+            val lines = f.readLines()
+            if (lines.isNotEmpty() && lines[0].trim() == HEADER_V1) {
+                f.writeText((listOf(HEADER) + lines.drop(1)).joinToString("\n") + "\n")
+            }
+        } catch (e: Exception) {
         }
     }
 
@@ -151,14 +172,16 @@ object LogStore {
         adjusted: Int,
         note: String = ""
     ): String {
-        val minutes = Math.round((endMs - startMs) / 60000.0).toInt()
+        val elapsedMs = (endMs - startMs).coerceAtLeast(0L)
+        val minutes = Math.round(elapsedMs / 60000.0).toInt()
         return listOf(
             stamp.format(Date(sessionStartMs)),
             stamp.format(Date(startMs)),
             csvEscape(label),
             minutes.toString(),
             adjusted.toString(),
-            csvEscape(note)
+            csvEscape(note),
+            elapsedMs.toString()
         ).joinToString(",") + "\n"
     }
 
@@ -186,8 +209,12 @@ object LogStore {
             val existing = parts[5].trim()
             val merged = if (existing.isEmpty()) note.trim() else "$existing\n${note.trim()}"
 
-            lines[lastIdx] = (parts.subList(0, 5).map { csvEscape(it) } + csvEscape(merged))
-                .joinToString(",")
+            // Keep every field after the note (duration_ms and anything added
+            // later). Rebuilding from the first six would silently drop them.
+            val tail = if (parts.size > 6) parts.subList(6, parts.size).map { csvEscape(it) }
+                       else emptyList()
+            lines[lastIdx] = (parts.subList(0, 5).map { csvEscape(it) } +
+                              csvEscape(merged) + tail).joinToString(",")
 
             val tmp = File(f.parentFile, "$FILE_NAME.tmp")
             tmp.writeText(lines.joinToString("\n") + "\n")
@@ -207,8 +234,15 @@ object LogStore {
         val label: String,
         val durationMinutes: Int,
         val adjustedMinutes: Int,
-        val note: String
-    )
+        val note: String,
+        /** Exact elapsed time. Approximated from minutes on pre-v39 rows. */
+        val durationMs: Long = 0L,
+        /** A standalone adjustment rather than a timed run. */
+        val isAdjustment: Boolean = false
+    ) {
+        /** What this row contributed to the day's counters, in ms. */
+        val totalMs: Long get() = durationMs + adjustedMinutes * 60_000L
+    }
 
     /** Splits a CSV line, honouring quoted fields and doubled quotes. */
     private fun parseCsvLine(line: String): List<String> {
@@ -252,13 +286,25 @@ object LogStore {
 
                 val duration = p[3].toIntOrNull() ?: 0
                 val adjusted = p[4].toIntOrNull() ?: 0
-                if (duration == 0 && adjusted != 0) return@forEachIndexed
+
+                // Standalone adjustments used to be hidden here. That left no
+                // way to remove one, and no way to see why a total looked
+                // wrong. They're listed now, marked as adjustments.
+                val isAdj = duration == 0 && adjusted != 0
 
                 val startMs = try {
                     stamp.parse(p[1])?.time ?: 0L
                 } catch (e: Exception) { 0L }
 
-                out.add(RunEntry(idx, startMs, p[2], duration, adjusted, decodeNewlines(p[5])))
+                // Exact ms where the row has it; otherwise the best available
+                // approximation from the rounded minutes.
+                val ms = if (p.size >= 7) p[6].toLongOrNull() ?: (duration * 60_000L)
+                         else duration * 60_000L
+
+                out.add(
+                    RunEntry(idx, startMs, p[2], duration, adjusted,
+                             decodeNewlines(p[5]), ms, isAdj)
+                )
             }
         } catch (e: Exception) {
         }
@@ -294,8 +340,11 @@ object LogStore {
 
             val p = parseCsvLine(lines[lineIndex])
             if (p.size < 6) return false
-            lines[lineIndex] = (p.subList(0, 5).map { csvEscape(it) } + csvEscape(note))
-                .joinToString(",")
+            // Preserve duration_ms and any later columns.
+            val tail = if (p.size > 6) p.subList(6, p.size).map { csvEscape(it) }
+                       else emptyList()
+            lines[lineIndex] = (p.subList(0, 5).map { csvEscape(it) } +
+                                csvEscape(note) + tail).joinToString(",")
 
             val tmp = File(f.parentFile, "$FILE_NAME.tmp")
             tmp.writeText(lines.joinToString("\n") + "\n")

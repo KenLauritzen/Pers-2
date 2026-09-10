@@ -487,6 +487,48 @@ the more useful figure and the one that was missing.
 
 ---
 
+## 37. Deleting a run left the time behind  ✅ fixed in v39
+
+**The bug:** A 17-second run plus a −5-minute adjustment left a label at
+−4:43. Deleting the run from the Notes screen changed nothing.
+
+**Two causes, compounding:**
+
+1. **The log stored whole minutes.** A 17-second run was written as `0`
+   minutes, so deleting it subtracted `0 × 60000 = 0` ms. The counters keep
+   exact milliseconds; the log was rounding them away, so a run under 30
+   seconds was worth nothing to delete.
+2. **Standalone adjustments were hidden.** `readRunsForLabel` deliberately
+   skipped rows with zero duration and a non-zero adjustment. The row actually
+   holding the −5 was never on screen and couldn't be deleted — or even seen,
+   which is why the total looked inexplicable.
+
+So the only visible row was worth zero, and the row that mattered was
+invisible.
+
+**A third problem found while fixing it:** both note writers rebuilt a row from
+its first six fields, which would have silently discarded the new `duration_ms`
+column every time a note was saved.
+
+**The fix:**
+- A seventh CSV column, `duration_ms`, carrying exact elapsed time.
+  `duration_minutes` stays for readability. Existing files have their header
+  upgraded in place; existing rows keep six fields and fall back to the rounded
+  value, which is the best available for time already logged.
+- Adjustments are listed, marked `adjustment -5m` in a distinct colour, and can
+  be deleted like anything else. They show regardless of the "runs with no
+  note" filter, since they never carry a note and hiding them is what made the
+  original problem unexplainable.
+- Deletion subtracts `duration_ms + adjustment`, so it exactly reverses what
+  the row contributed.
+- Both note writers now preserve every column after the note.
+
+**Worth noting:** rows logged before v39 have no exact millisecond figure, so
+deleting one subtracts its rounded minutes. Nothing can recover precision that
+was never written down.
+
+---
+
 ## Template for new entries
 
 New ideas go in **Open ideas** with the next unused number. When one ships,

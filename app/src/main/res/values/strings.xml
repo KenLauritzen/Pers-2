@@ -5,7 +5,7 @@
       "Work Ledger v31" showed only a fragment. The version stays visible so
       it's obvious which build is installed.
     -->
-    <string name="app_name">Focus v38</string>
+    <string name="app_name">Focus v39</string>
 
     <!-- Full name, for places with room for it -->
     <string name="app_name_full">Focus \u2014 Work Ledger</string>

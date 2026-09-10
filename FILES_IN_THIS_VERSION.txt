@@ -1,28 +1,33 @@
-Focus v38 — complete file list.
+Focus v39 — complete file list.
 
-TWO CHANGES
+FIXES THE v38 DELETE BUG
 
-1. Delete a logged run (idea 35)
-   In a label's Notes screen, tap an entry and use Delete, or long-press it.
-   The confirmation names the entry — date, time, duration, note — and says
-   what will happen to today's total.
+Deleting a run didn't remove its time. Two causes:
 
-   A run from today also comes off today's counters, so the main screen and
-   the log stay in agreement. An older run only loses its line, since that
-   day's counters rolled over long ago.
+  1. The log stored whole minutes. A 17-second run was written as 0 minutes,
+     so deleting it subtracted nothing. The log now carries exact milliseconds
+     in a new column, duration_ms.
 
-2. Rem shows how far past the goal (idea 36)
-   Was "0:00" once a goal was passed. Now shows "-0:15" in bright peach, which
-   stays legible against the burnt-red overage bar.
+  2. Standalone adjustments (a -5m with no run attached) were hidden from the
+     Notes screen entirely. They're now listed, marked "adjustment -5m", and
+     can be deleted like anything else. They show even with "Show runs with no
+     note" off, since they never have a note.
 
-   Start and ETA needed no change: ETA counts from now, so an overrun has
-   already pushed it later. Start is a fixed plan by design.
+A third problem turned up while fixing it: saving a note rebuilt the row from
+its first six fields, which would have dropped the new column every time.
+Fixed too.
 
-UPLOAD ONLY THESE FOUR — no need to touch anything else:
-  app/src/main/java/com/focusledger/timer/MainActivity.kt
-  app/src/main/java/com/focusledger/timer/NotesActivity.kt
+YOUR CURRENT -4:43
+Open that label's Notes screen. You should now see both the run and the
+adjustment listed. Delete both and the total returns to zero.
+
+Runs logged before v39 have no exact figure recorded, so deleting one subtracts
+its rounded minutes — the precision was never written down and can't be
+recovered.
+
+UPLOAD ONLY THESE THREE:
   app/src/main/java/com/focusledger/timer/LogStore.kt
-  app/src/main/java/com/focusledger/timer/TimerStore.kt
+  app/src/main/java/com/focusledger/timer/NotesActivity.kt
   app/src/main/res/values/strings.xml
 
 Nothing to delete this version.

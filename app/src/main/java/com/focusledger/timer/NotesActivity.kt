@@ -95,7 +95,11 @@ class NotesActivity : AppCompatActivity() {
     private fun renderHistory() {
         val showEmpty = SettingsStore.isShowEmptyRuns(this)
         val all = LogStore.readRunsForLabel(this, label)
-        val runs = if (showEmpty) all else all.filter { it.note.isNotBlank() }
+        // Adjustments never carry a note, so the note filter would hide them
+        // entirely — which is the situation that made a wrong total
+        // impossible to explain. They always show.
+        val runs = if (showEmpty) all
+                   else all.filter { it.note.isNotBlank() || it.isAdjustment }
 
         val inflater = LayoutInflater.from(this)
         b.notesList.removeAllViews()
@@ -117,9 +121,16 @@ class NotesActivity : AppCompatActivity() {
             val whenView = row.findViewById<TextView>(R.id.entryWhen)
             val noteView = row.findViewById<TextView>(R.id.entryNote)
 
-            val duration = fmtDuration(run.durationMinutes)
-            val adj = if (run.adjustedMinutes != 0) "  (${signed(run.adjustedMinutes)}m)" else ""
-            whenView.text = "${whenFmt.format(Date(run.runStartMs))}   \u00b7   $duration$adj"
+            whenView.text = if (run.isAdjustment) {
+                "${whenFmt.format(Date(run.runStartMs))}   \u00b7   adjustment ${signed(run.adjustedMinutes)}m"
+            } else {
+                val duration = fmtDuration(run.durationMinutes)
+                val adj = if (run.adjustedMinutes != 0) "  (${signed(run.adjustedMinutes)}m)" else ""
+                "${whenFmt.format(Date(run.runStartMs))}   \u00b7   $duration$adj"
+            }
+            whenView.setTextColor(
+                if (run.isAdjustment) 0xFFB8A06E.toInt() else 0xFF8FA39E.toInt()
+            )
 
             if (run.note.isBlank()) {
                 noteView.text = "\u2014"
@@ -175,18 +186,23 @@ class NotesActivity : AppCompatActivity() {
      */
     private fun confirmDeleteRun(run: LogStore.RunEntry) {
         val isToday = isSameDay(run.runStartMs, System.currentTimeMillis())
-        val duration = fmtDuration(run.durationMinutes)
         val notePart = if (run.note.isBlank()) "" else "\n\n\u201c${run.note}\u201d"
 
-        val effect = if (isToday)
-            "\n\nThis run is from today, so $duration will also come off today's total."
+        val what = if (run.isAdjustment)
+            "adjustment ${signed(run.adjustedMinutes)}m"
         else
-            "\n\nThis run is from an earlier day, so today's totals are unaffected."
+            fmtDuration(run.durationMinutes) +
+                if (run.adjustedMinutes != 0) "  (${signed(run.adjustedMinutes)}m)" else ""
+
+        val effect = if (isToday)
+            "\n\nFrom today, so ${fmtSigned(run.totalMs)} will also come off today's total."
+        else
+            "\n\nFrom an earlier day, so today's totals are unaffected."
 
         AlertDialog.Builder(this)
-            .setTitle("Delete this entry?")
+            .setTitle(if (run.isAdjustment) "Delete this adjustment?" else "Delete this entry?")
             .setMessage(
-                "${whenFmt.format(Date(run.runStartMs))}   \u00b7   $duration$notePart$effect"
+                "${whenFmt.format(Date(run.runStartMs))}   \u00b7   $what$notePart$effect"
             )
             .setPositiveButton("Delete") { _, _ -> deleteRun(run, isToday) }
             .setNegativeButton("Cancel", null)
@@ -199,9 +215,10 @@ class NotesActivity : AppCompatActivity() {
             return
         }
         if (isToday) {
-            // Adjustments recorded against the run count toward the same total.
-            val ms = (run.durationMinutes + run.adjustedMinutes) * 60_000L
-            TimerStore.subtractSilently(this, label, ms)
+            // Exact elapsed ms plus any adjustment on the row. Using the
+            // rounded minutes here was the bug: a 17-second run rounds to
+            // zero and subtracting zero left the time in the counter.
+            TimerStore.subtractSilently(this, label, run.totalMs)
         }
         renderHistory()
         updateHeader()
@@ -215,6 +232,19 @@ class NotesActivity : AppCompatActivity() {
     }
 
     private fun signed(v: Int) = if (v > 0) "+$v" else v.toString()
+
+    /** A duration in ms as a readable signed figure, e.g. "-5m" or "17s". */
+    private fun fmtSigned(ms: Long): String {
+        val neg = ms < 0
+        val abs = Math.abs(ms)
+        val body = when {
+            abs < 60_000L -> "${abs / 1000}s"
+            abs % 3_600_000L == 0L -> "${abs / 3_600_000L}h"
+            abs < 3_600_000L -> "${abs / 60_000L}m"
+            else -> "${abs / 3_600_000L}h ${(abs % 3_600_000L) / 60_000L}m"
+        }
+        return if (neg) "-$body" else body
+    }
 
     private fun fmtDuration(minutes: Int): String {
         val h = minutes / 60
