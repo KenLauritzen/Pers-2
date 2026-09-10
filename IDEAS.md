@@ -442,6 +442,51 @@ markers, the green and red bar, and the amber border on the running row.
 
 ---
 
+## 35. Delete a logged run  ✅ built in v38
+
+**What:** Remove an individual entry from a label's history, from the Notes
+screen — either the Delete button in the edit dialog, or a long-press on the
+entry.
+
+**Why:** A run started by mistake, or against the wrong label, currently stays
+in the log forever. Editing its note doesn't remove the time.
+
+**How it turned out:**
+- The confirmation names the entry exactly — date, time, duration and note —
+  since one run looks much like another in a list.
+- **A run from today also comes off today's counters**, so the main screen and
+  the log agree. Totals are kept as running counters rather than derived from
+  the CSV, so without this they would silently disagree.
+- **An older run only loses its line.** The day it belonged to rolled over long
+  ago and has no counter left to adjust. The confirmation says which case
+  applies rather than leaving it to be inferred.
+- Any adjustment recorded against the run is included in what's subtracted.
+- Deleting shifts every line index after it, so the screen re-reads the file
+  rather than reusing what it held.
+
+---
+
+## 36. Show how far past a goal, not a floored zero  ✅ built in v38
+
+**What:** In `Rem` mode, a label past its goal showed `0:00`. It now shows the
+overage as a negative — `-0:15` — in a bright peach `#FFAE73`.
+
+**Why:** `0:00` says only "no time left". `-0:15` says how far past, which is
+the more useful figure and the one that was missing.
+
+**Notes:**
+- The colour had to clear the burnt-red overage bar behind it, so another red
+  would have blended. Peach is lighter and warmer than the bar.
+- `0:00` exactly — goal met precisely — keeps the old red, since it's neither
+  a shortfall nor an overage.
+- **The clock modes needed no change.** `ETA` counts from now, so an overrun
+  has already moved "now" later and every projection with it. `Start` is a
+  fixed plan by definition and shouldn't reflect what's happened.
+- `SRem` still floors each label at zero before summing, so being over on one
+  label doesn't cancel time still owed on another.
+
+---
+
 ## Template for new entries
 
 New ideas go in **Open ideas** with the next unused number. When one ships,

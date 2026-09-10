@@ -13,6 +13,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.focusledger.timer.databinding.ActivityNotesBinding
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -129,6 +130,7 @@ class NotesActivity : AppCompatActivity() {
             }
 
             row.setOnClickListener { editPastNote(run) }
+            row.setOnLongClickListener { confirmDeleteRun(run); true }
             b.notesList.addView(row)
         }
 
@@ -157,7 +159,59 @@ class NotesActivity : AppCompatActivity() {
                 renderHistory()
             }
             .setNegativeButton("Cancel", null)
+            // Long-press deletes too, but a gesture nobody knows about isn't
+            // a feature. This is the discoverable route.
+            .setNeutralButton("Delete") { _, _ -> confirmDeleteRun(run) }
             .show()
+    }
+
+    /**
+     * Deleting a logged run. The confirmation spells out exactly which entry
+     * is going, since one run looks much like another in a list.
+     *
+     * A run from today also comes off today's counters, so the main screen and
+     * the log agree. Older runs have no counter left to adjust — the day they
+     * belonged to has long since rolled over — so only the line goes.
+     */
+    private fun confirmDeleteRun(run: LogStore.RunEntry) {
+        val isToday = isSameDay(run.runStartMs, System.currentTimeMillis())
+        val duration = fmtDuration(run.durationMinutes)
+        val notePart = if (run.note.isBlank()) "" else "\n\n\u201c${run.note}\u201d"
+
+        val effect = if (isToday)
+            "\n\nThis run is from today, so $duration will also come off today's total."
+        else
+            "\n\nThis run is from an earlier day, so today's totals are unaffected."
+
+        AlertDialog.Builder(this)
+            .setTitle("Delete this entry?")
+            .setMessage(
+                "${whenFmt.format(Date(run.runStartMs))}   \u00b7   $duration$notePart$effect"
+            )
+            .setPositiveButton("Delete") { _, _ -> deleteRun(run, isToday) }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun deleteRun(run: LogStore.RunEntry, isToday: Boolean) {
+        if (!LogStore.deleteRunAt(this, run.lineIndex)) {
+            Toast.makeText(this, "Couldn't delete that entry", Toast.LENGTH_LONG).show()
+            return
+        }
+        if (isToday) {
+            // Adjustments recorded against the run count toward the same total.
+            val ms = (run.durationMinutes + run.adjustedMinutes) * 60_000L
+            TimerStore.subtractSilently(this, label, ms)
+        }
+        renderHistory()
+        updateHeader()
+    }
+
+    private fun isSameDay(a: Long, b: Long): Boolean {
+        val ca = Calendar.getInstance().apply { timeInMillis = a }
+        val cb = Calendar.getInstance().apply { timeInMillis = b }
+        return ca.get(Calendar.YEAR) == cb.get(Calendar.YEAR) &&
+            ca.get(Calendar.DAY_OF_YEAR) == cb.get(Calendar.DAY_OF_YEAR)
     }
 
     private fun signed(v: Int) = if (v > 0) "+$v" else v.toString()

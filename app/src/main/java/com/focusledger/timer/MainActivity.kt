@@ -74,6 +74,8 @@ class MainActivity : AppCompatActivity() {
     private val colRemain = 0xFF6FAFC4.toInt()
     // Both clock modes share a colour; @ and ~ tell them apart.
     private val colClock = 0xFFB8C4C2.toInt()
+    /** Overage in Rem mode: bright peach, legible on the burnt-red bar. */
+    private val colOver = 0xFFFFAE73.toInt()
 
     private val tickRunnable = object : Runnable {
         override fun run() {
@@ -991,7 +993,11 @@ class MainActivity : AppCompatActivity() {
                 if (running > 0L) "\u03a3${fmtGoalMs(running)}" else ""
             }
             entry.goalMinutes <= 0 -> ""
-            colMode == SettingsStore.COL_REMAIN -> fmtGoalMs(remainingMs.coerceAtLeast(0L))
+            // Past the goal, show how far past rather than a floored 0:00 —
+            // "-0:15" says something "0:00" doesn't.
+            colMode == SettingsStore.COL_REMAIN && remainingMs < 0L ->
+                "-${fmtGoalMs(-remainingMs)}"
+            colMode == SettingsStore.COL_REMAIN -> fmtGoalMs(remainingMs)
             else -> fmtGoal(entry.goalMinutes)
         }
         val isRemainKind = colMode == SettingsStore.COL_REMAIN ||
@@ -1005,7 +1011,10 @@ class MainActivity : AppCompatActivity() {
                     projectedMs < System.currentTimeMillis() -> goalGrey
                 isClock -> colClock
                 entry.goalMinutes <= 0 && !isSum -> goalGrey
-                colMode == SettingsStore.COL_REMAIN && remainingMs <= 0L -> overRed
+                // Sits on the burnt-red overage bar, so it needs to be lighter
+                // and warmer than the bar rather than another red.
+                colMode == SettingsStore.COL_REMAIN && remainingMs < 0L -> colOver
+                colMode == SettingsStore.COL_REMAIN && remainingMs == 0L -> overRed
                 isRemainKind -> colRemain
                 else -> colGoal
             }

@@ -236,6 +236,19 @@ object TimerStore {
         }
     }
 
+    /**
+     * Removes [ms] from today's counters without writing a log row.
+     *
+     * Used when a logged run is deleted: the row is already going away, so
+     * recording an adjustment beside it would be noise. Distinct from
+     * [adjust], which is a deliberate correction and should leave a trace.
+     */
+    fun subtractSilently(c: Context, label: String, ms: Long) {
+        if (ms == 0L) return
+        addMapValue(c, KEY_DAY_MAP, label, -ms)
+        addMapValue(c, KEY_SESSION_MAP, label, -ms)
+    }
+
     // ---- totals ------------------------------------------------------------
 
     fun getDayMs(c: Context, label: String): Long = totalFor(c, KEY_DAY_MAP, label)

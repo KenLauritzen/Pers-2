@@ -1,22 +1,31 @@
-Focus v37 — complete file list.
+Focus v38 — complete file list.
 
-Fixes clipped clock times. "@11:00a" is seven characters where "@9:30a" is six,
-so double-digit hours overflowed and displayed as "@11:" — the minutes were cut
-without any sign they were missing.
+TWO CHANGES
 
-  Row split moved from 30/40/30 (was 34/40/26). The 4% comes from the label;
-  the timer column is untouched and all fonts stay as they were.
+1. Delete a logged run (idea 35)
+   In a label's Notes screen, tap an entry and use Delete, or long-press it.
+   The confirmation names the entry — date, time, duration, note — and says
+   what will happen to today's total.
 
-  The column now ellipsises too, so if anything ever overflows again it shows
-  as "…" rather than looking like a shorter value.
+   A run from today also comes off today's counters, so the main screen and
+   the log stay in agreement. An older run only loses its line, since that
+   day's counters rolled over long ago.
 
-Labels ellipsise a little sooner as a result — "Social Building" and similar
-were already truncating at the old width.
+2. Rem shows how far past the goal (idea 36)
+   Was "0:00" once a goal was passed. Now shows "-0:15" in bright peach, which
+   stays legible against the burnt-red overage bar.
 
-Changed from v36: row_timer.xml, activity_main.xml, strings.xml.
-No new or deleted files.
+   Start and ETA needed no change: ETA counts from now, so an overrun has
+   already pushed it later. Start is a fixed plan by design.
 
-If a file exists in your repo but is NOT listed below, delete it.
+UPLOAD ONLY THESE FOUR — no need to touch anything else:
+  app/src/main/java/com/focusledger/timer/MainActivity.kt
+  app/src/main/java/com/focusledger/timer/NotesActivity.kt
+  app/src/main/java/com/focusledger/timer/LogStore.kt
+  app/src/main/java/com/focusledger/timer/TimerStore.kt
+  app/src/main/res/values/strings.xml
+
+Nothing to delete this version.
 
 Current files:
 .github/workflows/build.yml

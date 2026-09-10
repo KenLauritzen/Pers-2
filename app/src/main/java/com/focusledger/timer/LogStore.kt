@@ -306,6 +306,27 @@ object LogStore {
         }
     }
 
+    /**
+     * Removes the run on [lineIndex], rewriting the file without it.
+     *
+     * Line indices shift once a line is gone, so anything holding them must
+     * re-read afterwards rather than reusing what it had.
+     */
+    fun deleteRunAt(context: Context, lineIndex: Int): Boolean {
+        return try {
+            val f = file(context)
+            if (!f.exists()) return false
+            val lines = f.readLines()
+            if (lineIndex <= 0 || lineIndex >= lines.size) return false   // 0 is the header
+            f.writeText(
+                lines.filterIndexed { i, _ -> i != lineIndex }.joinToString("\n") + "\n"
+            )
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     fun exists(context: Context) = file(context).exists()
     fun path(context: Context): String = file(context).absolutePath
 }
