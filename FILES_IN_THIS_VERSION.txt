@@ -1,22 +1,27 @@
-Focus v41 — complete file list.
+Focus v42 — complete file list.
 
-The long-press label popup reworked (idea 33):
+Notes screen type increased about 60%:
 
-  - +30 and -30 removed, leaving four buttons per row
-  - Button text 12sp -> 18sp, height 42dp -> 52dp
-  - "Goal" and "Time" labels 12sp -> 17sp
-  - Goal +1 +5 +15 +60 in green
-  - Goal -1 -5 -15 -60 in red
-  - Time -15 -5 +5 +15 in blue
-  - Delete label now 18sp, half width
-  - NEW: a Done button beside it, so you no longer have to tap outside to close
+  timestamp line   12sp -> 19sp
+  note text        14sp -> 22sp
+  empty state      13sp -> 17sp
+  input caption    12sp -> 15sp
+  note input       15sp -> 18sp
+  filter label     13sp -> 15sp
 
-Dropping the 30s is what made room for the larger type without the dialog
-growing wider.
+"adjustment -5m" is now "adj -5m".
 
-UPLOAD ONLY THESE THREE:
-  app/src/main/res/layout/dialog_label_edit.xml
-  app/src/main/java/com/focusledger/timer/MainActivity.kt
+At 19sp the timestamp ran past the screen edge, so the string was shortened
+rather than the font held back: "6:41 AM" -> "6:41a", the separator tightened,
+and adjustments show as " +15m" rather than "  (+15m)".
+
+A run over an hour that also has an adjustment is still marginally wide and
+wraps to a second line. It doesn't clip, and the combination is uncommon.
+
+UPLOAD ONLY THESE FOUR:
+  app/src/main/res/layout/row_note_entry.xml
+  app/src/main/res/layout/activity_notes.xml
+  app/src/main/java/com/focusledger/timer/NotesActivity.kt
   app/src/main/res/values/strings.xml
 
 Nothing to delete this version.

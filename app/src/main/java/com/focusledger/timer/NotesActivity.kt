@@ -35,7 +35,9 @@ class NotesActivity : AppCompatActivity() {
     private lateinit var label: String
     private val handler = Handler(Looper.getMainLooper())
 
-    private val whenFmt = SimpleDateFormat("EEE d MMM  h:mm a", Locale.getDefault())
+    // Compact on purpose: at 19sp monospace the long form runs close to the
+    // screen edge. Matches the main screen's "6:41a" style.
+    private val whenFmt = SimpleDateFormat("EEE d MMM  h:mma", Locale.getDefault())
 
     private val tick = object : Runnable {
         override fun run() {
@@ -109,7 +111,7 @@ class NotesActivity : AppCompatActivity() {
                 text = if (all.isEmpty()) "No runs logged yet."
                        else "No notes yet \u2014 turn on \u201cShow runs with no note\u201d to see all runs."
                 setTextColor(0xFF5C736E.toInt())
-                textSize = 13f
+                textSize = 17f
                 setPadding(8, 16, 8, 16)
             }
             b.notesList.addView(empty)
@@ -122,11 +124,11 @@ class NotesActivity : AppCompatActivity() {
             val noteView = row.findViewById<TextView>(R.id.entryNote)
 
             whenView.text = if (run.isAdjustment) {
-                "${whenFmt.format(Date(run.runStartMs))}   \u00b7   adjustment ${signed(run.adjustedMinutes)}m"
+                "${fmtWhen(run.runStartMs)} \u00b7 adj ${signed(run.adjustedMinutes)}m"
             } else {
                 val duration = fmtDuration(run.durationMinutes)
-                val adj = if (run.adjustedMinutes != 0) "  (${signed(run.adjustedMinutes)}m)" else ""
-                "${whenFmt.format(Date(run.runStartMs))}   \u00b7   $duration$adj"
+                val adj = if (run.adjustedMinutes != 0) " ${signed(run.adjustedMinutes)}m" else ""
+                "${fmtWhen(run.runStartMs)} \u00b7 $duration$adj"
             }
             whenView.setTextColor(
                 if (run.isAdjustment) 0xFFB8A06E.toInt() else 0xFF8FA39E.toInt()
@@ -162,7 +164,7 @@ class NotesActivity : AppCompatActivity() {
         }
 
         AlertDialog.Builder(this)
-            .setTitle(whenFmt.format(Date(run.runStartMs)))
+            .setTitle(fmtWhen(run.runStartMs))
             .setView(input)
             .setPositiveButton("Save") { _, _ ->
                 val ok = LogStore.updateNoteAt(this, run.lineIndex, input.text.toString())
@@ -189,10 +191,10 @@ class NotesActivity : AppCompatActivity() {
         val notePart = if (run.note.isBlank()) "" else "\n\n\u201c${run.note}\u201d"
 
         val what = if (run.isAdjustment)
-            "adjustment ${signed(run.adjustedMinutes)}m"
+            "adj ${signed(run.adjustedMinutes)}m"
         else
             fmtDuration(run.durationMinutes) +
-                if (run.adjustedMinutes != 0) "  (${signed(run.adjustedMinutes)}m)" else ""
+                if (run.adjustedMinutes != 0) " ${signed(run.adjustedMinutes)}m" else ""
 
         val effect = if (isToday)
             "\n\nFrom today, so ${fmtSigned(run.totalMs)} will also come off today's total."
@@ -202,7 +204,7 @@ class NotesActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle(if (run.isAdjustment) "Delete this adjustment?" else "Delete this entry?")
             .setMessage(
-                "${whenFmt.format(Date(run.runStartMs))}   \u00b7   $what$notePart$effect"
+                "${fmtWhen(run.runStartMs)} \u00b7 $what$notePart$effect"
             )
             .setPositiveButton("Delete") { _, _ -> deleteRun(run, isToday) }
             .setNegativeButton("Cancel", null)
@@ -230,6 +232,10 @@ class NotesActivity : AppCompatActivity() {
         return ca.get(Calendar.YEAR) == cb.get(Calendar.YEAR) &&
             ca.get(Calendar.DAY_OF_YEAR) == cb.get(Calendar.DAY_OF_YEAR)
     }
+
+    /** "Sun 7 Sep  6:41a" — lowercase suffix, no space, to save width. */
+    private fun fmtWhen(ms: Long): String =
+        whenFmt.format(Date(ms)).replace("AM", "a").replace("PM", "p")
 
     private fun signed(v: Int) = if (v > 0) "+$v" else v.toString()
 

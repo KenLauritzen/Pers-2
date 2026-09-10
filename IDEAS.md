@@ -518,6 +518,28 @@ says the truth: it isn't part of the plan.
 
 ---
 
+## 39. Larger type on the Notes screen  ✅ built in v42
+
+**What:** The notes list was 12sp for the timestamp and 14sp for the note.
+Both up roughly 60%: **19sp** and **22sp**. "adjustment" abbreviated to
+"adj".
+
+**Why:** The note text is the content of that screen and was the smallest type
+in the app.
+
+**Notes — what the larger size forced:**
+- At 19sp monospace, the timestamp line ran past the screen edge. Rather than
+  hold the font down, the string got shorter: `6:41 AM` → `6:41a`, the
+  separator from `   ·   ` to ` · `, and the adjustment from `  (+15m)` to
+  ` +15m`.
+- Worst case — a run over an hour that also carries an adjustment — is still
+  marginally wide and will wrap to a second line. It doesn't clip, and the
+  combination is rare.
+- The empty-state message, input caption, note input and filter label were all
+  scaled to match, or they'd have looked tiny beside 22sp entries.
+
+---
+
 ## Template for new entries
 
 New ideas go in **Open ideas** with the next unused number. When one ships,

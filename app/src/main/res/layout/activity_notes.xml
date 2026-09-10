@@ -47,7 +47,7 @@
             android:layout_height="wrap_content"
             android:text="Show runs with no note"
             android:textColor="#8FA39E"
-            android:textSize="13sp" />
+            android:textSize="15sp" />
 
         <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/switchShowEmpty"
@@ -78,7 +78,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:textColor="#8FA39E"
-        android:textSize="12sp" />
+        android:textSize="15sp" />
 
     <EditText
         android:id="@+id/editCurrentNote"
@@ -92,7 +92,7 @@
         android:hint="Note for this run"
         android:textColorHint="#5C736E"
         android:textColor="#F1EDE3"
-        android:textSize="15sp"
+        android:textSize="18sp"
         android:inputType="textMultiLine|textCapSentences"
         android:importantForAutofill="no"
         android:layout_marginTop="4dp" />
