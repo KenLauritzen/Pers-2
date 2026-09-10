@@ -1017,8 +1017,10 @@ class MainActivity : AppCompatActivity() {
                 entry.goalMinutes <= 0 && !isSum -> goalGrey
                 // Sits on the burnt-red overage bar, so it needs to be lighter
                 // and warmer than the bar rather than another red.
-                colMode == SettingsStore.COL_REMAIN && remainingMs < 0L -> colOver
-                colMode == SettingsStore.COL_REMAIN && remainingMs == 0L -> overRed
+                // Both sit on a bright bar where the darker red scored under
+                // 2:1. "0:00" and "-0:15" already tell the two apart, so the
+                // colour doesn't have to.
+                colMode == SettingsStore.COL_REMAIN && remainingMs <= 0L -> colOver
                 isRemainKind -> colRemain
                 else -> colGoal
             }

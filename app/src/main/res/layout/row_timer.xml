@@ -16,21 +16,26 @@
         android:orientation="horizontal"
         android:weightSum="1">
 
-        <!-- Progress up to the goal: green -->
+        <!-- Progress up to the goal.
+             Was #2A4A2E, which scored only 1.47 contrast against the track it
+             sits on and barely read as a bar at all. #3A6841 is about twice
+             that, while keeping the 32sp timer above 3:1. -->
         <View
             android:id="@+id/barProgress"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="0"
-            android:background="#2A4A2E" />
+            android:background="#3A6841" />
 
-        <!-- Time beyond the goal: burnt red -->
+        <!-- Time beyond the goal.
+             Was #4A2A18 at 1.14 against the track — all but invisible, so
+             going over a goal didn't register. -->
         <View
             android:id="@+id/barOver"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="0"
-            android:background="#4A2A18" />
+            android:background="#8C4726" />
 
         <View
             android:id="@+id/barRest"

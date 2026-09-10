@@ -540,6 +540,33 @@ in the app.
 
 ---
 
+## 40. A more visible progress bar  ✅ built in v43
+
+**What:** Both bar segments brightened.
+
+| | Was | Now | Contrast against the track |
+|---|---|---|---|
+| Progress | `#2A4A2E` | `#3A6841` | 1.47 → 2.25 |
+| Overage | `#4A2A18` | `#8C4726` | 1.14 → 2.12 |
+
+**Why:** A contrast ratio of 1.0 means indistinguishable. The overage red was
+at **1.14** against the track it sat on — so passing a goal barely changed the
+row's appearance, which defeated the point of having the bar at all.
+
+**Notes:**
+- The ceiling here is text legibility, not taste. Everything on the row sits
+  *on* the bar, so brightening it costs contrast for the label, timer and
+  right-hand figure. These values keep the 32sp timer above the 3:1 needed for
+  large text and the label above 5:1.
+- **Found while measuring:** the "goal exactly met" colour `#C97064` scored
+  1.85 on the brighter bar — unreadable. Both the at-goal and past-goal cases
+  now use the peach `#FFAE73`, which reads at 3.5+. The text already
+  distinguishes them (`0:00` versus `-0:15`), so the colour needn't.
+- If these still read as too subtle, there's room to go brighter, but the
+  timer's contrast is what will give first.
+
+---
+
 ## Template for new entries
 
 New ideas go in **Open ideas** with the next unused number. When one ships,

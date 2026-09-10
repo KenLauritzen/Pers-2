@@ -1,27 +1,26 @@
-Focus v42 — complete file list.
+Focus v43 — complete file list.
 
-Notes screen type increased about 60%:
+The progress bar is considerably more visible.
 
-  timestamp line   12sp -> 19sp
-  note text        14sp -> 22sp
-  empty state      13sp -> 17sp
-  input caption    12sp -> 15sp
-  note input       15sp -> 18sp
-  filter label     13sp -> 15sp
+  progress  #2A4A2E -> #3A6841
+  overage   #4A2A18 -> #8C4726
 
-"adjustment -5m" is now "adj -5m".
+Measured against the track each sits on, the old colours scored 1.47 and 1.14
+contrast — and 1.0 means indistinguishable. The overage red was effectively
+invisible, so going past a goal barely changed the row. Both now sit above 2.1.
 
-At 19sp the timestamp ran past the screen edge, so the string was shortened
-rather than the font held back: "6:41 AM" -> "6:41a", the separator tightened,
-and adjustments show as " +15m" rather than "  (+15m)".
+The limit is text legibility, since everything on the row sits on top of the
+bar. These values keep the 32sp timer above the 3:1 large text needs and the
+label above 5:1. There's room to go brighter if it still reads as subtle — the
+timer's contrast is what gives first.
 
-A run over an hour that also has an adjustment is still marginally wide and
-wraps to a second line. It doesn't clip, and the combination is uncommon.
+Also: the "goal exactly met" figure was #C97064, which scored 1.85 on the
+brighter bar. It now uses the same peach as the overage, which reads at 3.5+.
+The text already tells them apart — "0:00" versus "-0:15".
 
-UPLOAD ONLY THESE FOUR:
-  app/src/main/res/layout/row_note_entry.xml
-  app/src/main/res/layout/activity_notes.xml
-  app/src/main/java/com/focusledger/timer/NotesActivity.kt
+UPLOAD ONLY THESE THREE:
+  app/src/main/res/layout/row_timer.xml
+  app/src/main/java/com/focusledger/timer/MainActivity.kt
   app/src/main/res/values/strings.xml
 
 Nothing to delete this version.
