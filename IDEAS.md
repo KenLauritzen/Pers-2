@@ -352,38 +352,6 @@ still time to wrap up and move on.
 
 ---
 
-## 33. Label popup: larger buttons, coloured goal adjustments
-
-**What:** Two changes to the per-label popup.
-
-1. **Larger type on the adjustment buttons.** They're 12sp, which is small for
-   the most-tapped controls in the app. Around 15–16sp with taller buttons.
-2. **Colour the goal row by direction** — the `+` buttons green, the `−`
-   buttons red — so adding and subtracting are distinguishable without reading
-   each one.
-
-**Why:** The buttons are the whole point of the popup and currently read as an
-undifferentiated grid. Direction is the thing most worth signalling.
-
-**Notes:**
-- Buttons are 42dp tall at 12sp; 48dp at 15sp would sit comfortably and still
-  fit the dialog.
-- **Red is already in use** for a passed goal in the Rem column and for the
-  overage bar. On a button labelled `-15` the meaning is unambiguous, but it's
-  worth a look on the device to confirm it doesn't read as a warning.
-- The greens and reds should be muted enough not to fight the dialog —
-  something like `#7DBE7A` and `#C97064`, both already in the palette.
-
-**Open questions — to answer before building:**
-
-| # | Question | Leaning | Answer |
-|---|---|---|---|
-| 33.1 | Should the Time row get the same treatment, or stay neutral? | Same treatment — inconsistency between two adjacent rows of ± buttons would be odd | |
-| 33.2 | Colour the text, or the button background? | Text. Coloured backgrounds would dominate the dialog | |
-| 33.3 | Should Delete stay red, given the − buttons would now also be red? | Yes, but worth checking they don't blur together — Delete is full width and lower, so probably fine | |
-
----
-
 ## 34. Help page
 
 **What:** A help screen reached from Settings, listing every gesture and
@@ -526,6 +494,27 @@ column every time a note was saved.
 **Worth noting:** rows logged before v39 have no exact millisecond figure, so
 deleting one subtracts its rounded minutes. Nothing can recover precision that
 was never written down.
+
+---
+
+## 38. No projected time for a label with no goal  ✅ built in v40
+
+**What:** In `Start` and `ETA`, a label whose goal is zero now shows nothing
+in the right-hand column.
+
+**Why:** It contributed nothing to the projection, so it repeated whatever the
+row above showed — which read as though it were scheduled at that time. Blank
+says the truth: it isn't part of the plan.
+
+**Notes:**
+- Applied to `ETA` as well as `Start`. The reasoning is identical, and having
+  one blank while the other repeated a time would be inconsistent.
+- Matches how the other modes already behave: `Goal` and `Rem` are blank
+  without a goal.
+- `SGoal` and `SRem` still show the running total on such a row, which is
+  correct — a sum is about everything above it, not the row itself.
+- Goals cannot be negative: floored at zero when adjusted in the popup, when
+  read from `labels.txt`, and when restored from a layout.
 
 ---
 
@@ -1574,3 +1563,44 @@ up in an order and you can see immediately whether the plan collides with a
   for the sums. Both share a colour, since they're the same kind of value.
 - Needed exclusive prefix sums as well as the inclusive ones the sums use — a
   row's projected time is everything *above* it, not including itself.
+
+---
+
+## 33. Label popup: larger buttons, coloured goal adjustments  ✅ built in v41
+
+**What:** Two changes to the per-label popup.
+
+1. **Larger type on the adjustment buttons.** They're 12sp, which is small for
+   the most-tapped controls in the app. Around 15–16sp with taller buttons.
+2. **Colour the goal row by direction** — the `+` buttons green, the `−`
+   buttons red — so adding and subtracting are distinguishable without reading
+   each one.
+
+**Why:** The buttons are the whole point of the popup and currently read as an
+undifferentiated grid. Direction is the thing most worth signalling.
+
+**Notes:**
+- Buttons are 42dp tall at 12sp; 48dp at 15sp would sit comfortably and still
+  fit the dialog.
+- **Red is already in use** for a passed goal in the Rem column and for the
+  overage bar. On a button labelled `-15` the meaning is unambiguous, but it's
+  worth a look on the device to confirm it doesn't read as a warning.
+- The greens and reds should be muted enough not to fight the dialog —
+  something like `#7DBE7A` and `#C97064`, both already in the palette.
+
+**Open questions — to answer before building:**
+
+| # | Question | Leaning | Answer |
+|---|---|---|---|
+| 33.1 | Time row treated the same? | Yes | **Blue**, distinct from the goal row's green and red. Direction matters less there — the row is a correction either way. |
+| 33.2 | Text or background? | Text | **Text.** Coloured fills would dominate the dialog. |
+| 33.3 | Delete still red beside red − buttons? | Yes | **Yes**, and it's now half width beside Done, two rows below, so they don't crowd. |
+
+**Built in v41:**
+- `+30` / `−30` removed, leaving four per row — which is what gave the larger
+  type room without the dialog growing sideways.
+- Buttons 12sp → 18sp, height 42dp → 52dp. "Goal" and "Time" 12sp → 17sp.
+- Goal adds green `#7DBE7A`, goal subtracts red `#C97064`, the whole Time row
+  blue `#6FAFC4`.
+- **A `Done` button** beside Delete, so closing no longer means tapping outside
+  the dialog and hoping.

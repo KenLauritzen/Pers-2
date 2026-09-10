@@ -1,33 +1,22 @@
-Focus v39 — complete file list.
+Focus v41 — complete file list.
 
-FIXES THE v38 DELETE BUG
+The long-press label popup reworked (idea 33):
 
-Deleting a run didn't remove its time. Two causes:
+  - +30 and -30 removed, leaving four buttons per row
+  - Button text 12sp -> 18sp, height 42dp -> 52dp
+  - "Goal" and "Time" labels 12sp -> 17sp
+  - Goal +1 +5 +15 +60 in green
+  - Goal -1 -5 -15 -60 in red
+  - Time -15 -5 +5 +15 in blue
+  - Delete label now 18sp, half width
+  - NEW: a Done button beside it, so you no longer have to tap outside to close
 
-  1. The log stored whole minutes. A 17-second run was written as 0 minutes,
-     so deleting it subtracted nothing. The log now carries exact milliseconds
-     in a new column, duration_ms.
-
-  2. Standalone adjustments (a -5m with no run attached) were hidden from the
-     Notes screen entirely. They're now listed, marked "adjustment -5m", and
-     can be deleted like anything else. They show even with "Show runs with no
-     note" off, since they never have a note.
-
-A third problem turned up while fixing it: saving a note rebuilt the row from
-its first six fields, which would have dropped the new column every time.
-Fixed too.
-
-YOUR CURRENT -4:43
-Open that label's Notes screen. You should now see both the run and the
-adjustment listed. Delete both and the total returns to zero.
-
-Runs logged before v39 have no exact figure recorded, so deleting one subtracts
-its rounded minutes — the precision was never written down and can't be
-recovered.
+Dropping the 30s is what made room for the larger type without the dialog
+growing wider.
 
 UPLOAD ONLY THESE THREE:
-  app/src/main/java/com/focusledger/timer/LogStore.kt
-  app/src/main/java/com/focusledger/timer/NotesActivity.kt
+  app/src/main/res/layout/dialog_label_edit.xml
+  app/src/main/java/com/focusledger/timer/MainActivity.kt
   app/src/main/res/values/strings.xml
 
 Nothing to delete this version.

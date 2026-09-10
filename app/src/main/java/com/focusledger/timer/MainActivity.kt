@@ -296,12 +296,10 @@ class MainActivity : AppCompatActivity() {
         view.findViewById<Button>(R.id.eG1).setOnClickListener { changeGoal(1) }
         view.findViewById<Button>(R.id.eG5).setOnClickListener { changeGoal(5) }
         view.findViewById<Button>(R.id.eG15).setOnClickListener { changeGoal(15) }
-        view.findViewById<Button>(R.id.eG30).setOnClickListener { changeGoal(30) }
         view.findViewById<Button>(R.id.eG60).setOnClickListener { changeGoal(60) }
         view.findViewById<Button>(R.id.eGm1).setOnClickListener { changeGoal(-1) }
         view.findViewById<Button>(R.id.eGm5).setOnClickListener { changeGoal(-5) }
         view.findViewById<Button>(R.id.eGm15).setOnClickListener { changeGoal(-15) }
-        view.findViewById<Button>(R.id.eGm30).setOnClickListener { changeGoal(-30) }
         view.findViewById<Button>(R.id.eGm60).setOnClickListener { changeGoal(-60) }
 
         view.findViewById<Button>(R.id.eTm15).setOnClickListener { changeTime(-15) }
@@ -312,6 +310,7 @@ class MainActivity : AppCompatActivity() {
         view.findViewById<Button>(R.id.eDelete).setOnClickListener {
             dialog.dismiss(); confirmDeleteLabel(label)
         }
+        view.findViewById<Button>(R.id.eDone).setOnClickListener { dialog.dismiss() }
 
         dialog.show()
     }
@@ -984,6 +983,10 @@ class MainActivity : AppCompatActivity() {
         } else 0L
 
         hGoal.text = when {
+            // A label with no goal isn't part of the plan, so it has no
+            // projected time. Showing one would repeat the row above and read
+            // as though it were scheduled.
+            isClock && entry.goalMinutes <= 0 -> ""
             isClock -> {
                 val mark = if (colMode == SettingsStore.COL_START) "@" else "~"
                 "$mark${fmtClock(projectedMs)}"
@@ -1005,6 +1008,7 @@ class MainActivity : AppCompatActivity() {
 
         hGoal.setTextColor(
             when {
+                isClock && entry.goalMinutes <= 0 -> goalGrey
                 // A Start time that has already passed says the plan has
                 // slipped, so it dims rather than reading as still valid.
                 isClock && colMode == SettingsStore.COL_START &&
