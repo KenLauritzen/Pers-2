@@ -486,6 +486,37 @@ anything", which is the state most worth noticing.
 
 ---
 
+## 44. Elapsed-time slider, and a flat 5-minute step  ✅ built in v49
+
+**What:**
+- **Long-press the timer column and slide** to correct recorded time, the same
+  gesture the right column uses for goals.
+- **Both sliders now step a flat 5 minutes.** The accelerating ladder was
+  replaced.
+- The timer auto-sizes, so an hour-long value fits.
+
+**Why the flat step:** with 5, 10, 15, 30… you had to remember how far you'd
+come to know what the next step would add, which made the value hard to aim.
+A flat rate is slower over long distances and far more predictable.
+
+**How the time slider records it:** through `TimerStore.adjust`, which already
+handles both cases — on the running label the correction folds into that run's
+row; on an idle one it writes an adjustment of its own. Exactly the behaviour
+the popup's ±5/±15 buttons have always had, now available without opening
+anything.
+
+**Notes:**
+- Floored so a label can't go below zero for the day.
+- The timer shows the pending total in amber while sliding; nothing is written
+  until release.
+- **Auto-sizing replaced a fixed 32sp.** At an hour the string grows from
+  `09:07` to `1:09:07` and overflowed — the screenshot showed `1:09:0`. It now
+  scales between 20 and 32sp, so only rows that need it shrink and short
+  timers stay large. This removes the whole class of problem rather than
+  rebalancing column widths again.
+
+---
+
 ## Template for new entries
 
 New ideas go in **Open ideas** with the next unused number. When one ships,

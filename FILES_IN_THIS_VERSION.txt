@@ -1,26 +1,33 @@
-Focus v48 — complete file list.
+Focus v49 — complete file list.
 
-THREE CHANGES TO THE GOAL SLIDER
+  1. Long-press the TIMER column and slide to correct recorded time.
+     Recorded through the same path as the popup's +/- buttons: on the running
+     label it folds into that run's row; on an idle one it writes its own
+     adjustment record. Nothing saves until you lift your finger, and a label
+     can't go below zero for the day.
 
-1. Releasing now updates the row.
-   The goal was being saved correctly, but the row kept showing the old value.
-   refreshValues binds from a cached copy of the label list, so it was
-   re-drawing the stale goal; only a rebuild re-reads the file. Tapping showed
-   the new value because the popup reads the file directly. It now always
-   rebuilds, which also re-sorts if the order depends on goals.
+  2. Both sliders now step a flat 5 minutes.
+     The accelerating ladder meant you had to remember how far you'd come to
+     know what the next step would add.
 
-2. The column adjusts what it was already showing.
-   Sliding no longer swaps the column for a raw goal figure. In Rem it counts
-   down as the goal grows; in Goal it shows the goal. Clock and sum modes
-   don't change for the row being adjusted — their value comes from the rows
-   above it — so those fall back to showing the goal, or there'd be no
-   feedback at all.
+  3. The timer auto-sizes between 20 and 32sp.
+     "1:09:07" was overflowing a fixed 32sp and showing as "1:09:0". Only rows
+     that need it shrink; short timers stay large.
 
-3. New ladder: 5, 10, 15, then 15 more per step.
-   From a 60-minute goal, dragging up gives 65, 70, 75, 90, 105, 120.
+GESTURE CHART
 
-UPLOAD ONLY THESE TWO:
+  section        tap                        long-press
+  1 note icon    Notes screen               drag to reorder
+  2 label        move above another         drag to reorder
+  3 timer        start, or stop if running  slide to adjust recorded time
+  4 right col    goal & time popup          slide to adjust the goal
+
+  Both slides: up adds, down subtracts, 5 minutes per 24dp of travel.
+  Preview shows in amber; nothing is written until you lift.
+
+UPLOAD ONLY THESE THREE:
   app/src/main/java/com/focusledger/timer/MainActivity.kt
+  app/src/main/res/layout/row_timer.xml
   app/src/main/res/values/strings.xml
 
 Nothing to delete this version.

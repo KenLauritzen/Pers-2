@@ -11,6 +11,7 @@ import android.os.Looper
 import android.text.format.DateFormat
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -25,6 +26,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.widget.TextViewCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -55,6 +57,12 @@ class MainActivity : AppCompatActivity() {
     private var slidePendingGoal = 0
     private var slideStartGoal = 0
     private var slideStartY = 0f
+
+    /** The same, for the elapsed-time slider on the timer column. */
+    private var timeSlideLabel: String? = null
+    private var timeSlidePendingMinutes = 0
+    private var timeSlideStartMs = 0L
+    private var timeSlideStartY = 0f
     private var rowHeightPx = 0
 
     // Running totals down [displayed], recomputed whenever values change and
@@ -296,6 +304,56 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
+     * Zone 3: long-press then slide to correct the recorded time.
+     *
+     * Applied through [TimerStore.adjust], which already does the right thing
+     * either way: on the running label it folds into that run's row, and on an
+     * idle one it writes an adjustment of its own. Nothing is written until
+     * the finger lifts.
+     */
+    private fun attachTimeSlider(holder: TimerAdapter.Holder, entry: LabelEntry) {
+        val timeView = holder.time ?: return
+        val stepPx = 24 * resources.displayMetrics.density
+
+        timeView.setOnLongClickListener {
+            timeSlideLabel = entry.name
+            timeSlideStartMs = TimerStore.getDayMs(this, entry.name)
+            timeSlidePendingMinutes = 0
+            timeSlideStartY = Float.NaN
+            binding.rowsList.requestDisallowInterceptTouchEvent(true)
+            refreshValues()
+            true
+        }
+
+        timeView.setOnTouchListener { _, ev ->
+            if (timeSlideLabel != entry.name) return@setOnTouchListener false
+            when (ev.actionMasked) {
+                MotionEvent.ACTION_MOVE -> {
+                    if (timeSlideStartY.isNaN()) timeSlideStartY = ev.rawY
+                    val steps = ((timeSlideStartY - ev.rawY) / stepPx).toInt()
+                    // Can't take a label below zero for the day.
+                    val floor = (-timeSlideStartMs / 60_000L).toInt()
+                    timeSlidePendingMinutes = stepDelta(steps).coerceAtLeast(floor)
+                    refreshValues()
+                    true
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    val label = entry.name
+                    val minutes = timeSlidePendingMinutes
+                    timeSlideLabel = null
+                    binding.rowsList.requestDisallowInterceptTouchEvent(false)
+                    if (minutes != 0) {
+                        TimerStore.adjust(this, label, minutes)
+                        rebuild(); syncService()
+                    } else refreshValues()
+                    true
+                }
+                else -> false
+            }
+        }
+    }
+
+    /**
      * Zone 4: long-press then slide to change the goal without typing.
      *
      * The first step is 5 minutes, every step after that 15 — so a short
@@ -352,20 +410,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Minutes for [steps] of travel: 5, 10, 15, then 15 more each step.
+     * Five minutes per step of travel, in both sliders.
      *
-     * Fine at the start for nudging a goal by a few minutes, then a steady
-     * quarter-hour per step so a long drag covers a working day.
+     * An accelerating ladder made the value hard to predict mid-drag: you had
+     * to remember how far you'd come to know what the next step would add.
+     * A flat rate is slower over long distances and much easier to aim.
      */
-    private fun stepDelta(steps: Int): Int {
-        if (steps == 0) return 0
-        val n = Math.abs(steps)
-        val ladder = intArrayOf(5, 10, 15)
-        val magnitude =
-            if (n <= ladder.size) ladder[n - 1]
-            else ladder.last() + 15 * (n - ladder.size)
-        return if (steps > 0) magnitude else -magnitude
-    }
+    private fun stepDelta(steps: Int): Int = steps * 5
 
     private fun commitGoal(label: String, minutes: Int) {
         val library = LabelStore.readLibrary(this).map { e ->
@@ -1200,11 +1251,22 @@ class MainActivity : AppCompatActivity() {
         val accent = if (isSession) blueGrey else amber
 
         hLabel.text = label
-        hTime.text = TimerStore.formatDuration(
-            if (isSession) TimerStore.getSessionMs(this, label)
-            else TimerStore.getDayMs(this, label)
-        )
-        hTime.setTextColor(if (isActive) accent else muted)
+        val timeSliding = timeSlideLabel == entry.name
+
+        // Mid-slide the timer shows its total with the pending correction
+        // folded in, amber to mark it as not yet saved.
+        if (timeSliding) {
+            hTime.text = TimerStore.formatDuration(
+                (timeSlideStartMs + timeSlidePendingMinutes * 60_000L).coerceAtLeast(0L)
+            )
+            hTime.setTextColor(amber)
+        } else {
+            hTime.text = TimerStore.formatDuration(
+                if (isSession) TimerStore.getSessionMs(this, label)
+                else TimerStore.getDayMs(this, label)
+            )
+            hTime.setTextColor(if (isActive) accent else muted)
+        }
 
         // Nothing running anywhere: tint the timer column on every row, so the
         // state is obvious even when the active label is scrolled out of view.
@@ -1278,6 +1340,17 @@ class MainActivity : AppCompatActivity() {
         private val TYPE_ADD = 1
 
         inner class Holder(view: View) : RecyclerView.ViewHolder(view) {
+            init {
+                // Once an hour is reached the string grows from "09:07" to
+                // "1:09:07" and overflowed a fixed size. Auto-sizing shrinks
+                // only the rows that need it, so short timers stay large.
+                view.findViewById<TextView>(R.id.rowTime)?.let {
+                    TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(
+                        it, 20, 32, 1, TypedValue.COMPLEX_UNIT_SP
+                    )
+                }
+            }
+
             // Null on the "+ New label" row, which has none of these.
             val label: TextView? = view.findViewById(R.id.rowLabel)
             val sub: TextView? = view.findViewById(R.id.rowSub)
@@ -1319,6 +1392,7 @@ class MainActivity : AppCompatActivity() {
 
             // Zone 3 — the timer. Tap toggles: start if idle, stop if running.
             holder.time?.setOnClickListener { toggleTimer(entry.name) }
+            attachTimeSlider(holder, entry)
             // Gaps between zones fall through to the row; same behaviour.
             holder.itemView.setOnClickListener { toggleTimer(entry.name) }
 
