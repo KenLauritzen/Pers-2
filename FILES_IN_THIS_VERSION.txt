@@ -1,4 +1,7 @@
-Focus v46 — complete file list.
+Focus v47 — complete file list.
+
+Fixes the v46 build failure: commitGoal referenced SettingsStore.SORT_GOALS,
+which doesn't exist — the constant is SORT_GOAL. One word.
 
 FOUR GESTURE ZONES, WITH DIVIDERS
 
@@ -32,10 +35,14 @@ ALSO INCLUDED — the fix held back from v44:
   peach until a full minute over, then -0:01. The Σ sums had the same fault
   under a minute and are fixed too.
 
-UPLOAD ONLY THESE THREE:
-  app/src/main/res/layout/row_timer.xml
+UPLOAD THESE:
   app/src/main/java/com/focusledger/timer/MainActivity.kt
   app/src/main/res/values/strings.xml
+  app/src/main/res/layout/row_timer.xml          (unchanged since v46)
+
+If you are coming from v43 rather than v46, you also need:
+  app/src/main/res/layout/activity_main.xml      (v44: the btnCum2 pill)
+  app/src/main/java/com/focusledger/timer/SettingsStore.kt  (v44: COL_NONE etc)
 
 Nothing to delete this version.
 

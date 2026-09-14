@@ -378,7 +378,7 @@ class MainActivity : AppCompatActivity() {
         }
         // Goal-dependent orders need the row to move to its new place.
         val sort = SettingsStore.getSortMode(this)
-        if (sort == SettingsStore.SORT_GOALS || sort == SettingsStore.SORT_REMAINING) rebuild()
+        if (sort == SettingsStore.SORT_GOAL || sort == SettingsStore.SORT_REMAINING) rebuild()
         else { refreshValues(); updateChrome() }
         syncService()
     }
