@@ -1,29 +1,40 @@
-Focus v44 — complete file list.
+Focus v46 — complete file list.
 
-A second, smaller figure under the label.
+FOUR GESTURE ZONES, WITH DIVIDERS
 
-  A fifth pill sits leftmost in the header. Tap it to choose any of the six
-  column modes, or None. Position is what marks it as secondary — its colour
-  follows what it's showing, same as the primary pill.
+  zone            tap                      long-press
+  note icon       Notes screen             drag to reorder
+  label           move above another       drag to reorder
+  timer           start, or stop if going  —
+  right column    goal & time popup        slide to set the goal
 
-  The header now shows just "6:00a" rather than "Start 6:00a". That word was
-  the width the new pill needed.
+Fine vertical lines now mark the boundaries.
 
-  Rows get a taller minimum (52dp, was 44dp) when a second figure is showing,
-  since two lines need about 43dp and the old floor would have clipped on a
-  short screen. Slightly fewer rows fit before scrolling.
+THE GOAL SLIDER
+  Long-press the right column and slide. Up adds, down subtracts. The ladder
+  is 5, 15, 30, 45 minutes, then 15 more for each further step. A step is
+  about 24dp of travel, so 45 minutes is roughly 96dp of drag.
 
-  With None selected, the second line is removed and the label centres exactly
-  as before.
+  Nothing is saved until you lift your finger. The column shows the pending
+  goal in amber while you slide, so the preview sits under the finger setting
+  it. The list is held still for the duration.
 
-Useful pairings: Start with ETA shows plan against reality without toggling.
-Goal with Rem shows target and remainder together.
+  On release, if you're sorting by Goals or Remain, the row moves to its new
+  place.
 
-UPLOAD ONLY THESE FIVE:
+ALSO CHANGED
+  Tapping a running timer now stops it. Before, it did nothing.
+  Long-press on the row as a whole no longer opens the popup — that moved to a
+  tap on the right column.
+
+ALSO INCLUDED — the fix held back from v44:
+  A goal passed by less than a minute showed a lone "-". It now shows 0:00 in
+  peach until a full minute over, then -0:01. The Σ sums had the same fault
+  under a minute and are fixed too.
+
+UPLOAD ONLY THESE THREE:
   app/src/main/res/layout/row_timer.xml
-  app/src/main/res/layout/activity_main.xml
   app/src/main/java/com/focusledger/timer/MainActivity.kt
-  app/src/main/java/com/focusledger/timer/SettingsStore.kt
   app/src/main/res/values/strings.xml
 
 Nothing to delete this version.

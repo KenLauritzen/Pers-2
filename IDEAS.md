@@ -383,6 +383,109 @@ tick rather than only for the selected mode.
 
 ---
 
+## 42. A lone minus sign in Rem  — FIXED, pending release
+
+**The bug:** A label with a 21-minute goal sitting at 21:53 showed only `-` in
+the Rem column.
+
+**Cause:** `fmtGoal` returns an empty string for zero, which is correct for
+"this label has no goal" and wrong for a measured value. 53 seconds past the
+goal divides to 0 minutes, so the row rendered the minus sign and nothing
+after it.
+
+**The same fault elsewhere:** the `Σ` sums used the same formatter behind a
+`running > 0L` guard, so a running total under a minute would have rendered a
+lone sigma. Found while checking the first fix, not reported.
+
+**The fix:** one `fmtMeasuredMs` that always renders, zero included. Through
+the crossover, with a 21:00 goal:
+
+| Elapsed | Shows | Colour |
+|---|---|---|
+| 20:59 | `0:00` | blue |
+| 21:00 | `0:00` | peach |
+| 21:53 | `0:00` | peach |
+| 22:00 | `-0:01` | peach |
+| 23:00 | `-0:02` | peach |
+
+No sign while the overage rounds to zero — `-0:00` reads as a mistake, and the
+colour already says you're past. The sign appears at a full minute over.
+
+**Also improved:** with a minute or less remaining, the column showed nothing
+at all. It now shows `0:00` in blue, so a label about to reach its goal looks
+different from one with no goal set.
+
+---
+
+## 43. Four gesture zones, with dividers  ✅ built in v45
+
+**What:** Each column of a row now does something distinct, and fine vertical
+lines mark where one ends and the next begins.
+
+| Zone | Tap | Long-press |
+|---|---|---|
+| Note icon | Notes screen | Drag to reorder |
+| Label | Move above another | Drag to reorder |
+| Timer | Start, or stop if running | — |
+| Right column | Goal & time popup | Slide to set the goal |
+
+**Why:** Dividers were the original request, but the zones didn't warrant them
+— the timer and right column behaved identically, and long-press was uniform
+across the whole row. Giving each column its own meaning made the lines worth
+drawing.
+
+**The goal slider:**
+- Long-press the right column, then slide. Up adds, down subtracts.
+- **The ladder is 5, 15, 30, 45**, then 15 more for each further step. The
+  first step is small for nudging a goal a few minutes; the gaps open up so a
+  long drag covers a working day without much thumb travel.
+- A step is 24dp of travel.
+- **Nothing is written until you lift.** The column shows the pending value in
+  amber meanwhile, which puts the preview exactly where the finger already is
+  rather than needing a floating tooltip.
+- The list is held still for the duration, via
+  `requestDisallowInterceptTouchEvent`, or the row would fight the scroll.
+- On release, if the order depends on goals — Goals or Remain sorting — the
+  list re-sorts and the row moves to its new place.
+- Floored at zero, as everywhere else.
+
+**Notes:**
+- Tapping a running timer now **stops** it. Previously tapping a running row
+  did nothing.
+- A long-press with no movement changes nothing and doesn't open the popup —
+  the release path deliberately skips `performClick`, or every slide would end
+  with the popup appearing.
+- Dividers are `#4A6360` at 1dp, inset 9dp top and bottom so they read as
+  separators rather than a grid. They sit on the bar, so they had to work
+  against both the dark track and the green fill.
+
+---
+
+## 44. Show at a glance that nothing is running  ✅ built in v46
+
+**What:** When no timer is running anywhere, the timer column carries a
+translucent red wash — on every row, not just one.
+
+**Why:** With ten labels and a scrolling list, the only sign a timer was
+running could be off screen. Nothing said "you are not currently tracking
+anything", which is the state most worth noticing.
+
+**Notes:**
+- On **every** row deliberately. Marking one row wouldn't help when the list
+  is scrolled away from it; this is a property of the app, not of a label.
+- 22% opacity, so the progress bar still reads through. Over the dark track it
+  gives a warm grey, over the green bar a muted olive — visible in both cases
+  without hiding what's underneath.
+- The timer column became full height so the wash fills the column rather than
+  banding around the text.
+- `bindValues` runs for every row each tick, so the wash appears and clears
+  immediately on a start or stop.
+- **`getActiveLabel` never returns null** — it returns a sentinel — so the
+  obvious check would silently never fire. `isRunning` already existed for
+  this.
+
+---
+
 ## Template for new entries
 
 New ideas go in **Open ideas** with the next unused number. When one ships,

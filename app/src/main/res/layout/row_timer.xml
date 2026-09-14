@@ -69,6 +69,16 @@
         <!-- Label with an optional second figure beneath it. The container
              centres its children, so with no second line the label sits
              centred exactly as before. -->
+
+        <!-- Zone boundary. Sits on the bar, so it has to read against both the
+             dark track and the green fill. -->
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:layout_marginTop="9dp"
+            android:layout_marginBottom="9dp"
+            android:background="#4A6360" />
+
         <LinearLayout
             android:id="@+id/rowLabelBox"
             android:layout_width="0dp"
@@ -105,12 +115,24 @@
         </LinearLayout>
 
         <!-- Right-aligned so the colons stay put as the hours digit appears -->
+
+        <!-- Zone boundary. Sits on the bar, so it has to read against both the
+             dark track and the green fill. -->
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:layout_marginTop="9dp"
+            android:layout_marginBottom="9dp"
+            android:background="#4A6360" />
+
         <TextView
             android:id="@+id/rowTime"
+            android:clickable="true"
+            android:focusable="true"
             android:layout_width="0dp"
             android:layout_weight="0.40"
-            android:layout_height="wrap_content"
-            android:gravity="end"
+            android:layout_height="match_parent"
+            android:gravity="end|center_vertical"
             android:text="00:00"
             android:textColor="#E8A33D"
             android:fontFamily="monospace"
@@ -118,8 +140,20 @@
             android:maxLines="1"
             android:includeFontPadding="false" />
 
+
+        <!-- Zone boundary. Sits on the bar, so it has to read against both the
+             dark track and the green fill. -->
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:layout_marginTop="9dp"
+            android:layout_marginBottom="9dp"
+            android:background="#4A6360" />
+
         <TextView
             android:id="@+id/rowGoal"
+            android:clickable="true"
+            android:focusable="true"
             android:layout_width="0dp"
             android:layout_weight="0.30"
             android:layout_height="wrap_content"

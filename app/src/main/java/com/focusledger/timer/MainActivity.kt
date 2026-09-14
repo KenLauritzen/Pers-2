@@ -12,6 +12,7 @@ import android.text.format.DateFormat
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -44,6 +45,16 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var adapter: TimerAdapter
     private var dragHelper: ItemTouchHelper? = null
+
+    /**
+     * Goal-slide in progress. While set, the row's right column shows the
+     * pending value rather than the stored one, and the per-second refresh
+     * leaves it alone.
+     */
+    private var slideLabel: String? = null
+    private var slidePendingGoal = 0
+    private var slideStartGoal = 0
+    private var slideStartY = 0f
     private var rowHeightPx = 0
 
     // Running totals down [displayed], recomputed whenever values change and
@@ -78,6 +89,12 @@ class MainActivity : AppCompatActivity() {
     private val colClock = 0xFFB8C4C2.toInt()
     /** Overage in Rem mode: bright peach, legible on the burnt-red bar. */
     private val colOver = 0xFFFFAE73.toInt()
+    /**
+     * Wash over the timer column when nothing at all is running. Translucent,
+     * so the progress bar still reads through it, and applied to every row so
+     * it's visible wherever the list happens to be scrolled.
+     */
+    private val idleWash = 0x38C97064
 
     private val tickRunnable = object : Runnable {
         override fun run() {
@@ -258,6 +275,112 @@ class MainActivity : AppCompatActivity() {
         if (!LabelStore.writeLibrary(this, updated)) {
             Toast.makeText(this, "Couldn't save the new order", Toast.LENGTH_LONG).show()
         }
+    }
+
+    // ---- row gestures ------------------------------------------------------
+
+    /** Zone 3: tapping the timer starts an idle label or stops a running one. */
+    private fun toggleTimer(label: String) {
+        if (TimerStore.getActiveLabel(this) == label) TimerStore.stop(this)
+        else TimerStore.start(this, label)
+        refreshValues(); updateChrome(); syncService()
+    }
+
+    /** Zones 1 and 2 both start a drag, when the order is manual. */
+    private fun beginDrag(holder: TimerAdapter.Holder) {
+        if (SettingsStore.getSortMode(this) == SettingsStore.SORT_MANUAL) {
+            dragHelper?.startDrag(holder)
+        } else {
+            Toast.makeText(this, "Switch to Manual order to rearrange", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * Zone 4: long-press then slide to change the goal without typing.
+     *
+     * The first step is 5 minutes, every step after that 15 — so a short
+     * nudge is fine-grained and a longer drag covers ground quickly. Up adds,
+     * down subtracts, floored at zero.
+     *
+     * Nothing is written until the finger lifts. The column shows the pending
+     * value in amber meanwhile, which puts the preview exactly where the
+     * finger already is.
+     */
+    private fun attachGoalSlider(holder: TimerAdapter.Holder, entry: LabelEntry) {
+        val goalView = holder.goal ?: return
+        val stepPx = 24 * resources.displayMetrics.density
+
+        goalView.setOnLongClickListener {
+            val current = LabelStore.readLibrary(this)
+                .firstOrNull { it.name == entry.name }?.goalMinutes ?: 0
+            slideLabel = entry.name
+            slideStartGoal = current
+            slidePendingGoal = current
+            slideStartY = Float.NaN          // set on the first move
+            // Stop the list scrolling underneath the gesture.
+            binding.rowsList.requestDisallowInterceptTouchEvent(true)
+            refreshValues()
+            true
+        }
+
+        goalView.setOnTouchListener { _, ev ->
+            if (slideLabel != entry.name) return@setOnTouchListener false
+            when (ev.actionMasked) {
+                MotionEvent.ACTION_MOVE -> {
+                    if (slideStartY.isNaN()) slideStartY = ev.rawY
+                    // Up is positive: screen Y grows downward.
+                    val steps = ((slideStartY - ev.rawY) / stepPx).toInt()
+                    slidePendingGoal = (slideStartGoal + stepDelta(steps)).coerceAtLeast(0)
+                    refreshValues()
+                    true
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    val label = entry.name
+                    val newGoal = slidePendingGoal
+                    val changed = newGoal != slideStartGoal
+                    slideLabel = null
+                    binding.rowsList.requestDisallowInterceptTouchEvent(false)
+                    // No performClick here: only a long-press reaches this
+                    // path, and a release after one shouldn't also open the
+                    // popup that a plain tap opens.
+                    if (changed) commitGoal(label, newGoal) else refreshValues()
+                    true
+                }
+                else -> false
+            }
+        }
+    }
+
+    /**
+     * Minutes for [steps] of travel: 5, 15, 30, 45, then 15 more each step.
+     *
+     * The first step is deliberately small for nudging a goal by a few
+     * minutes; the gaps open up after that so a long drag covers a working
+     * day without a great deal of thumb travel.
+     */
+    private fun stepDelta(steps: Int): Int {
+        if (steps == 0) return 0
+        val n = Math.abs(steps)
+        val ladder = intArrayOf(5, 15, 30, 45)
+        val magnitude =
+            if (n <= ladder.size) ladder[n - 1]
+            else ladder.last() + 15 * (n - ladder.size)
+        return if (steps > 0) magnitude else -magnitude
+    }
+
+    private fun commitGoal(label: String, minutes: Int) {
+        val library = LabelStore.readLibrary(this).map { e ->
+            if (e.name == label) e.copy(goalMinutes = minutes.coerceAtLeast(0)) else e
+        }
+        if (!LabelStore.writeLibrary(this, library)) {
+            Toast.makeText(this, "Couldn't save the goal", Toast.LENGTH_LONG).show()
+            return
+        }
+        // Goal-dependent orders need the row to move to its new place.
+        val sort = SettingsStore.getSortMode(this)
+        if (sort == SettingsStore.SORT_GOALS || sort == SettingsStore.SORT_REMAINING) rebuild()
+        else { refreshValues(); updateChrome() }
+        syncService()
     }
 
     // ---- per-label popup ---------------------------------------------------
@@ -854,17 +977,22 @@ class MainActivity : AppCompatActivity() {
             val inc = if (mode == SettingsStore.COL_SUM_REMAIN) remInc else goalInc
             val running = inc.getOrNull(position) ?: 0L
             val colour = if (mode == SettingsStore.COL_SUM_REMAIN) colRemain else colGoal
-            return (if (running > 0L) "\u03a3${fmtGoalMs(running)}" else "") to colour
+            // Measured formatter here too: a running total under a minute is
+            // still a real total, and the blanking one would leave a lone
+            // sigma with nothing after it.
+            return (if (running > 0L) "\u03a3${fmtMeasuredMs(running)}" else "") to colour
         }
 
         if (entry.goalMinutes <= 0) return "" to goalGrey
 
         return if (mode == SettingsStore.COL_REMAIN) {
             when {
-                // Past the goal, how far past — "0:00" doesn't say that.
-                remainingMs < 0L -> "-${fmtGoalMs(-remainingMs)}" to colOver
-                remainingMs == 0L -> fmtGoalMs(0L) to colOver
-                else -> fmtGoalMs(remainingMs) to colRemain
+                // Past the goal by a minute or more: how far past.
+                remainingMs <= -60_000L -> "-${fmtMeasuredMs(-remainingMs)}" to colOver
+                // Past it by less than a minute. No sign — "-0:00" reads as a
+                // mistake, and the colour already says you're over.
+                remainingMs <= 0L -> "0:00" to colOver
+                else -> fmtMeasuredMs(remainingMs) to colRemain
             }
         } else {
             fmtGoal(entry.goalMinutes) to colGoal
@@ -1026,7 +1154,18 @@ class MainActivity : AppCompatActivity() {
     }
 
     /** Formats a duration in ms as h:mm, for goal-style figures. */
-    private fun fmtGoalMs(ms: Long): String = fmtGoal((ms / 60_000L).toInt())
+    /**
+     * A measured duration as h:mm, rendering zero as "0:00".
+     *
+     * [fmtGoal] blanks zero, which is right for "this label has no goal" and
+     * wrong for a measured value. 53 seconds past a goal is real and happens
+     * to round down; blanking it left the row showing a lone minus sign, and
+     * a sub-minute running total showed a lone sigma.
+     */
+    private fun fmtMeasuredMs(ms: Long): String {
+        val mins = (ms / 60_000L).toInt()
+        return if (mins <= 0) "0:00" else fmtGoal(mins)
+    }
 
     /** Per-second refresh: values only, never the order. */
     private fun refreshValues() {
@@ -1066,14 +1205,28 @@ class MainActivity : AppCompatActivity() {
         )
         hTime.setTextColor(if (isActive) accent else muted)
 
+        // Nothing running anywhere: tint the timer column on every row, so the
+        // state is obvious even when the active label is scrolled out of view.
+        hTime.setBackgroundColor(
+            if (TimerStore.isRunning(this)) 0x00000000 else idleWash
+        )
+
         val remainingMs =
             if (entry.goalMinutes > 0) TimerStore.getRemainingMs(this, label, entry.goalMinutes)
             else 0L
-        val (goalText, goalColour) = columnFigure(
-            SettingsStore.getColumnMode(this), entry, position, remainingMs
-        )
-        hGoal.text = goalText
-        hGoal.setTextColor(goalColour)
+        if (slideLabel == entry.name) {
+            // Mid-slide: show what the goal will become, in amber, so the
+            // preview sits under the finger that's setting it. Nothing is
+            // written until the finger lifts.
+            hGoal.text = fmtGoal(slidePendingGoal).ifEmpty { "0:00" }
+            hGoal.setTextColor(amber)
+        } else {
+            val (goalText, goalColour) = columnFigure(
+                SettingsStore.getColumnMode(this), entry, position, remainingMs
+            )
+            hGoal.text = goalText
+            hGoal.setTextColor(goalColour)
+        }
 
         // Second, smaller figure under the label when one is chosen.
         h.sub?.let { hSub ->
@@ -1147,38 +1300,33 @@ class MainActivity : AppCompatActivity() {
             if (getItemViewType(position) == TYPE_ADD) return
             val entry = displayed.getOrNull(position) ?: return
 
-            holder.itemView.setOnClickListener {
-                if (TimerStore.getActiveLabel(this@MainActivity) == entry.name) return@setOnClickListener
-                val wasRunning = TimerStore.isRunning(this@MainActivity)
-                TimerStore.start(this@MainActivity, entry.name)
-                if (wasRunning) offerNote()
-                rebuild(); syncService()
-            }
+            // Zone 3 — the timer. Tap toggles: start if idle, stop if running.
+            holder.time?.setOnClickListener { toggleTimer(entry.name) }
+            // Gaps between zones fall through to the row; same behaviour.
+            holder.itemView.setOnClickListener { toggleTimer(entry.name) }
+
+            // Zone 2 — the label. Tap moves it above another; long-press drags,
+            // the same as the note icon.
             (holder.labelBox ?: holder.label)?.setOnClickListener {
                 onLabelTapped(holder.bindingAdapterPosition)
             }
+            (holder.labelBox ?: holder.label)?.setOnLongClickListener {
+                beginDrag(holder); true
+            }
+
+            // Zone 1 — the note icon.
             holder.note?.setOnClickListener {
                 startActivity(
                     Intent(this@MainActivity, NotesActivity::class.java)
                         .putExtra(NotesActivity.EXTRA_LABEL, entry.name)
                 )
             }
-            // Each gesture has exactly one meaning: the icon drags, the row
-            // long-press opens the label popup.
-            holder.note?.setOnLongClickListener {
-                if (SettingsStore.getSortMode(this@MainActivity) == SettingsStore.SORT_MANUAL) {
-                    dragHelper?.startDrag(holder); true
-                } else {
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Switch to Manual order to rearrange",
-                        Toast.LENGTH_SHORT
-                    ).show(); true
-                }
-            }
-            holder.itemView.setOnLongClickListener {
-                showLabelPopup(entry.name); true
-            }
+            holder.note?.setOnLongClickListener { beginDrag(holder); true }
+
+            // Zone 4 — the right column. Tap opens the popup; long-press then
+            // slide adjusts the goal.
+            holder.goal?.setOnClickListener { showLabelPopup(entry.name) }
+            attachGoalSlider(holder, entry)
 
             bindValues(holder, entry, position)
         }
