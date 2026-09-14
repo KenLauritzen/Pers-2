@@ -352,16 +352,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Minutes for [steps] of travel: 5, 15, 30, 45, then 15 more each step.
+     * Minutes for [steps] of travel: 5, 10, 15, then 15 more each step.
      *
-     * The first step is deliberately small for nudging a goal by a few
-     * minutes; the gaps open up after that so a long drag covers a working
-     * day without a great deal of thumb travel.
+     * Fine at the start for nudging a goal by a few minutes, then a steady
+     * quarter-hour per step so a long drag covers a working day.
      */
     private fun stepDelta(steps: Int): Int {
         if (steps == 0) return 0
         val n = Math.abs(steps)
-        val ladder = intArrayOf(5, 15, 30, 45)
+        val ladder = intArrayOf(5, 10, 15)
         val magnitude =
             if (n <= ladder.size) ladder[n - 1]
             else ladder.last() + 15 * (n - ladder.size)
@@ -376,10 +375,12 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Couldn't save the goal", Toast.LENGTH_LONG).show()
             return
         }
-        // Goal-dependent orders need the row to move to its new place.
-        val sort = SettingsStore.getSortMode(this)
-        if (sort == SettingsStore.SORT_GOAL || sort == SettingsStore.SORT_REMAINING) rebuild()
-        else { refreshValues(); updateChrome() }
+        // Always rebuild, not just for goal-dependent orders. `displayed` is
+        // a cached copy of the library, so refreshValues alone would keep
+        // binding the old goal — the value was saved but the row didn't show
+        // it. rebuild re-reads the library, and re-sorts when the order
+        // depends on goals.
+        rebuild()
         syncService()
     }
 
@@ -1215,10 +1216,26 @@ class MainActivity : AppCompatActivity() {
             if (entry.goalMinutes > 0) TimerStore.getRemainingMs(this, label, entry.goalMinutes)
             else 0L
         if (slideLabel == entry.name) {
-            // Mid-slide: show what the goal will become, in amber, so the
-            // preview sits under the finger that's setting it. Nothing is
-            // written until the finger lifts.
-            hGoal.text = fmtGoal(slidePendingGoal).ifEmpty { "0:00" }
+            // Mid-slide the column keeps showing its own kind of figure,
+            // recomputed against the pending goal — Rem counts down as the
+            // goal grows, Goal shows the goal itself. Amber marks it as not
+            // yet saved.
+            //
+            // Clock and sum modes don't change for the row being adjusted
+            // (their value comes from the rows above it), so there'd be no
+            // feedback at all; those fall back to showing the goal.
+            val pending = entry.copy(goalMinutes = slidePendingGoal)
+            val pendingRemaining =
+                if (slidePendingGoal > 0)
+                    slidePendingGoal * 60_000L - TimerStore.getDayMs(this, entry.name)
+                else 0L
+            val mode = SettingsStore.getColumnMode(this)
+            val (previewText, _) = columnFigure(mode, pending, position, pendingRemaining)
+            val (currentText, _) = columnFigure(mode, entry, position, remainingMs)
+
+            hGoal.text =
+                if (previewText.isNotEmpty() && previewText != currentText) previewText
+                else fmtGoal(slidePendingGoal).ifEmpty { "0:00" }
             hGoal.setTextColor(amber)
         } else {
             val (goalText, goalColour) = columnFigure(

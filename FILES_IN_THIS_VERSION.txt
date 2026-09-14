@@ -1,48 +1,27 @@
-Focus v47 — complete file list.
+Focus v48 — complete file list.
 
-Fixes the v46 build failure: commitGoal referenced SettingsStore.SORT_GOALS,
-which doesn't exist — the constant is SORT_GOAL. One word.
+THREE CHANGES TO THE GOAL SLIDER
 
-FOUR GESTURE ZONES, WITH DIVIDERS
+1. Releasing now updates the row.
+   The goal was being saved correctly, but the row kept showing the old value.
+   refreshValues binds from a cached copy of the label list, so it was
+   re-drawing the stale goal; only a rebuild re-reads the file. Tapping showed
+   the new value because the popup reads the file directly. It now always
+   rebuilds, which also re-sorts if the order depends on goals.
 
-  zone            tap                      long-press
-  note icon       Notes screen             drag to reorder
-  label           move above another       drag to reorder
-  timer           start, or stop if going  —
-  right column    goal & time popup        slide to set the goal
+2. The column adjusts what it was already showing.
+   Sliding no longer swaps the column for a raw goal figure. In Rem it counts
+   down as the goal grows; in Goal it shows the goal. Clock and sum modes
+   don't change for the row being adjusted — their value comes from the rows
+   above it — so those fall back to showing the goal, or there'd be no
+   feedback at all.
 
-Fine vertical lines now mark the boundaries.
+3. New ladder: 5, 10, 15, then 15 more per step.
+   From a 60-minute goal, dragging up gives 65, 70, 75, 90, 105, 120.
 
-THE GOAL SLIDER
-  Long-press the right column and slide. Up adds, down subtracts. The ladder
-  is 5, 15, 30, 45 minutes, then 15 more for each further step. A step is
-  about 24dp of travel, so 45 minutes is roughly 96dp of drag.
-
-  Nothing is saved until you lift your finger. The column shows the pending
-  goal in amber while you slide, so the preview sits under the finger setting
-  it. The list is held still for the duration.
-
-  On release, if you're sorting by Goals or Remain, the row moves to its new
-  place.
-
-ALSO CHANGED
-  Tapping a running timer now stops it. Before, it did nothing.
-  Long-press on the row as a whole no longer opens the popup — that moved to a
-  tap on the right column.
-
-ALSO INCLUDED — the fix held back from v44:
-  A goal passed by less than a minute showed a lone "-". It now shows 0:00 in
-  peach until a full minute over, then -0:01. The Σ sums had the same fault
-  under a minute and are fixed too.
-
-UPLOAD THESE:
+UPLOAD ONLY THESE TWO:
   app/src/main/java/com/focusledger/timer/MainActivity.kt
   app/src/main/res/values/strings.xml
-  app/src/main/res/layout/row_timer.xml          (unchanged since v46)
-
-If you are coming from v43 rather than v46, you also need:
-  app/src/main/res/layout/activity_main.xml      (v44: the btnCum2 pill)
-  app/src/main/java/com/focusledger/timer/SettingsStore.kt  (v44: COL_NONE etc)
 
 Nothing to delete this version.
 
