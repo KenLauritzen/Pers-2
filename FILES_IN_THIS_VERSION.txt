@@ -1,4 +1,8 @@
-Focus v51 — complete file list.
+Focus v52 — complete file list.
+
+Fixes the v51 build failure: updateChrome already had a "val running", and the
+new header indicator declared a second one in the same scope. Declared once at
+the top of the function now.
 
 Three of the high-priority items, built together because they're small and
 touch the same files.
@@ -25,10 +29,10 @@ touch the same files.
       17sp, so nothing newly truncates — they lose a character or two more.
       Say if that's too much and 18sp is the compromise.
 
-UPLOAD ONLY THESE THREE:
+UPLOAD THESE:
   app/src/main/java/com/focusledger/timer/MainActivity.kt
-  app/src/main/res/layout/row_timer.xml
   app/src/main/res/values/strings.xml
+  app/src/main/res/layout/row_timer.xml    (unchanged since v51 — skip if done)
 
 Nothing to delete this version.
 

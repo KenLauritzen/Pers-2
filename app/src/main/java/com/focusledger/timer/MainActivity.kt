@@ -946,6 +946,7 @@ class MainActivity : AppCompatActivity() {
 
     /** Header, pills and Stop state — everything except the per-row values. */
     private fun updateChrome() {
+        val running = TimerStore.isRunning(this)
         val isSession = sessionView()
         // The header now carries the day's planned start time rather than the
         // date — it's what the Start column projects from, and tapping it
@@ -953,7 +954,6 @@ class MainActivity : AppCompatActivity() {
         // Just the time: the word "Start" cost the width the fifth pill needed.
         // A dot in front when nothing is running — the header is the only
         // thing on screen no matter where the list is scrolled.
-        val running = TimerStore.isRunning(this)
         binding.tvHeader.text =
             if (running) fmtClock(dayStartMs()) else "\u25cf ${fmtClock(dayStartMs())}"
         binding.tvHeader.setTextColor(if (running) muted else overRed)
@@ -996,7 +996,6 @@ class MainActivity : AppCompatActivity() {
             }
         )
 
-        val running = TimerStore.isRunning(this)
         binding.btnStop.isEnabled = running
         binding.btnStop.alpha = if (running) 1f else 0.4f
     }
