@@ -1,34 +1,33 @@
-Focus v50 — complete file list.
+Focus v51 — complete file list.
 
-  1. Export from the Notes screen.
-     A button beside Done writes a CSV of that label's rows only, through the
-     same share sheet and file-location dialog as the Settings export.
+Three of the high-priority items, built together because they're small and
+touch the same files.
 
-     The screen's filter applies: with "Show runs with no note" off, only runs
-     with notes are included, so the file matches what you were looking at.
-     The dialog tells you which you got.
+  50  Popup header units
+      The goal read 0:45 and today's time read 00:00 — minutes beside seconds.
+      Both now h:mm. Today's time was using the seconds formatter shared with
+      the main screen, where seconds do belong.
 
-     Written as Focus_<label>.csv beside the main log, overwritten each time.
+  51  The no-timer state is much harder to miss
+      The wash now covers the WHOLE ROW rather than the timer column, and went
+      from 22% to 35% alpha. The header also shows a red dot before the start
+      time when nothing is running — the header being the one thing on screen
+      no matter where the list is scrolled.
 
-  2. Adjustments now obey the "Show runs with no note" filter.
-     v39 made them always visible so a stray adjustment could be found. In use
-     that meant rows with no note kept appearing with the filter on. They now
-     hide like anything else without a note — turn the filter on to find one.
+      Text still reads on it: label contrast 4.7–7.8, timer 2.8–4.6, checked
+      against both the dark track and a filled green bar.
 
-GESTURE CHART
+  53  Larger label font
+      17sp -> 19sp. The second line stays 13sp.
 
-                 1 note icon    2 label           3 timer            4 right col
-  tap            Notes screen   move above        start / stop       goal & time popup
-  long-press     drag to order  drag to order     slide: adjust time slide: adjust goal
-  double-tap     N/A            N/A               N/A                N/A
+      Labels over about eight characters ellipsise a little sooner. "Fam
+      Kaitlyn", "Stewardship" and "Social Building" were already truncating at
+      17sp, so nothing newly truncates — they lose a character or two more.
+      Say if that's too much and 18sp is the compromise.
 
-  Both slides: up adds, down subtracts, 5 minutes per 24dp.
-  Preview in amber; nothing written until you lift.
-
-UPLOAD ONLY THESE FOUR:
-  app/src/main/java/com/focusledger/timer/NotesActivity.kt
-  app/src/main/java/com/focusledger/timer/LogStore.kt
-  app/src/main/res/layout/activity_notes.xml
+UPLOAD ONLY THESE THREE:
+  app/src/main/java/com/focusledger/timer/MainActivity.kt
+  app/src/main/res/layout/row_timer.xml
   app/src/main/res/values/strings.xml
 
 Nothing to delete this version.

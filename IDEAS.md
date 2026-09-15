@@ -336,213 +336,218 @@ markers, the green and red bar, and the amber border on the running row.
 | # | Question | Leaning | Answer |
 |---|---|---|---|
 | 34.1 | One long scrolling page, or sections you expand? | One page — scrolling is easier than hunting through collapsed sections | |
+| 34.5 | Lay it out as the four sections across, matching the screen, with tap / double-tap / long-press down the side? | Yes — it mirrors what you're looking at | |
+| 34.6 | Landscape too? | Once idea 49 exists | |
 | 34.2 | Should it show on first launch, or only when opened from Settings? | Settings only. First-launch help gets dismissed unread | |
 | 34.3 | Include the file locations and export explanation, or leave those in Settings? | Include them; it's the natural place to explain where data lives | |
 | 34.4 | Should it carry the version number, so it's obvious which build it describes? | Yes | |
 
 ---
 
-## 41. A second figure under the label  ✅ built in v44
+## 47. Sleep timer — stop everything at a set time  ⭐ HIGH
 
-**What:** A fifth pill, leftmost in the header, choosing a second smaller
-figure that sits beneath the label. Any of the six column modes, or `None`.
+**What:** A time after which any running timer stops on its own.
 
-```
-  Fitness                00:00     @9:30a
-  Σ1:30
-
-  Home Org               00:00    @11:00a
-  Σ2:15
-```
-
-**Why:** The pairings answer questions a single column can't. `Start` against
-`ETA` shows the slip between plan and reality without toggling. `Goal` against
-`Rem` shows target and remainder together.
+**Why:** A timer left running overnight silently ruins a day's data, and the
+correction afterwards is guesswork.
 
 **Notes:**
-- **Position marks it as secondary**, not colour. The pill's colour follows
-  what it's showing, exactly like the primary, so colour keeps meaning "what
-  kind of figure this is" rather than "which pill this is".
-- The header lost the word "Start" before the time to make room — `6:00a`
-  rather than `Start 6:00a`. The pill needed about 44dp and that bought it.
-- **Rows get a taller minimum (52dp, was 44dp) when a second figure shows.**
-  Two lines need roughly 43dp, so the old floor would have clipped on a short
-  screen. Fewer rows fit before scrolling, which is the trade for turning it
-  on.
-- With `None`, the second view is `GONE` and the label centres exactly as
-  before.
-- When a row has a value but the figure is empty — a goalless label in `Goal`
-  mode — the line stays in the layout so the label doesn't sit at a different
-  height row to row.
+- The service already ticks and already splits runs at midnight, so the
+  machinery is there.
+- Interacts with idea 57: an after-hours prompt that needs acknowledging is
+  the gentler version of the same idea, and a hard stop is the backstop.
 
-**Worth noting:** this forced a useful refactor. The column rendering was
-inline in `bindValues`; it's now a single `columnFigure(mode, entry, position)`
-returning text and colour, shared by both figures. They can't drift apart in
-formatting or colour, and the running totals are computed on both bases every
-tick rather than only for the selected mode.
+| # | Question | Leaning | Answer |
+|---|---|---|---|
+| 47.1 | Hard stop, or prompt first with a stop on no answer? | Prompt, then stop — a silent stop loses real time too | |
+| 47.2 | One time for every label, or per label? | One, in Settings | |
+| 47.3 | Should it write a note on the run saying it was auto-stopped? | Yes — otherwise the row looks like a deliberate stop | |
 
 ---
 
-## 42. A lone minus sign in Rem  — FIXED, pending release
+## 48. Hide rows once the goal is met  ⭐ HIGH
 
-**The bug:** A label with a 21-minute goal sitting at 21:53 showed only `-` in
-the Rem column.
+**What:** A toggle that hides any row whose goal is met, and any row with no
+goal. A tick mark marks a label done for the day. Next day it reappears.
 
-**Cause:** `fmtGoal` returns an empty string for zero, which is correct for
-"this label has no goal" and wrong for a measured value. 53 seconds past the
-goal divides to 0 minutes, so the row rendered the minus sign and nothing
-after it.
+**Why:** Late in the day the list is mostly finished work. What's left is what
+matters.
 
-**The same fault elsewhere:** the `Σ` sums used the same formatter behind a
-`running > 0L` guard, so a running total under a minute would have rendered a
-lone sigma. Found while checking the first fix, not reported.
+**Notes:**
+- **This is per-label hiding returning in a different form.** Idea 24 removed
+  it because nothing could be unhidden. This version is safe because hiding is
+  a computed state, not a stored one — flip the toggle and everything is back.
+- With the toggle off, a done label shows its tick.
 
-**The fix:** one `fmtMeasuredMs` that always renders, zero included. Through
-the crossover, with a 21:00 goal:
-
-| Elapsed | Shows | Colour |
-|---|---|---|
-| 20:59 | `0:00` | blue |
-| 21:00 | `0:00` | peach |
-| 21:53 | `0:00` | peach |
-| 22:00 | `-0:01` | peach |
-| 23:00 | `-0:02` | peach |
-
-No sign while the overage rounds to zero — `-0:00` reads as a mistake, and the
-colour already says you're past. The sign appears at a full minute over.
-
-**Also improved:** with a minute or less remaining, the column showed nothing
-at all. It now shows `0:00` in blue, so a label about to reach its goal looks
-different from one with no goal set.
+| # | Question | Leaning | Answer |
+|---|---|---|---|
+| 48.1 | Is the tick separate from meeting the goal, or the same thing? | Separate — "I'm finished with this" isn't always "I hit the number" | |
+| 48.2 | Does a ticked label still count toward the totals? | Yes; it's real time | |
+| 48.3 | Where does the toggle live? | Beside the sort pill | |
+| 48.4 | Does the tick clear at midnight, like the day counters? | Yes | |
 
 ---
 
-## 43. Four gesture zones, with dividers  ✅ built in v45
+## 49. Landscape focus screen  ⭐ HIGH
 
-**What:** Each column of a row now does something distinct, and fine vertical
-lines mark where one ends and the next begins.
+**What:** A landscape layout built for watching rather than managing:
+- One giant timer across the left two-thirds — elapsed, remaining, or time to
+  the next break, chosen per label with a default
+- Tasks with tick boxes down the right third (idea 27)
+- The other figures small along the bottom, around 52dp
+- Per-label almost-done settings: sound, flashing, which figure is giant
 
-| Zone | Tap | Long-press |
-|---|---|---|
-| Note icon | Notes screen | Drag to reorder |
-| Label | Move above another | Drag to reorder |
-| Timer | Start, or stop if running | — |
-| Right column | Goal & time popup | Slide to set the goal |
+**Why:** The portrait screen manages ten labels. This one watches a single
+piece of work.
 
-**Why:** Dividers were the original request, but the zones didn't warrant them
-— the timer and right column behaved identically, and long-press was uniform
-across the whole row. Giving each column its own meaning made the lines worth
-drawing.
-
-**The goal slider:**
-- Long-press the right column, then slide. Up adds, down subtracts.
-- **The ladder is 5, 15, 30, 45**, then 15 more for each further step. The
-  first step is small for nudging a goal a few minutes; the gaps open up so a
-  long drag covers a working day without much thumb travel.
-- A step is 24dp of travel.
-- **Nothing is written until you lift.** The column shows the pending value in
-  amber meanwhile, which puts the preview exactly where the finger already is
-  rather than needing a floating tooltip.
-- The list is held still for the duration, via
-  `requestDisallowInterceptTouchEvent`, or the row would fight the scroll.
-- On release, if the order depends on goals — Goals or Remain sorting — the
-  list re-sorts and the row moves to its new place.
-- Floored at zero, as everywhere else.
-
-**Notes:**
-- Tapping a running timer now **stops** it. Previously tapping a running row
-  did nothing.
-- A long-press with no movement changes nothing and doesn't open the popup —
-  the release path deliberately skips `performClick`, or every slide would end
-  with the popup appearing.
-- Dividers are `#4A6360` at 1dp, inset 9dp top and bottom so they read as
-  separators rather than a grid. They sit on the bar, so they had to work
-  against both the dark track and the green fill.
+| # | Question | Leaning | Answer |
+|---|---|---|---|
+| 49.1 | Does rotating enter it automatically, or is it a mode? | Rotating — that's what rotating is for | |
+| 49.2 | Which label does it show — the running one, or one you pick? | The running one; if none, the last | |
+| 49.3 | Can timers be started and stopped from it, or is it read-only? | Start/stop only; managing stays in portrait | |
+| 49.4 | Is this worth building before idea 27, given the task panel is half of it? | No — 27 first | |
 
 ---
 
-## 44. Show at a glance that nothing is running  ✅ built in v46
+## 52. Goal bar scaled across all labels  ⭐ HIGH
 
-**What:** When no timer is running anywhere, the timer column carries a
-translucent red wash — on every row, not just one.
+**What:** A second bar where 100% is the *largest goal of the day*, so every
+label's bar is proportional to every other. Green fills the blue, red goes
+past it.
 
-**Why:** With ten labels and a scrolling list, the only sign a timer was
-running could be off screen. Nothing said "you are not currently tracking
-anything", which is the state most worth noticing.
+**Why:** The current bar shows each label against its own goal, so a 15-minute
+label and a 4-hour one look identical at 50%. This shows the shape of the day.
 
 **Notes:**
-- On **every** row deliberately. Marking one row wouldn't help when the list
-  is scrolled away from it; this is a property of the app, not of a label.
-- 22% opacity, so the progress bar still reads through. Over the dark track it
-  gives a warm grey, over the green bar a muted olive — visible in both cases
-  without hiding what's underneath.
-- The timer column became full height so the wash fills the column rather than
-  banding around the text.
-- `bindValues` runs for every row each tick, so the wash appears and clears
-  immediately on a start or stop.
-- **`getActiveLabel` never returns null** — it returns a sentinel — so the
-  obvious check would silently never fire. `isRunning` already existed for
-  this.
+- **The scaling problem you identified is real.** Once the largest-goal label
+  goes past its goal, the 100% mark isn't the right edge any more, and every
+  other bar shifts as it keeps running. Two ways out: scale to the largest
+  *goal* and let overage overflow the row, or scale to the largest *goal or
+  elapsed*, and accept that all bars move.
+
+| # | Question | Leaning | Answer |
+|---|---|---|---|
+| 52.1 | Scale to the largest goal, or the largest of goal-or-elapsed? | Largest goal, fixed for the day — bars that move while you watch are hard to read | |
+| 52.2 | Does this replace the current bar, or is it a toggle? | Toggle; they answer different questions | |
 
 ---
 
-## 44. Elapsed-time slider, and a flat 5-minute step  ✅ built in v49
+## 54. Split a label into numbered parts  — MEDIUM
 
-**What:**
-- **Long-press the timer column and slide** to correct recorded time, the same
-  gesture the right column uses for goals.
-- **Both sliders now step a flat 5 minutes.** The accelerating ladder was
-  replaced.
-- The timer auto-sizes, so an hour-long value fits.
+**What:** Write `Work (1)`, `Work (2)` and so on, so a large area can be
+placed at several points in the day, then recombined by stripping everything
+from ` (` when reporting.
 
-**Why the flat step:** with 5, 10, 15, 30… you had to remember how far you'd
-come to know what the next step would add, which made the value hard to aim.
-A flat rate is slower over long distances and far more predictable.
+**Notes:** You leaned toward stripping *before* the log is written, which
+keeps the CSV clean but loses which part it was. Stripping at report time
+keeps both, at the cost of every consumer knowing the convention.
 
-**How the time slider records it:** through `TimerStore.adjust`, which already
-handles both cases — on the running label the correction folds into that run's
-row; on an idle one it writes an adjustment of its own. Exactly the behaviour
-the popup's ±5/±15 buttons have always had, now available without opening
-anything.
-
-**Notes:**
-- Floored so a label can't go below zero for the day.
-- The timer shows the pending total in amber while sliding; nothing is written
-  until release.
-- **Auto-sizing replaced a fixed 32sp.** At an hour the string grows from
-  `09:07` to `1:09:07` and overflowed — the screenshot showed `1:09:0`. It now
-  scales between 20 and 32sp, so only rows that need it shrink and short
-  timers stay large. This removes the whole class of problem rather than
-  rebalancing column widths again.
+| # | Question | Leaning | Answer |
+|---|---|---|---|
+| 54.1 | Strip before writing, or keep the part number and strip when reporting? | Keep it in the log — you can always ignore a column, never recover one | |
+| 54.2 | Do the parts share a goal, or have their own? | Their own, or the schedule can't be laid out | |
 
 ---
 
-## 45. Export one label from its Notes screen  ✅ built in v50
+## 55. Reminder sound is unreliable  — MEDIUM, BUG
 
-**What:** An Export button beside Done on the Notes screen, writing a CSV of
-that label's rows only, through the same share sheet and location dialog as
-the Settings export.
+**What:** The interval reminder's sound doesn't play dependably.
 
-**Why:** The Settings export is everything, for backup. This is one label for
-looking at — a month of one kind of work, in a spreadsheet, without filtering
-thousands of rows by hand first.
+**Notes:** Likely the notification channel: on API 26+ sound is a property of
+the channel, fixed when the channel is created. Changing the setting later has
+no effect unless the channel is recreated under a new id. That would explain a
+setting that appears to work but doesn't.
 
-**Notes:**
-- **The screen's filter applies.** With "Show runs with no note" off, the file
-  contains only runs with notes, so what you send matches what you were
-  looking at. The location dialog says which of the two you got.
-- Written beside the main log as `Focus_<label>.csv`, so the existing
-  FileProvider path covers it with no manifest change. Overwritten each time
-  rather than accumulating.
-- Same header as the main log, so both open identically.
-- Nothing matching produces a message rather than an empty file.
+---
 
-**Also changed here — adjustments now obey the filter.** v39 made them always
-visible, on the reasoning that an invisible adjustment is what made a wrong
-total impossible to explain. In use that was wrong: with the filter on, rows
-with no note kept appearing. They now hide like anything else without a note.
-The trade is that finding a stray adjustment means turning the filter on —
-which the empty-state message now says.
+## 56. Line the pills up with the columns  — MEDIUM
+
+**What:** Position the header pills over the columns they describe.
+
+**Notes:** Only some pills map to a column — sort and Day/Ses don't. Partial
+alignment may read as broken alignment.
+
+---
+
+## 57. After-hours prompt that must be answered  — MEDIUM
+
+**What:** Late in the day, a prompt that stops the timer unless a person
+answers it. Plus making the day's figures adjustable afterwards, for when a
+wind-down timer was left running.
+
+**Notes:** The gentler half of idea 47. Both want the same "is anyone there?"
+check; 47 is what happens when the answer is no.
+
+---
+
+## 58. Time logged against a label with no goal  — MEDIUM
+
+**What:** Two parts:
+- A red bar across the whole row when a label has time but no goal — time
+  recorded against nothing planned.
+- A way to clear a few stray seconds from an accidental start.
+
+**Notes:** The second half largely exists: the Notes screen deletes a run, and
+long-press on the timer column adjusts. Neither is good for wiping 8 seconds,
+though — the slider steps 5 minutes. A "clear today" action in the popup may
+be what's missing.
+
+| # | Question | Leaning | Answer |
+|---|---|---|---|
+| 58.1 | Is a full red bar too alarming for something as ordinary as an unplanned label? | Possibly — a thin edge stripe may say it without shouting | |
+| 58.2 | Add "Clear today" to the label popup? | Yes, behind a confirmation | |
+
+---
+
+## 59. Notification quality  — MEDIUM
+
+**What:** The ongoing notification should name the label, and the additional
+timers listed under it need a sensible order — "Service" currently leads for
+no clear reason.
+
+**Notes:** The order is probably library order rather than anything meaningful.
+Most likely wanted: running first, then by time recorded today.
+
+---
+
+## 60. Offer the last-used layout name when saving  — LOW
+
+**What:** Prefill the save dialog with the layout last opened, so re-saving it
+is one tap. A search box beside it for the rest.
+
+**Notes:** Overwrite already prompts; this removes the retyping.
+
+---
+
+## 61. Consistent button colours  — LOW
+
+**What:** Save, Cancel and Delete differ between screens — amber in one place,
+white or blue in another.
+
+**Notes:** Worth settling one rule: amber for the affirmative action, muted for
+cancel, red for destructive, and applying it everywhere.
+
+---
+
+## 62. Two more sort orders  — LOW
+
+**What:** Most time recorded first, and least-percentage-of-goal first.
+
+**Notes:** The second is the interesting one — it surfaces what's furthest
+behind rather than what's largest. Labels with no goal have no percentage and
+would need a defined place, probably the bottom.
+
+---
+
+## 63. One pill for Day / Session / Since last start  — NEEDS CHECKING
+
+**What:** Collapse Day and Ses into a single pill cycling three options, the
+third being time since the timer was last started.
+
+**Note:** Your list has this under Done, but it isn't built — Day and Ses are
+still two separate pills and there's no "since last start" option. Worth
+confirming whether you meant something else, or whether it belongs in the open
+list.
 
 ---
 
@@ -1858,3 +1863,266 @@ row's appearance, which defeated the point of having the bar at all.
   distinguishes them (`0:00` versus `-0:15`), so the colour needn't.
 - If these still read as too subtle, there's room to go brighter, but the
   timer's contrast is what will give first.
+
+---
+
+## 41. A second figure under the label  ✅ built in v44
+
+**What:** A fifth pill, leftmost in the header, choosing a second smaller
+figure that sits beneath the label. Any of the six column modes, or `None`.
+
+```
+  Fitness                00:00     @9:30a
+  Σ1:30
+
+  Home Org               00:00    @11:00a
+  Σ2:15
+```
+
+**Why:** The pairings answer questions a single column can't. `Start` against
+`ETA` shows the slip between plan and reality without toggling. `Goal` against
+`Rem` shows target and remainder together.
+
+**Notes:**
+- **Position marks it as secondary**, not colour. The pill's colour follows
+  what it's showing, exactly like the primary, so colour keeps meaning "what
+  kind of figure this is" rather than "which pill this is".
+- The header lost the word "Start" before the time to make room — `6:00a`
+  rather than `Start 6:00a`. The pill needed about 44dp and that bought it.
+- **Rows get a taller minimum (52dp, was 44dp) when a second figure shows.**
+  Two lines need roughly 43dp, so the old floor would have clipped on a short
+  screen. Fewer rows fit before scrolling, which is the trade for turning it
+  on.
+- With `None`, the second view is `GONE` and the label centres exactly as
+  before.
+- When a row has a value but the figure is empty — a goalless label in `Goal`
+  mode — the line stays in the layout so the label doesn't sit at a different
+  height row to row.
+
+**Worth noting:** this forced a useful refactor. The column rendering was
+inline in `bindValues`; it's now a single `columnFigure(mode, entry, position)`
+returning text and colour, shared by both figures. They can't drift apart in
+formatting or colour, and the running totals are computed on both bases every
+tick rather than only for the selected mode.
+
+---
+
+## 42. A lone minus sign in Rem  ✅ fixed in v46
+
+**The bug:** A label with a 21-minute goal sitting at 21:53 showed only `-` in
+the Rem column.
+
+**Cause:** `fmtGoal` returns an empty string for zero, which is correct for
+"this label has no goal" and wrong for a measured value. 53 seconds past the
+goal divides to 0 minutes, so the row rendered the minus sign and nothing
+after it.
+
+**The same fault elsewhere:** the `Σ` sums used the same formatter behind a
+`running > 0L` guard, so a running total under a minute would have rendered a
+lone sigma. Found while checking the first fix, not reported.
+
+**The fix:** one `fmtMeasuredMs` that always renders, zero included. Through
+the crossover, with a 21:00 goal:
+
+| Elapsed | Shows | Colour |
+|---|---|---|
+| 20:59 | `0:00` | blue |
+| 21:00 | `0:00` | peach |
+| 21:53 | `0:00` | peach |
+| 22:00 | `-0:01` | peach |
+| 23:00 | `-0:02` | peach |
+
+No sign while the overage rounds to zero — `-0:00` reads as a mistake, and the
+colour already says you're past. The sign appears at a full minute over.
+
+**Also improved:** with a minute or less remaining, the column showed nothing
+at all. It now shows `0:00` in blue, so a label about to reach its goal looks
+different from one with no goal set.
+
+---
+
+## 43. Four gesture zones, with dividers  ✅ built in v45
+
+**What:** Each column of a row now does something distinct, and fine vertical
+lines mark where one ends and the next begins.
+
+| Zone | Tap | Long-press |
+|---|---|---|
+| Note icon | Notes screen | Drag to reorder |
+| Label | Move above another | Drag to reorder |
+| Timer | Start, or stop if running | — |
+| Right column | Goal & time popup | Slide to set the goal |
+
+**Why:** Dividers were the original request, but the zones didn't warrant them
+— the timer and right column behaved identically, and long-press was uniform
+across the whole row. Giving each column its own meaning made the lines worth
+drawing.
+
+**The goal slider:**
+- Long-press the right column, then slide. Up adds, down subtracts.
+- **The ladder is 5, 15, 30, 45**, then 15 more for each further step. The
+  first step is small for nudging a goal a few minutes; the gaps open up so a
+  long drag covers a working day without much thumb travel.
+- A step is 24dp of travel.
+- **Nothing is written until you lift.** The column shows the pending value in
+  amber meanwhile, which puts the preview exactly where the finger already is
+  rather than needing a floating tooltip.
+- The list is held still for the duration, via
+  `requestDisallowInterceptTouchEvent`, or the row would fight the scroll.
+- On release, if the order depends on goals — Goals or Remain sorting — the
+  list re-sorts and the row moves to its new place.
+- Floored at zero, as everywhere else.
+
+**Notes:**
+- Tapping a running timer now **stops** it. Previously tapping a running row
+  did nothing.
+- A long-press with no movement changes nothing and doesn't open the popup —
+  the release path deliberately skips `performClick`, or every slide would end
+  with the popup appearing.
+- Dividers are `#4A6360` at 1dp, inset 9dp top and bottom so they read as
+  separators rather than a grid. They sit on the bar, so they had to work
+  against both the dark track and the green fill.
+
+---
+
+## 44. Show at a glance that nothing is running  ✅ built in v46
+
+**What:** When no timer is running anywhere, the timer column carries a
+translucent red wash — on every row, not just one.
+
+**Why:** With ten labels and a scrolling list, the only sign a timer was
+running could be off screen. Nothing said "you are not currently tracking
+anything", which is the state most worth noticing.
+
+**Notes:**
+- On **every** row deliberately. Marking one row wouldn't help when the list
+  is scrolled away from it; this is a property of the app, not of a label.
+- 22% opacity, so the progress bar still reads through. Over the dark track it
+  gives a warm grey, over the green bar a muted olive — visible in both cases
+  without hiding what's underneath.
+- The timer column became full height so the wash fills the column rather than
+  banding around the text.
+- `bindValues` runs for every row each tick, so the wash appears and clears
+  immediately on a start or stop.
+- **`getActiveLabel` never returns null** — it returns a sentinel — so the
+  obvious check would silently never fire. `isRunning` already existed for
+  this.
+
+---
+
+## 45. Export one label from its Notes screen  ✅ built in v50
+
+**What:** An Export button beside Done on the Notes screen, writing a CSV of
+that label's rows only, through the same share sheet and location dialog as
+the Settings export.
+
+**Why:** The Settings export is everything, for backup. This is one label for
+looking at — a month of one kind of work, in a spreadsheet, without filtering
+thousands of rows by hand first.
+
+**Notes:**
+- **The screen's filter applies.** With "Show runs with no note" off, the file
+  contains only runs with notes, so what you send matches what you were
+  looking at. The location dialog says which of the two you got.
+- Written beside the main log as `Focus_<label>.csv`, so the existing
+  FileProvider path covers it with no manifest change. Overwritten each time
+  rather than accumulating.
+- Same header as the main log, so both open identically.
+- Nothing matching produces a message rather than an empty file.
+
+**Also changed here — adjustments now obey the filter.** v39 made them always
+visible, on the reasoning that an invisible adjustment is what made a wrong
+total impossible to explain. In use that was wrong: with the filter on, rows
+with no note kept appearing. They now hide like anything else without a note.
+The trade is that finding a stray adjustment means turning the filter on —
+which the empty-state message now says.
+
+---
+
+## 46. Elapsed-time slider, and a flat 5-minute step  ✅ built in v49
+
+**What:**
+- **Long-press the timer column and slide** to correct recorded time, the same
+  gesture the right column uses for goals.
+- **Both sliders now step a flat 5 minutes.** The accelerating ladder was
+  replaced.
+- The timer auto-sizes, so an hour-long value fits.
+
+**Why the flat step:** with 5, 10, 15, 30… you had to remember how far you'd
+come to know what the next step would add, which made the value hard to aim.
+A flat rate is slower over long distances and far more predictable.
+
+**How the time slider records it:** through `TimerStore.adjust`, which already
+handles both cases — on the running label the correction folds into that run's
+row; on an idle one it writes an adjustment of its own. Exactly the behaviour
+the popup's ±5/±15 buttons have always had, now available without opening
+anything.
+
+**Notes:**
+- Floored so a label can't go below zero for the day.
+- The timer shows the pending total in amber while sliding; nothing is written
+  until release.
+- **Auto-sizing replaced a fixed 32sp.** At an hour the string grows from
+  `09:07` to `1:09:07` and overflowed — the screenshot showed `1:09:0`. It now
+  scales between 20 and 32sp, so only rows that need it shrink and short
+  timers stay large. This removes the whole class of problem rather than
+  rebalancing column widths again.
+
+---
+
+## 50. Popup header shows two different units  ✅ built in v51
+
+**What:** In the label popup the goal reads `0:45` and today's time reads
+`00:00` — minutes in one, seconds in the other. Make them consistent.
+
+**Why:** Two adjacent figures in different formats invite misreading.
+
+| # | Question | Leaning | Answer |
+|---|---|---|---|
+| 50.1 | Both to h:mm, or both with seconds? | h:mm — seconds aren't useful when setting a goal | |
+
+**Built in v51:** both read h:mm. Today's time was using the seconds
+formatter shared with the main screen's timer, where seconds do belong.
+
+---
+
+## 51. Make the no-timer state harder to miss  ✅ built in v51
+
+**What:** Strengthen the idle wash built in idea 44. Currently 22% alpha on
+the timer column; it isn't registering in use.
+
+**Why:** Scrolled away from the running row, there's no way to tell whether
+anything is running — which is the whole point.
+
+**Notes:**
+- Options: raise the alpha, wash the whole row rather than one column, or
+  something that moves, since motion catches the eye where colour doesn't.
+- The constraint is the same as always: text sits on top of it.
+
+| # | Question | Leaning | Answer |
+|---|---|---|---|
+| 51.1 | Stronger wash, whole row, or something animated? | Try a stronger wash across the full row first | |
+| 51.2 | Should the header show it too, so it's visible without any row? | Yes — that's the one thing always on screen | |
+
+**Built in v51:**
+- The wash covers **the whole row**, not just the timer column, and went from
+  22% to 35% alpha.
+- The header shows a red dot before the start time when nothing is running —
+  the header being the one thing on screen at any scroll position (51.2).
+- Text still reads on it: label contrast 4.7–7.8, timer 2.8–4.6, measured
+  against both the dark track and a green bar.
+
+---
+
+## 53. Slightly larger label font  ✅ built in v51
+
+**What:** Label text up from 17sp. The second line stays 13sp.
+
+**Notes:** Labels already ellipsise at 30% width, so a larger font truncates
+sooner. Worth checking "Social Building" before committing.
+
+**Built in v51:** 17sp → 19sp, second line unchanged at 13sp.
+
+Labels over about eight characters ellipsise a little sooner. “Fam Kaitlyn”,
+“Stewardship” and “Social Building” were already truncating at 17sp, so
+nothing newly truncates — they lose a character or two more.

@@ -102,7 +102,7 @@ class MainActivity : AppCompatActivity() {
      * so the progress bar still reads through it, and applied to every row so
      * it's visible wherever the list happens to be scrolled.
      */
-    private val idleWash = 0x38C97064
+    private val idleWash = 0x59C97064
 
     private val tickRunnable = object : Runnable {
         override fun run() {
@@ -456,8 +456,10 @@ class MainActivity : AppCompatActivity() {
             val entry = LabelStore.readLibrary(this).firstOrNull { it.name == label }
             val goal = entry?.goalMinutes ?: 0
             nameView.text = label
+            // Both in h:mm. The goal was minutes and today's time carried
+            // seconds, so two figures a line apart read in different units.
             goalView.text = "goal  ${if (goal > 0) fmtGoal(goal) else "0:00"}"
-            todayView.text = "today ${TimerStore.formatDuration(TimerStore.getDayMs(this, label))}"
+            todayView.text = "today ${fmtMeasuredMs(TimerStore.getDayMs(this, label))}"
         }
         refresh()
 
@@ -949,7 +951,12 @@ class MainActivity : AppCompatActivity() {
         // date — it's what the Start column projects from, and tapping it
         // opens the picker. The date is on the phone's status bar anyway.
         // Just the time: the word "Start" cost the width the fifth pill needed.
-        binding.tvHeader.text = fmtClock(dayStartMs())
+        // A dot in front when nothing is running — the header is the only
+        // thing on screen no matter where the list is scrolled.
+        val running = TimerStore.isRunning(this)
+        binding.tvHeader.text =
+            if (running) fmtClock(dayStartMs()) else "\u25cf ${fmtClock(dayStartMs())}"
+        binding.tvHeader.setTextColor(if (running) muted else overRed)
 
         binding.btnViewDay.setBackgroundResource(
             if (isSession) R.drawable.bg_pill_off else R.drawable.bg_pill_on
@@ -1268,11 +1275,13 @@ class MainActivity : AppCompatActivity() {
             hTime.setTextColor(if (isActive) accent else muted)
         }
 
-        // Nothing running anywhere: tint the timer column on every row, so the
-        // state is obvious even when the active label is scrolled out of view.
-        hTime.setBackgroundColor(
+        // Nothing running anywhere: wash the whole row rather than the timer
+        // column alone. One column at 22% wasn't registering; the full width
+        // at 35% is hard to miss at any scroll position.
+        h.content?.setBackgroundColor(
             if (TimerStore.isRunning(this)) 0x00000000 else idleWash
         )
+        hTime.setBackgroundColor(0x00000000)
 
         val remainingMs =
             if (entry.goalMinutes > 0) TimerStore.getRemainingMs(this, label, entry.goalMinutes)
@@ -1354,6 +1363,7 @@ class MainActivity : AppCompatActivity() {
             // Null on the "+ New label" row, which has none of these.
             val label: TextView? = view.findViewById(R.id.rowLabel)
             val sub: TextView? = view.findViewById(R.id.rowSub)
+            val content: View? = view.findViewById(R.id.rowContent)
             val labelBox: View? = view.findViewById(R.id.rowLabelBox)
             val time: TextView? = view.findViewById(R.id.rowTime)
             val goal: TextView? = view.findViewById(R.id.rowGoal)
