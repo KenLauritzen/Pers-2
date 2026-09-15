@@ -376,6 +376,43 @@ object LogStore {
         }
     }
 
+    /**
+     * Writes one label's rows to a file of their own, for sharing.
+     *
+     * [includeEmptyNotes] mirrors the Notes screen's filter, so the export
+     * matches what's on screen rather than quietly containing more.
+     *
+     * Lands beside the main log so the existing FileProvider path covers it,
+     * and overwrites each time rather than accumulating exports.
+     */
+    fun exportForLabel(context: Context, label: String, includeEmptyNotes: Boolean): File? {
+        return try {
+            val src = file(context)
+            if (!src.exists()) return null
+
+            val safe = label.replace(Regex("[^A-Za-z0-9._-]"), "_")
+            val out = File(context.getExternalFilesDir(null), "Focus_${safe}.csv")
+
+            val lines = src.readLines()
+            if (lines.isEmpty()) return null
+
+            val kept = mutableListOf(lines[0])          // header
+            lines.drop(1).forEach { line ->
+                if (line.isBlank()) return@forEach
+                val p = parseCsvLine(line)
+                if (p.size < 6 || p[2] != label) return@forEach
+                if (!includeEmptyNotes && p[5].isBlank()) return@forEach
+                kept.add(line)
+            }
+            if (kept.size <= 1) return null             // nothing but the header
+
+            out.writeText(kept.joinToString("\n") + "\n")
+            out
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     fun exists(context: Context) = file(context).exists()
     fun path(context: Context): String = file(context).absolutePath
 }

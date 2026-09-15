@@ -1,33 +1,34 @@
-Focus v49 — complete file list.
+Focus v50 — complete file list.
 
-  1. Long-press the TIMER column and slide to correct recorded time.
-     Recorded through the same path as the popup's +/- buttons: on the running
-     label it folds into that run's row; on an idle one it writes its own
-     adjustment record. Nothing saves until you lift your finger, and a label
-     can't go below zero for the day.
+  1. Export from the Notes screen.
+     A button beside Done writes a CSV of that label's rows only, through the
+     same share sheet and file-location dialog as the Settings export.
 
-  2. Both sliders now step a flat 5 minutes.
-     The accelerating ladder meant you had to remember how far you'd come to
-     know what the next step would add.
+     The screen's filter applies: with "Show runs with no note" off, only runs
+     with notes are included, so the file matches what you were looking at.
+     The dialog tells you which you got.
 
-  3. The timer auto-sizes between 20 and 32sp.
-     "1:09:07" was overflowing a fixed 32sp and showing as "1:09:0". Only rows
-     that need it shrink; short timers stay large.
+     Written as Focus_<label>.csv beside the main log, overwritten each time.
+
+  2. Adjustments now obey the "Show runs with no note" filter.
+     v39 made them always visible so a stray adjustment could be found. In use
+     that meant rows with no note kept appearing with the filter on. They now
+     hide like anything else without a note — turn the filter on to find one.
 
 GESTURE CHART
 
-  section        tap                        long-press
-  1 note icon    Notes screen               drag to reorder
-  2 label        move above another         drag to reorder
-  3 timer        start, or stop if running  slide to adjust recorded time
-  4 right col    goal & time popup          slide to adjust the goal
+                 1 note icon    2 label           3 timer            4 right col
+  tap            Notes screen   move above        start / stop       goal & time popup
+  long-press     drag to order  drag to order     slide: adjust time slide: adjust goal
+  double-tap     N/A            N/A               N/A                N/A
 
-  Both slides: up adds, down subtracts, 5 minutes per 24dp of travel.
-  Preview shows in amber; nothing is written until you lift.
+  Both slides: up adds, down subtracts, 5 minutes per 24dp.
+  Preview in amber; nothing written until you lift.
 
-UPLOAD ONLY THESE THREE:
-  app/src/main/java/com/focusledger/timer/MainActivity.kt
-  app/src/main/res/layout/row_timer.xml
+UPLOAD ONLY THESE FOUR:
+  app/src/main/java/com/focusledger/timer/NotesActivity.kt
+  app/src/main/java/com/focusledger/timer/LogStore.kt
+  app/src/main/res/layout/activity_notes.xml
   app/src/main/res/values/strings.xml
 
 Nothing to delete this version.

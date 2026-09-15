@@ -1,5 +1,6 @@
 package com.focusledger.timer
 
+import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -10,6 +11,7 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.FileProvider
 import androidx.appcompat.app.AppCompatActivity
 import com.focusledger.timer.databinding.ActivityNotesBinding
 import java.text.SimpleDateFormat
@@ -83,6 +85,7 @@ class NotesActivity : AppCompatActivity() {
             override fun onTextChanged(s: CharSequence?, a: Int, bb: Int, c: Int) {}
         })
 
+        b.btnNotesExport.setOnClickListener { exportThisLabel() }
         b.btnNotesDone.setOnClickListener { finish() }
 
         renderHistory()
@@ -97,11 +100,10 @@ class NotesActivity : AppCompatActivity() {
     private fun renderHistory() {
         val showEmpty = SettingsStore.isShowEmptyRuns(this)
         val all = LogStore.readRunsForLabel(this, label)
-        // Adjustments never carry a note, so the note filter would hide them
-        // entirely — which is the situation that made a wrong total
-        // impossible to explain. They always show.
-        val runs = if (showEmpty) all
-                   else all.filter { it.note.isNotBlank() || it.isAdjustment }
+        // Adjustments obey the filter like anything else. They never carry a
+        // note, so with the filter on they're hidden — turn "Show runs with no
+        // note" on to find or delete one.
+        val runs = if (showEmpty) all else all.filter { it.note.isNotBlank() }
 
         val inflater = LayoutInflater.from(this)
         b.notesList.removeAllViews()
@@ -109,7 +111,8 @@ class NotesActivity : AppCompatActivity() {
         if (runs.isEmpty()) {
             val empty = TextView(this).apply {
                 text = if (all.isEmpty()) "No runs logged yet."
-                       else "No notes yet \u2014 turn on \u201cShow runs with no note\u201d to see all runs."
+                       else "Nothing with a note yet \u2014 turn on \u201cShow runs with no note\u201d " +
+                            "to see every run and adjustment."
                 setTextColor(0xFF5C736E.toInt())
                 textSize = 17f
                 setPadding(8, 16, 8, 16)
@@ -236,6 +239,41 @@ class NotesActivity : AppCompatActivity() {
     /** "Sun 7 Sep  6:41a" — lowercase suffix, no space, to save width. */
     private fun fmtWhen(ms: Long): String =
         whenFmt.format(Date(ms)).replace("AM", "a").replace("PM", "p")
+
+    /**
+     * This label's rows only, filtered exactly as the list above is — so what
+     * you send matches what you were looking at.
+     */
+    private fun exportThisLabel() {
+        try {
+            val showEmpty = SettingsStore.isShowEmptyRuns(this)
+            val out = LogStore.exportForLabel(this, label, showEmpty)
+            if (out == null) {
+                Toast.makeText(this, "Nothing to export for this label", Toast.LENGTH_SHORT).show()
+                return
+            }
+            val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", out)
+            val send = Intent(Intent.ACTION_SEND).apply {
+                type = "text/csv"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                putExtra(Intent.EXTRA_SUBJECT, "Focus \u2014 $label")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            startActivity(Intent.createChooser(send, "Export $label"))
+
+            AlertDialog.Builder(this)
+                .setTitle("File location")
+                .setMessage(
+                    "${out.absolutePath}\n\n" +
+                    if (showEmpty) "All runs for this label."
+                    else "Only runs with a note, matching the filter above."
+                )
+                .setPositiveButton("OK", null)
+                .show()
+        } catch (e: Exception) {
+            Toast.makeText(this, "Export failed: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
 
     private fun signed(v: Int) = if (v > 0) "+$v" else v.toString()
 

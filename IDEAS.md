@@ -517,6 +517,35 @@ anything.
 
 ---
 
+## 45. Export one label from its Notes screen  ✅ built in v50
+
+**What:** An Export button beside Done on the Notes screen, writing a CSV of
+that label's rows only, through the same share sheet and location dialog as
+the Settings export.
+
+**Why:** The Settings export is everything, for backup. This is one label for
+looking at — a month of one kind of work, in a spreadsheet, without filtering
+thousands of rows by hand first.
+
+**Notes:**
+- **The screen's filter applies.** With "Show runs with no note" off, the file
+  contains only runs with notes, so what you send matches what you were
+  looking at. The location dialog says which of the two you got.
+- Written beside the main log as `Focus_<label>.csv`, so the existing
+  FileProvider path covers it with no manifest change. Overwritten each time
+  rather than accumulating.
+- Same header as the main log, so both open identically.
+- Nothing matching produces a message rather than an empty file.
+
+**Also changed here — adjustments now obey the filter.** v39 made them always
+visible, on the reasoning that an invisible adjustment is what made a wrong
+total impossible to explain. In use that was wrong: with the filter on, rows
+with no note kept appearing. They now hide like anything else without a note.
+The trade is that finding a stray adjustment means turning the filter on —
+which the empty-state message now says.
+
+---
+
 ## Template for new entries
 
 New ideas go in **Open ideas** with the next unused number. When one ships,
