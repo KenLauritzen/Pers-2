@@ -1,4 +1,7 @@
-Focus v59 — complete file list.
+Focus v60 — complete file list.
+
+Fixes the v59 build failure: "$prefix0:00" parses the name as `prefix0`, not
+`prefix` followed by "0:00". Needs ${prefix}0:00.
 
 The -5m / +5m buttons are gone. Long-pressing a row and sliding replaced them,
 and they only ever worked on the running timer anyway.

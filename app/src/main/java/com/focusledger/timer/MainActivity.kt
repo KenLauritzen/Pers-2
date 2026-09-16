@@ -1213,7 +1213,7 @@ class MainActivity : AppCompatActivity() {
         return when (mode) {
             SettingsStore.COL_REMAIN, SettingsStore.COL_SUM_REMAIN -> {
                 val prefix = if (mode == SettingsStore.COL_SUM_REMAIN) "\u03a3" else ""
-                val text = if (totalRemainMs > 0L) "$prefix${fmtHm(totalRemainMs)}" else "$prefix0:00"
+                val text = if (totalRemainMs > 0L) "$prefix${fmtHm(totalRemainMs)}" else "${prefix}0:00"
                 text to (if (totalRemainMs <= 0L) colOver else colRemain)
             }
             SettingsStore.COL_START ->
