@@ -1256,6 +1256,11 @@ class MainActivity : AppCompatActivity() {
         val isActive = label == TimerStore.getActiveLabel(this)
         val accent = if (isSession) blueGrey else amber
 
+        // Both slide flags up front: the label, the timer and the right
+        // column all read them, in that order.
+        val timeSliding = timeSlideLabel == entry.name
+        val goalSliding = slideLabel == entry.name
+
         // While the recorded time is being slid, the label line carries the
         // delta. The timer itself shows the new total and sits under the
         // finger, and using the second line instead would make a hidden line
@@ -1268,12 +1273,10 @@ class MainActivity : AppCompatActivity() {
             hLabel.text = label
             hLabel.setTextColor(0xFFF1EDE3.toInt())
         }
-        val timeSliding = timeSlideLabel == entry.name
 
         // While the goal is being slid, the timer column — immediately left of
         // the figure and clear of the finger — shows how much is being added
         // or taken off. It goes back to the time on release.
-        val goalSliding = slideLabel == entry.name
         if (goalSliding) {
             val delta = slidePendingGoal - slideStartGoal
             hTime.text = if (delta == 0) "" else (if (delta > 0) "+$delta" else "$delta")

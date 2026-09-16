@@ -1,4 +1,8 @@
-Focus v55 — complete file list.
+Focus v56 — complete file list.
+
+Fixes the v55 build failure: the label block read the slide flags before they
+were declared. Both are now declared at the top of bindValues, where the
+label, the timer and the right column can all see them.
 
 While sliding, the change so far (+10, -15) now shows to the left of the figure
 being changed, clear of your finger. It disappears on release.
