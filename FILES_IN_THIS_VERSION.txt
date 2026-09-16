@@ -1,21 +1,26 @@
-Focus v58 — complete file list.
+Focus v59 — complete file list.
 
-The ongoing notification now lists TIME REMAINING rather than elapsed.
+The -5m / +5m buttons are gone. Long-pressing a row and sliding replaced them,
+and they only ever worked on the running timer anyway.
 
-  Planning -0:02  ·  Work 1:26  ·  Part Pot 0:38  ·  Fitness 1:20
+In their place, a third total. The bottom row now has one under each column:
 
-  Past a goal shows as a negative, so overrunning looks different from having
-  finished. Labels with no goal have nothing to remain, so they still show what
-  has been recorded.
+  under the label column   total for the SECOND figure (the sub-line)
+  under the timer column   total time recorded
+  under the right column   total for the PRIMARY figure
 
-  Figures are h:mm — it's a planning view and seconds are noise. The title
-  keeps seconds, since that's the one figure you watch tick.
+Each matches the column above it, prefixes and colours included — so you get
+Σ8:35 in mint, or ~2:15p in grey-blue.
 
-Still in from v57: the reminder-sound fix (three channels, chosen at send time)
-and the ordering — running label first, then by most remaining, then the rest.
+The clock modes can't sum — adding two times of day means nothing — so Start
+and ETA show WHEN YOU WOULD FINISH instead: the day's start plus every goal, or
+now plus everything still to do.
 
-UPLOAD ONLY THESE TWO:
-  app/src/main/java/com/focusledger/timer/TimerForegroundService.kt
+The left total is blank when the second figure is set to None.
+
+UPLOAD ONLY THESE THREE:
+  app/src/main/java/com/focusledger/timer/MainActivity.kt
+  app/src/main/res/layout/activity_main.xml
   app/src/main/res/values/strings.xml
 
 Nothing to delete this version.

@@ -529,6 +529,38 @@ list.
 
 ---
 
+## 66. Three totals, and the ±5m buttons removed  ✅ built in v59
+
+**What:** The `−5m` / `+5m` pair at the bottom left is gone. In its place, a
+third total — the same figure for whatever the second line under each label is
+showing.
+
+The bottom row now has one total under each column:
+
+| Under | Shows |
+|---|---|
+| Label column | total for the secondary figure |
+| Timer column | total time recorded |
+| Right column | total for the primary figure |
+
+**Why:** Long-pressing a row and sliding replaced the buttons, which only ever
+adjusted the running timer and needed a running timer to do it. Three aligned
+totals are a better use of the space.
+
+**The clock modes needed a decision.** Adding two times of day is meaningless,
+so `Start` and `ETA` can't sum. They show **when you would finish** instead —
+the day's start plus every goal, or now plus everything still to do. That's the
+figure the column is building toward on its last row, so the total is its
+natural conclusion rather than an invented one.
+
+**Notes:**
+- Prefixes and colours carry through, so a total reads the same way as the
+  column above it: `Σ8:35` in mint, `~2:15p` in grey-blue.
+- Blank when the secondary is set to None.
+- `adjustActive` had no caller left and was removed.
+
+---
+
 ## Template for new entries
 
 New ideas go in **Open ideas** with the next unused number. When one ships,

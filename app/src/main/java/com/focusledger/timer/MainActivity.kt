@@ -136,8 +136,6 @@ class MainActivity : AppCompatActivity() {
             offerNote()
             rebuild(); syncService()
         }
-        binding.btnPlus5.setOnClickListener { adjustActive(5) }
-        binding.btnMinus5.setOnClickListener { adjustActive(-5) }
         binding.btnSettings.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
@@ -846,15 +844,6 @@ class MainActivity : AppCompatActivity() {
 
     // ---- adjustments -------------------------------------------------------
 
-    private fun adjustActive(minutes: Int) {
-        val active = TimerStore.getActiveLabel(this)
-        if (active == TimerStore.NONE) {
-            Toast.makeText(this, "Start a timer, or adjust it in Settings", Toast.LENGTH_SHORT).show()
-            return
-        }
-        TimerStore.adjust(this, active, minutes)
-        refreshValues(); syncService()
-    }
 
     // ---- notes / exit ------------------------------------------------------
 
@@ -1175,32 +1164,67 @@ class MainActivity : AppCompatActivity() {
      * pill: with a running total above, the last row already equals this
      * figure, and blanking it would look like a fault.
      */
-    private fun updateTotals(remainMode: Boolean, isSession: Boolean) {
+    /**
+     * The three totals beneath the columns they sum, each matching what the
+     * column above it shows.
+     */
+    private fun updateTotals(isSession: Boolean) {
         val library = LabelStore.readLibrary(this)
 
+        // Middle \u2014 total time recorded, following the Day/Session toggle.
+        // Shown as-is, negatives included: it's real recorded time and an
+        // adjustment that took a label below zero should be visible.
         val elapsedMs = library.fold(0L) { acc, e ->
             acc + if (isSession) TimerStore.getSessionMs(this, e.name)
                   else TimerStore.getDayMs(this, e.name)
         }
         binding.tvTotalElapsed.text = if (elapsedMs != 0L) fmtHm(elapsedMs) else ""
 
-        val goalMs: Long = if (remainMode) {
-            library.fold(0L) { acc, e ->
-                acc + if (e.goalMinutes <= 0) 0L
-                else TimerStore.getRemainingMs(this, e.name, e.goalMinutes).coerceAtLeast(0L)
-            }
+        val (goalText, goalColour) = totalFor(SettingsStore.getColumnMode(this), library)
+        binding.tvTotalGoal.text = goalText
+        binding.tvTotalGoal.setTextColor(goalColour)
+
+        // Left \u2014 the same figure for whatever the second line under each
+        // label is showing. Blank when there is no second line.
+        val secondary = SettingsStore.getSecondaryMode(this)
+        if (secondary == SettingsStore.COL_NONE) {
+            binding.tvTotalSub.text = ""
         } else {
-            library.fold(0L) { acc, e -> acc + e.goalMinutes.toLong() } * 60_000L
+            val (subText, subColour) = totalFor(secondary, library)
+            binding.tvTotalSub.text = subText
+            binding.tvTotalSub.setTextColor(subColour)
         }
-        binding.tvTotalGoal.text = if (goalMs > 0L) fmtHm(goalMs) else ""
-        // Match the colour of the column it sits under.
-        binding.tvTotalGoal.setTextColor(
-            when (SettingsStore.getColumnMode(this)) {
-                SettingsStore.COL_REMAIN -> if (goalMs <= 0L) overRed else colRemain
-                SettingsStore.COL_SUM_REMAIN -> colRemain
-                else -> colGoal
+    }
+
+    /**
+     * The total for a column mode, as text and colour.
+     *
+     * Durations sum. The clock modes don't sum \u2014 adding two times of day is
+     * meaningless \u2014 so they show **when you would finish**: the day's start
+     * plus every goal, or now plus everything still to do. That's the figure
+     * the column is building toward on its last row.
+     */
+    private fun totalFor(mode: Int, library: List<LabelEntry>): Pair<String, Int> {
+        val totalGoalMs = library.fold(0L) { a, e -> a + e.goalMinutes.toLong() } * 60_000L
+        val totalRemainMs = library.fold(0L) { a, e ->
+            a + if (e.goalMinutes <= 0) 0L
+                else TimerStore.getRemainingMs(this, e.name, e.goalMinutes).coerceAtLeast(0L)
+        }
+        return when (mode) {
+            SettingsStore.COL_REMAIN, SettingsStore.COL_SUM_REMAIN -> {
+                val prefix = if (mode == SettingsStore.COL_SUM_REMAIN) "\u03a3" else ""
+                val text = if (totalRemainMs > 0L) "$prefix${fmtHm(totalRemainMs)}" else "$prefix0:00"
+                text to (if (totalRemainMs <= 0L) colOver else colRemain)
             }
-        )
+            SettingsStore.COL_START ->
+                "@${fmtClock(dayStartMs() + totalGoalMs)}" to colClock
+            SettingsStore.COL_ETA ->
+                "~${fmtClock(System.currentTimeMillis() + totalRemainMs)}" to colClock
+            else -> {
+                val prefix = if (mode == SettingsStore.COL_SUM_GOAL) "\u03a3" else ""
+                (if (totalGoalMs > 0L) "$prefix${fmtHm(totalGoalMs)}" else "") to colGoal
+            }
+        }
     }
 
     /** h:mm, no seconds. Handles negatives with a leading minus. */
@@ -1228,11 +1252,7 @@ class MainActivity : AppCompatActivity() {
     /** Per-second refresh: values only, never the order. */
     private fun refreshValues() {
         computeCumulative()
-        updateTotals(
-            SettingsStore.getColumnMode(this) == SettingsStore.COL_REMAIN ||
-                SettingsStore.getColumnMode(this) == SettingsStore.COL_SUM_REMAIN,
-            sessionView()
-        )
+        updateTotals(sessionView())
         for (i in displayed.indices) {
             val holder = binding.rowsList.findViewHolderForAdapterPosition(i) as? TimerAdapter.Holder
             holder?.let { bindValues(it, displayed[i], i) }
