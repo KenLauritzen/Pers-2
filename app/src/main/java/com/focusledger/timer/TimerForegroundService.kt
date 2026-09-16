@@ -9,6 +9,7 @@ import android.content.Intent
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.media.AudioAttributes
 import android.provider.Settings
 import androidx.core.app.NotificationCompat
 import java.util.Calendar
@@ -28,8 +29,19 @@ class TimerForegroundService : Service() {
         const val ACTION_STOP_AND_EXIT = "com.focusledger.timer.SERVICE_STOP_AND_EXIT"
 
         private const val CHANNEL_ONGOING = "focus_ledger_tracking"
-        private const val CHANNEL_REMINDER = "focus_ledger_reminder"
-        private const val CHANNEL_REMINDER_SILENT = "focus_ledger_reminder_silent"
+        // A channel's sound and importance are fixed when it is created —
+        // createNotificationChannel on an existing id does nothing. So every
+        // combination needs its own id, and changing the setting picks a
+        // different channel rather than editing one.
+        //
+        // The _v2 suffix retires the originals, which were created before this
+        // was understood and may carry the wrong sound on existing installs.
+        private const val CHANNEL_POPUP_SOUND = "focus_reminder_popup_sound_v2"
+        private const val CHANNEL_POPUP_SILENT = "focus_reminder_popup_silent_v2"
+        private const val CHANNEL_QUIET = "focus_reminder_quiet_v2"
+        private val RETIRED_CHANNELS = listOf(
+            "focus_ledger_reminder", "focus_ledger_reminder_silent"
+        )
         private const val NOTIF_ONGOING = 1001
         private const val NOTIF_REMINDER = 1002
         private const val TICK_MS = 30_000L
@@ -122,8 +134,14 @@ class TimerForegroundService : Service() {
         val label = TimerStore.getActiveLabel(this)
         if (label == TimerStore.NONE) return
 
-        val channel = if (SettingsStore.isHeadsUp(this)) CHANNEL_REMINDER else CHANNEL_REMINDER_SILENT
-        val priority = if (SettingsStore.isHeadsUp(this))
+        val headsUp = SettingsStore.isHeadsUp(this)
+        val sound = SettingsStore.isSoundOn(this)
+        val channel = when {
+            headsUp && sound -> CHANNEL_POPUP_SOUND
+            headsUp -> CHANNEL_POPUP_SILENT
+            else -> CHANNEL_QUIET
+        }
+        val priority = if (headsUp)
             NotificationCompat.PRIORITY_HIGH else NotificationCompat.PRIORITY_LOW
 
         val b = NotificationCompat.Builder(this, channel)
@@ -159,13 +177,32 @@ class TimerForegroundService : Service() {
 
     private fun buildOngoing(): Notification {
         val active = TimerStore.getActiveLabel(this)
-        val library = LabelStore.readLibrary(this).filter { it.visible }
+        val library = LabelStore.readLibrary(this)
 
         val title = if (active != TimerStore.NONE)
             "Running: $active  ${TimerStore.formatDuration(TimerStore.getDayMs(this, active))}"
         else getString(R.string.app_name_full)
 
-        val content = library.joinToString("  \u00b7  ") { e ->
+        // Ordered rather than however the file happens to list them:
+        //   running label first
+        //   then labels with a goal, most time remaining first
+        //   then the rest, most time recorded first
+        //
+        // Labels with neither a goal nor any time recorded are left out. They
+        // were most of the list and said nothing.
+        val shown = library
+            .filter { it.goalMinutes > 0 || TimerStore.getDayMs(this, it.name) > 0L }
+            .sortedWith(
+                compareByDescending<LabelEntry> { it.name == active }
+                    .thenByDescending { it.goalMinutes > 0 }
+                    .thenByDescending {
+                        if (it.goalMinutes > 0)
+                            TimerStore.getRemainingMs(this, it.name, it.goalMinutes)
+                        else TimerStore.getDayMs(this, it.name)
+                    }
+            )
+
+        val content = shown.joinToString("  \u00b7  ") { e ->
             "${e.name} ${TimerStore.formatDuration(TimerStore.getDayMs(this, e.name))}"
         }
 
@@ -207,28 +244,42 @@ class TimerForegroundService : Service() {
                 }
         )
 
-        // Heads-up channel. Sound is controlled by the user setting; because a
-        // channel's sound is fixed at creation, we honour the toggle by
-        // choosing between two channels.
-        val headsUp = NotificationChannel(
-            CHANNEL_REMINDER, "Timer reminders", NotificationManager.IMPORTANCE_HIGH
-        ).apply {
-            description = "Pops up when a timer has run for your set interval"
-            if (!SettingsStore.isSoundOn(this@TimerForegroundService)) {
-                setSound(null, null)
-                enableVibration(false)
-            } else {
-                setSound(Settings.System.DEFAULT_NOTIFICATION_URI, null)
-            }
-        }
-        nm.createNotificationChannel(headsUp)
+        // Channels created once, each fixed. The setting selects between
+        // them at send time rather than trying to modify one.
+        RETIRED_CHANNELS.forEach { runCatching { nm.deleteNotificationChannel(it) } }
 
         nm.createNotificationChannel(
             NotificationChannel(
-                CHANNEL_REMINDER_SILENT, "Timer reminders (silent)",
-                NotificationManager.IMPORTANCE_LOW
+                CHANNEL_POPUP_SOUND, "Timer reminders", NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Shows quietly in the notification shade"
+                description = "Pops up with a sound when a timer reaches your interval"
+                setSound(
+                    Settings.System.DEFAULT_NOTIFICATION_URI,
+                    AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                        .build()
+                )
+                enableVibration(true)
+            }
+        )
+
+        nm.createNotificationChannel(
+            NotificationChannel(
+                CHANNEL_POPUP_SILENT, "Timer reminders (no sound)",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Pops up silently when a timer reaches your interval"
+                setSound(null, null)
+                enableVibration(true)
+            }
+        )
+
+        nm.createNotificationChannel(
+            NotificationChannel(
+                CHANNEL_QUIET, "Timer reminders (quiet)", NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "Shows in the shade without interrupting"
                 setSound(null, null)
             }
         )

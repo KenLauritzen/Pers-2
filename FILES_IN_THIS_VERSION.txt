@@ -1,25 +1,33 @@
-Focus v56 — complete file list.
+Focus v57 — complete file list.
 
-Fixes the v55 build failure: the label block read the slide flags before they
-were declared. Both are now declared at the top of bindValues, where the
-label, the timer and the right column can all see them.
+  1. The reminder sound has never worked. Fixed.
 
-While sliding, the change so far (+10, -15) now shows to the left of the figure
-being changed, clear of your finger. It disappears on release.
+     A notification channel's sound and importance are fixed when it's created
+     — calling createNotificationChannel again on the same id does nothing. The
+     code picked between two channel ids for heads-up vs quiet, but applied the
+     SOUND toggle to the same id either way. So whatever the setting was the
+     first time you ever ran the app is what you've had since.
 
-  sliding the GOAL  -> delta appears in the timer column
-  sliding the TIME  -> delta appears in place of the label
+     There are now three channels, one per combination, chosen when the
+     notification is sent rather than edited: pop-up with sound, pop-up silent,
+     quiet. New ids, and the old ones are deleted so they don't linger in
+     Android's notification settings.
 
-The label's text is replaced for the duration rather than appended to — you
-know which row you're touching, and appending would just truncate.
+     If sound still doesn't play, check Android Settings > Apps > Focus >
+     Notifications — "Timer reminders" should be there with a sound set.
 
-Note on why not the second line under the label: with no secondary figure
-chosen that line is hidden and rows are 44dp; making it appear mid-drag needs
-about 45dp, so the row would clip for as long as your finger was down. The
-label line costs no height.
+  2. The ongoing notification is ordered, and shorter.
+
+     Was library order, which is to say none. Now:
+       1. the running label
+       2. labels with a goal, most time remaining first
+       3. everything else, most time recorded first
+
+     Labels with neither a goal nor any recorded time are left out — they were
+     most of the list and said nothing.
 
 UPLOAD ONLY THESE TWO:
-  app/src/main/java/com/focusledger/timer/MainActivity.kt
+  app/src/main/java/com/focusledger/timer/TimerForegroundService.kt
   app/src/main/res/values/strings.xml
 
 Nothing to delete this version.

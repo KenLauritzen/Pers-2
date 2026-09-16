@@ -449,17 +449,6 @@ keeps both, at the cost of every consumer knowing the convention.
 
 ---
 
-## 55. Reminder sound is unreliable  — MEDIUM, BUG
-
-**What:** The interval reminder's sound doesn't play dependably.
-
-**Notes:** Likely the notification channel: on API 26+ sound is a property of
-the channel, fixed when the channel is created. Changing the setting later has
-no effect unless the channel is recreated under a new id. That would explain a
-setting that appears to work but doesn't.
-
----
-
 ## 56. Line the pills up with the columns  — MEDIUM
 
 **What:** Position the header pills over the columns they describe.
@@ -496,17 +485,6 @@ be what's missing.
 |---|---|---|---|
 | 58.1 | Is a full red bar too alarming for something as ordinary as an unplanned label? | Possibly — a thin edge stripe may say it without shouting | |
 | 58.2 | Add "Clear today" to the label popup? | Yes, behind a confirmation | |
-
----
-
-## 59. Notification quality  — MEDIUM
-
-**What:** The ongoing notification should name the label, and the additional
-timers listed under it need a sensible order — "Service" currently leads for
-no clear reason.
-
-**Notes:** The order is probably library order rather than anything meaningful.
-Most likely wanted: running first, then by time recorded today.
 
 ---
 
@@ -548,56 +526,6 @@ third being time since the timer was last started.
 still two separate pills and there's no "since last start" option. Worth
 confirming whether you meant something else, or whether it belongs in the open
 list.
-
----
-
-## 64. Clear a note, and larger type for writing one  ✅ built in v54
-
-**What:**
-- A **Clear note** action in the note editor, between Cancel and Save.
-- The note input 50% larger: 18sp → 27sp on the Notes screen, and the editor's
-  own field at 22sp.
-
-**Why:** Emptying the text and saving worked but took two deliberate steps, and
-the field you actually write in was among the smallest type in the app.
-
-**Notes:**
-- **Clear is not Delete.** Clear keeps the run and its recorded time and
-  removes only the words; Delete removes the row and its time. Both are in the
-  same dialog, so the distinction is stated in each confirmation.
-- **The editor is now a custom layout.** `AlertDialog` offers three buttons and
-  this needed four — Delete, Cancel, Clear note, Save.
-- Clearing asks first, since typed notes can't be recovered.
-- **With the filter on, clearing makes the row disappear** — a run with no note
-  isn't listed. The confirmation says so rather than leaving it to surprise.
-
----
-
-## 65. Show the delta while sliding  ✅ built in v55
-
-**What:** While either slider is in use, the running total of the change —
-`+10`, `-15` — appears to the left of the figure being changed, clear of the
-finger. It disappears on release.
-
-**Why:** Sliding 5 or 10 minutes moves the figure by less than the fingertip
-covers, so the first couple of steps were invisible. You could feel the drag
-working but not see it.
-
-**Where each one goes:**
-
-| Sliding | Figure shown | Delta appears in |
-|---|---|---|
-| Goal (zone 4) | the right column | the timer column, immediately left |
-| Recorded time (zone 3) | the timer column | the label line, immediately left |
-
-**Notes:**
-- The label's own text is replaced for the duration rather than appended to —
-  you know which row you're touching, and appending would truncate.
-- **The second line under the label looked like the obvious home for the time
-  delta and isn't.** With no secondary figure chosen that line is hidden and
-  the row minimum is 44dp; making it appear mid-drag needs ~45dp, so the row
-  would clip for as long as the finger was down. The label line costs no
-  height at all.
 
 ---
 
@@ -2182,3 +2110,91 @@ sooner. Worth checking "Social Building" before committing.
 Labels over about eight characters ellipsise a little sooner. “Fam Kaitlyn”,
 “Stewardship” and “Social Building” were already truncating at 17sp, so
 nothing newly truncates — they lose a character or two more.
+
+---
+
+## 55. Reminder sound is unreliable  ✅ fixed in v57
+
+**What:** The interval reminder's sound doesn't play dependably.
+
+**The cause, confirmed:** exactly that. `createNotificationChannel` on an id
+that already exists does nothing — Android fixes sound and importance at
+creation. The code chose between two channel ids for heads-up versus quiet, but
+applied the *sound* toggle to the same id either way. So whatever the setting
+was the first time the app ever ran is what it stayed, and the toggle has never
+done anything.
+
+**The fix:** one channel per combination, chosen at send time rather than
+edited. Three now — pop-up with sound, pop-up silent, quiet — with `_v2` ids so
+existing installs get fresh ones. The originals are deleted, so they don't
+linger in Android's notification settings. Explicit `AudioAttributes` too, which
+some launchers want before they'll play anything.
+
+---
+
+## 59. Notification quality  ✅ built in v57
+
+**What:** The ongoing notification should name the label, and the additional
+timers listed under it need a sensible order — "Service" currently leads for
+no clear reason.
+
+**Built in v57.** It was library order — which is to say, no order. Now:
+1. the running label
+2. labels with a goal, most time remaining first
+3. everything else, most time recorded first
+
+**Labels with neither a goal nor any recorded time are left out entirely.**
+They were most of the list and said nothing — twenty-odd entries reading
+`00:00` pushed the ones that mattered off the end.
+
+The title already names the running label; it was the body that had no order.
+
+---
+
+## 64. Clear a note, and larger type for writing one  ✅ built in v54
+
+**What:**
+- A **Clear note** action in the note editor, between Cancel and Save.
+- The note input 50% larger: 18sp → 27sp on the Notes screen, and the editor's
+  own field at 22sp.
+
+**Why:** Emptying the text and saving worked but took two deliberate steps, and
+the field you actually write in was among the smallest type in the app.
+
+**Notes:**
+- **Clear is not Delete.** Clear keeps the run and its recorded time and
+  removes only the words; Delete removes the row and its time. Both are in the
+  same dialog, so the distinction is stated in each confirmation.
+- **The editor is now a custom layout.** `AlertDialog` offers three buttons and
+  this needed four — Delete, Cancel, Clear note, Save.
+- Clearing asks first, since typed notes can't be recovered.
+- **With the filter on, clearing makes the row disappear** — a run with no note
+  isn't listed. The confirmation says so rather than leaving it to surprise.
+
+---
+
+## 65. Show the delta while sliding  ✅ built in v55
+
+**What:** While either slider is in use, the running total of the change —
+`+10`, `-15` — appears to the left of the figure being changed, clear of the
+finger. It disappears on release.
+
+**Why:** Sliding 5 or 10 minutes moves the figure by less than the fingertip
+covers, so the first couple of steps were invisible. You could feel the drag
+working but not see it.
+
+**Where each one goes:**
+
+| Sliding | Figure shown | Delta appears in |
+|---|---|---|
+| Goal (zone 4) | the right column | the timer column, immediately left |
+| Recorded time (zone 3) | the timer column | the label line, immediately left |
+
+**Notes:**
+- The label's own text is replaced for the duration rather than appended to —
+  you know which row you're touching, and appending would truncate.
+- **The second line under the label looked like the obvious home for the time
+  delta and isn't.** With no secondary figure chosen that line is hidden and
+  the row minimum is 44dp; making it appear mid-drag needs ~45dp, so the row
+  would clip for as long as the finger was down. The label line costs no
+  height at all.
