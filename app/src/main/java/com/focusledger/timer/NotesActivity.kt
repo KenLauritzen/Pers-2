@@ -7,6 +7,7 @@ import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
+import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
@@ -155,29 +156,71 @@ class NotesActivity : AppCompatActivity() {
     }
 
     /** Tapping a past run opens its note for editing. */
+    /**
+     * Editing a past run's note.
+     *
+     * Four actions — Delete, Cancel, Clear note, Save — so this uses its own
+     * layout rather than AlertDialog's buttons, which stop at three.
+     *
+     * "Clear note" empties the text and saves immediately, which is different
+     * from Delete: the run stays and keeps its time, it just loses the words.
+     */
     private fun editPastNote(run: LogStore.RunEntry) {
-        val input = EditText(this).apply {
-            setText(run.note)
-            setTextColor(0xFFF1EDE3.toInt())
-            setBackgroundResource(R.drawable.bg_row_track)
-            setPadding(28, 24, 28, 24)
-            textSize = 15f
-            setSingleLine(false)
-            minLines = 3
+        val view = LayoutInflater.from(this).inflate(R.layout.dialog_note_edit, null)
+        val input = view.findViewById<EditText>(R.id.noteInput)
+        view.findViewById<TextView>(R.id.noteWhen).text = fmtWhen(run.runStartMs)
+        input.setText(run.note)
+        input.setSelection(input.text.length)
+
+        val dialog = AlertDialog.Builder(this).setView(view).create()
+
+        fun save(text: String) {
+            if (!LogStore.updateNoteAt(this, run.lineIndex, text)) {
+                Toast.makeText(this, "Couldn't save that note", Toast.LENGTH_SHORT).show()
+            }
+            dialog.dismiss()
+            renderHistory()
         }
 
+        view.findViewById<Button>(R.id.noteSave).setOnClickListener {
+            save(input.text.toString())
+        }
+        view.findViewById<Button>(R.id.noteClear).setOnClickListener {
+            confirmClearNote(run) { dialog.dismiss() }
+        }
+        view.findViewById<Button>(R.id.noteCancel).setOnClickListener { dialog.dismiss() }
+        view.findViewById<Button>(R.id.noteDelete).setOnClickListener {
+            dialog.dismiss(); confirmDeleteRun(run)
+        }
+        dialog.show()
+    }
+
+    /**
+     * Clearing a note keeps the run and its time; only the text goes. Asked
+     * about because typed notes aren't recoverable.
+     */
+    private fun confirmClearNote(run: LogStore.RunEntry, onDone: () -> Unit) {
+        if (run.note.isBlank()) { onDone(); return }
+        // With the filter on, a run with no note isn't listed — so clearing
+        // one makes the row disappear. Said here rather than left to surprise.
+        val willVanish = !SettingsStore.isShowEmptyRuns(this)
         AlertDialog.Builder(this)
-            .setTitle(fmtWhen(run.runStartMs))
-            .setView(input)
-            .setPositiveButton("Save") { _, _ ->
-                val ok = LogStore.updateNoteAt(this, run.lineIndex, input.text.toString())
-                if (!ok) Toast.makeText(this, "Couldn't save that note", Toast.LENGTH_SHORT).show()
+            .setTitle("Clear this note?")
+            .setMessage(
+                "The run and its time stay; only the note is removed." +
+                if (willVanish)
+                    "\n\nThe run will drop out of this list until you turn on " +
+                    "\u201cShow runs with no note\u201d."
+                else ""
+            )
+            .setPositiveButton("Clear") { _, _ ->
+                if (!LogStore.updateNoteAt(this, run.lineIndex, "")) {
+                    Toast.makeText(this, "Couldn't clear that note", Toast.LENGTH_SHORT).show()
+                }
+                onDone()
                 renderHistory()
             }
             .setNegativeButton("Cancel", null)
-            // Long-press deletes too, but a gesture nobody knows about isn't
-            // a feature. This is the discoverable route.
-            .setNeutralButton("Delete") { _, _ -> confirmDeleteRun(run) }
             .show()
     }
 

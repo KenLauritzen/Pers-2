@@ -102,7 +102,7 @@ class MainActivity : AppCompatActivity() {
      * so the progress bar still reads through it, and applied to every row so
      * it's visible wherever the list happens to be scrolled.
      */
-    private val idleWash = 0x59C97064
+    private val idleWash = 0x38C97064
 
     private val tickRunnable = object : Runnable {
         override fun run() {
@@ -1256,12 +1256,29 @@ class MainActivity : AppCompatActivity() {
         val isActive = label == TimerStore.getActiveLabel(this)
         val accent = if (isSession) blueGrey else amber
 
-        hLabel.text = label
+        // While the recorded time is being slid, the label line carries the
+        // delta. The timer itself shows the new total and sits under the
+        // finger, and using the second line instead would make a hidden line
+        // appear and clip the row.
+        if (timeSliding) {
+            val d = timeSlidePendingMinutes
+            hLabel.text = if (d == 0) label else (if (d > 0) "+$d min" else "$d min")
+            hLabel.setTextColor(if (d == 0) 0xFFF1EDE3.toInt() else amber)
+        } else {
+            hLabel.text = label
+            hLabel.setTextColor(0xFFF1EDE3.toInt())
+        }
         val timeSliding = timeSlideLabel == entry.name
 
-        // Mid-slide the timer shows its total with the pending correction
-        // folded in, amber to mark it as not yet saved.
-        if (timeSliding) {
+        // While the goal is being slid, the timer column — immediately left of
+        // the figure and clear of the finger — shows how much is being added
+        // or taken off. It goes back to the time on release.
+        val goalSliding = slideLabel == entry.name
+        if (goalSliding) {
+            val delta = slidePendingGoal - slideStartGoal
+            hTime.text = if (delta == 0) "" else (if (delta > 0) "+$delta" else "$delta")
+            hTime.setTextColor(amber)
+        } else if (timeSliding) {
             hTime.text = TimerStore.formatDuration(
                 (timeSlideStartMs + timeSlidePendingMinutes * 60_000L).coerceAtLeast(0L)
             )
@@ -1274,13 +1291,16 @@ class MainActivity : AppCompatActivity() {
             hTime.setTextColor(if (isActive) accent else muted)
         }
 
-        // Nothing running anywhere: wash the whole row rather than the timer
-        // column alone. One column at 22% wasn't registering; the full width
-        // at 35% is hard to miss at any scroll position.
-        h.content?.setBackgroundColor(
+        // Nothing running anywhere: tint the timer column only.
+        //
+        // v51 washed the whole row at 35% and it was a mistake — the wash sits
+        // on top of the progress bars, so every row flattened to the same
+        // olive and the green/red distinction disappeared. The always-visible
+        // job is done by the dot in the header instead, which costs nothing.
+        h.content?.setBackgroundColor(0x00000000)
+        hTime.setBackgroundColor(
             if (TimerStore.isRunning(this)) 0x00000000 else idleWash
         )
-        hTime.setBackgroundColor(0x00000000)
 
         val remainingMs =
             if (entry.goalMinutes > 0) TimerStore.getRemainingMs(this, label, entry.goalMinutes)

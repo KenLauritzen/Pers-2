@@ -551,6 +551,56 @@ list.
 
 ---
 
+## 64. Clear a note, and larger type for writing one  ✅ built in v54
+
+**What:**
+- A **Clear note** action in the note editor, between Cancel and Save.
+- The note input 50% larger: 18sp → 27sp on the Notes screen, and the editor's
+  own field at 22sp.
+
+**Why:** Emptying the text and saving worked but took two deliberate steps, and
+the field you actually write in was among the smallest type in the app.
+
+**Notes:**
+- **Clear is not Delete.** Clear keeps the run and its recorded time and
+  removes only the words; Delete removes the row and its time. Both are in the
+  same dialog, so the distinction is stated in each confirmation.
+- **The editor is now a custom layout.** `AlertDialog` offers three buttons and
+  this needed four — Delete, Cancel, Clear note, Save.
+- Clearing asks first, since typed notes can't be recovered.
+- **With the filter on, clearing makes the row disappear** — a run with no note
+  isn't listed. The confirmation says so rather than leaving it to surprise.
+
+---
+
+## 65. Show the delta while sliding  ✅ built in v55
+
+**What:** While either slider is in use, the running total of the change —
+`+10`, `-15` — appears to the left of the figure being changed, clear of the
+finger. It disappears on release.
+
+**Why:** Sliding 5 or 10 minutes moves the figure by less than the fingertip
+covers, so the first couple of steps were invisible. You could feel the drag
+working but not see it.
+
+**Where each one goes:**
+
+| Sliding | Figure shown | Delta appears in |
+|---|---|---|
+| Goal (zone 4) | the right column | the timer column, immediately left |
+| Recorded time (zone 3) | the timer column | the label line, immediately left |
+
+**Notes:**
+- The label's own text is replaced for the duration rather than appended to —
+  you know which row you're touching, and appending would truncate.
+- **The second line under the label looked like the obvious home for the time
+  delta and isn't.** With no secondary figure chosen that line is hidden and
+  the row minimum is 44dp; making it appear mid-drag needs ~45dp, so the row
+  would clip for as long as the finger was down. The label line costs no
+  height at all.
+
+---
+
 ## Template for new entries
 
 New ideas go in **Open ideas** with the next unused number. When one ships,
@@ -2104,13 +2154,19 @@ anything is running — which is the whole point.
 | 51.1 | Stronger wash, whole row, or something animated? | Try a stronger wash across the full row first | |
 | 51.2 | Should the header show it too, so it's visible without any row? | Yes — that's the one thing always on screen | |
 
-**Built in v51:**
-- The wash covers **the whole row**, not just the timer column, and went from
-  22% to 35% alpha.
+**Built in v51, half of it reverted in v53:**
 - The header shows a red dot before the start time when nothing is running —
   the header being the one thing on screen at any scroll position (51.2).
-- Text still reads on it: label contrast 4.7–7.8, timer 2.8–4.6, measured
-  against both the dark track and a green bar.
+  **This is the part that works**, and on its own it's enough.
+- The whole-row wash at 35% was a mistake. The wash sits *on top of* the
+  progress bars, so with nothing running every row flattened to the same
+  olive and the green/red distinction vanished — the app lost its colour
+  language to gain an indicator it didn't need.
+- Reverted to the original 22% on the timer column alone.
+
+**The lesson:** contrast maths said the text was still readable, and it was.
+What it couldn't say was that the wash destroyed the meaning of everything
+underneath it. Readability isn't the only thing an overlay can break.
 
 ---
 

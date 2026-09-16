@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#1A2C2A"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/noteWhen"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#E8A33D"
+        android:fontFamily="monospace"
+        android:textSize="17sp"
+        android:layout_marginBottom="10dp" />
+
+    <EditText
+        android:id="@+id/noteInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minLines="3"
+        android:gravity="top|start"
+        android:inputType="textMultiLine|textCapSentences"
+        android:textColor="#F1EDE3"
+        android:textColorHint="#5C736E"
+        android:textSize="22sp"
+        android:padding="12dp"
+        android:background="@drawable/bg_row_track"
+        android:hint="Note for this run" />
+
+    <!-- Four actions, so these are ordinary buttons rather than the dialog's
+         own: AlertDialog offers only three. Ordered least to most destructive
+         reading right to left, with Save under the thumb. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="14dp">
+
+        <Button
+            android:id="@+id/noteDelete"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="46dp"
+            android:layout_marginEnd="4dp"
+            android:text="Delete"
+            android:textAllCaps="false"
+            android:textColor="#C97064"
+            android:textSize="15sp"
+            android:padding="0dp"
+            android:background="@drawable/bg_button_small" />
+
+        <Button
+            android:id="@+id/noteCancel"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="46dp"
+            android:layout_marginEnd="4dp"
+            android:text="Cancel"
+            android:textAllCaps="false"
+            android:textColor="#8FA39E"
+            android:textSize="15sp"
+            android:padding="0dp"
+            android:background="@drawable/bg_button_small" />
+
+        <Button
+            android:id="@+id/noteClear"
+            android:layout_width="0dp"
+            android:layout_weight="1.15"
+            android:layout_height="46dp"
+            android:layout_marginEnd="4dp"
+            android:text="Clear note"
+            android:textAllCaps="false"
+            android:textColor="#B8C4C2"
+            android:textSize="15sp"
+            android:padding="0dp"
+            android:background="@drawable/bg_button_small" />
+
+        <Button
+            android:id="@+id/noteSave"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="46dp"
+            android:text="Save"
+            android:textAllCaps="false"
+            android:textColor="#E8A33D"
+            android:textSize="15sp"
+            android:padding="0dp"
+            android:background="@drawable/bg_button_small" />
+    </LinearLayout>
+
+</LinearLayout>
