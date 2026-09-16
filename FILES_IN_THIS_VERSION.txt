@@ -1,30 +1,18 @@
-Focus v57 — complete file list.
+Focus v58 — complete file list.
 
-  1. The reminder sound has never worked. Fixed.
+The ongoing notification now lists TIME REMAINING rather than elapsed.
 
-     A notification channel's sound and importance are fixed when it's created
-     — calling createNotificationChannel again on the same id does nothing. The
-     code picked between two channel ids for heads-up vs quiet, but applied the
-     SOUND toggle to the same id either way. So whatever the setting was the
-     first time you ever ran the app is what you've had since.
+  Planning -0:02  ·  Work 1:26  ·  Part Pot 0:38  ·  Fitness 1:20
 
-     There are now three channels, one per combination, chosen when the
-     notification is sent rather than edited: pop-up with sound, pop-up silent,
-     quiet. New ids, and the old ones are deleted so they don't linger in
-     Android's notification settings.
+  Past a goal shows as a negative, so overrunning looks different from having
+  finished. Labels with no goal have nothing to remain, so they still show what
+  has been recorded.
 
-     If sound still doesn't play, check Android Settings > Apps > Focus >
-     Notifications — "Timer reminders" should be there with a sound set.
+  Figures are h:mm — it's a planning view and seconds are noise. The title
+  keeps seconds, since that's the one figure you watch tick.
 
-  2. The ongoing notification is ordered, and shorter.
-
-     Was library order, which is to say none. Now:
-       1. the running label
-       2. labels with a goal, most time remaining first
-       3. everything else, most time recorded first
-
-     Labels with neither a goal nor any recorded time are left out — they were
-     most of the list and said nothing.
+Still in from v57: the reminder-sound fix (three channels, chosen at send time)
+and the ordering — running label first, then by most remaining, then the rest.
 
 UPLOAD ONLY THESE TWO:
   app/src/main/java/com/focusledger/timer/TimerForegroundService.kt

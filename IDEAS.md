@@ -2149,6 +2149,15 @@ They were most of the list and said nothing — twenty-odd entries reading
 
 The title already names the running label; it was the body that had no order.
 
+**v58: the body shows time remaining, not elapsed.** A list of elapsed times
+says what's been done; remaining says what's left, which is what you'd open a
+notification to find out. Past a goal it reads as a negative, so overrunning
+looks different from finishing. Labels with no goal have nothing to remain and
+still show what's recorded.
+
+Figures are h:mm there — it's a planning view and seconds are noise. The title
+keeps seconds, being the one figure that visibly ticks.
+
 ---
 
 ## 64. Clear a note, and larger type for writing one  ✅ built in v54

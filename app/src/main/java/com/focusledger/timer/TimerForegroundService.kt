@@ -180,6 +180,8 @@ class TimerForegroundService : Service() {
         val library = LabelStore.readLibrary(this)
 
         val title = if (active != TimerStore.NONE)
+            // The title keeps seconds — it's the one figure you watch tick,
+            // and it names what's running rather than what's left.
             "Running: $active  ${TimerStore.formatDuration(TimerStore.getDayMs(this, active))}"
         else getString(R.string.app_name_full)
 
@@ -203,7 +205,15 @@ class TimerForegroundService : Service() {
             )
 
         val content = shown.joinToString("  \u00b7  ") { e ->
-            "${e.name} ${TimerStore.formatDuration(TimerStore.getDayMs(this, e.name))}"
+            if (e.goalMinutes > 0) {
+                val left = TimerStore.getRemainingMs(this, e.name, e.goalMinutes)
+                // Past the goal reads as a negative, so being over is obvious
+                // rather than looking like nothing left to do.
+                if (left < 0) "${e.name} -${hm(-left)}" else "${e.name} ${hm(left)}"
+            } else {
+                // No goal, so nothing to remain — show what's been recorded.
+                "${e.name} ${hm(TimerStore.getDayMs(this, e.name))}"
+            }
         }
 
         return NotificationCompat.Builder(this, CHANNEL_ONGOING)
@@ -231,6 +241,12 @@ class TimerForegroundService : Service() {
             this, code, i,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+    }
+
+    /** h:mm. The notification is a planning view; seconds only add noise. */
+    private fun hm(ms: Long): String {
+        val mins = (Math.abs(ms) / 60_000L).toInt()
+        return String.format("%d:%02d", mins / 60, mins % 60)
     }
 
     private fun createChannels() {
