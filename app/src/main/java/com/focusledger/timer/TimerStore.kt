@@ -127,6 +127,8 @@ object TimerStore {
 
     /** Starts [label]. Starting the already-running label is a no-op. */
     fun start(c: Context, label: String) {
+        // Settle against the outgoing label before the active one changes.
+        TaskStore.settleDoing(c)
         if (getActiveLabel(c) == label) return
         if (isRunning(c)) stopInternal(c)
 
@@ -143,6 +145,9 @@ object TimerStore {
     /** Stops the running timer, banking its time and writing a log row. */
     fun stop(c: Context) {
         if (!isRunning(c)) return
+        // Fold any task time accrued during this run before the label stops,
+        // or it would be counted against a timer that is no longer going.
+        TaskStore.settleDoing(c)
         stopInternal(c)
         p(c).edit()
             .putString(KEY_ACTIVE_LABEL, NONE)

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#1A2C2A"
+    android:padding="14dp">
+
+    <TextView
+        android:id="@+id/tasksTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#E8A33D"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="4dp" />
+
+    <!-- How many of this label's tasks the row shows. Zero opts the label out
+         entirely, so no separate on/off is needed. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="10dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:text="Show on the row"
+            android:textColor="#8FA39E"
+            android:textSize="15sp" />
+
+        <Button
+            android:id="@+id/tasksShowMinus"
+            android:layout_width="44dp"
+            android:layout_height="40dp"
+            android:text="\u2212"
+            android:textAllCaps="false"
+            android:textColor="#C97064"
+            android:textSize="18sp"
+            android:padding="0dp"
+            android:background="@drawable/bg_button_small" />
+
+        <TextView
+            android:id="@+id/tasksShowCount"
+            android:layout_width="40dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="#F1EDE3"
+            android:fontFamily="monospace"
+            android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/tasksShowPlus"
+            android:layout_width="44dp"
+            android:layout_height="40dp"
+            android:text="+"
+            android:textAllCaps="false"
+            android:textColor="#7DBE7A"
+            android:textSize="18sp"
+            android:padding="0dp"
+            android:background="@drawable/bg_button_small" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:minHeight="120dp">
+
+        <LinearLayout
+            android:id="@+id/tasksList"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </ScrollView>
+
+    <!-- New task: text and an estimate in minutes -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="10dp">
+
+        <EditText
+            android:id="@+id/taskNewText"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="46dp"
+            android:hint="New task"
+            android:textColor="#F1EDE3"
+            android:textColorHint="#5C736E"
+            android:textSize="16sp"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:singleLine="true"
+            android:importantForAutofill="no"
+            android:background="@drawable/bg_row_track" />
+
+        <EditText
+            android:id="@+id/taskNewEstimate"
+            android:layout_width="64dp"
+            android:layout_height="46dp"
+            android:layout_marginStart="6dp"
+            android:hint="min"
+            android:gravity="center"
+            android:inputType="number"
+            android:textColor="#F1EDE3"
+            android:textColorHint="#5C736E"
+            android:textSize="16sp"
+            android:importantForAutofill="no"
+            android:background="@drawable/bg_row_track" />
+
+        <Button
+            android:id="@+id/taskAdd"
+            android:layout_width="56dp"
+            android:layout_height="46dp"
+            android:layout_marginStart="6dp"
+            android:text="Add"
+            android:textAllCaps="false"
+            android:textColor="#7DBE7A"
+            android:textSize="15sp"
+            android:padding="0dp"
+            android:background="@drawable/bg_button_small" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/tasksDone"
+        android:layout_width="match_parent"
+        android:layout_height="46dp"
+        android:layout_marginTop="12dp"
+        android:text="Done"
+        android:textAllCaps="false"
+        android:textColor="#E8A33D"
+        android:textSize="16sp"
+        android:background="@drawable/bg_button_small" />
+
+</LinearLayout>

@@ -103,6 +103,9 @@ class SettingsActivity : AppCompatActivity() {
             val layouts = java.io.File(getExternalFilesDir(null), "layouts.json")
             if (layouts.exists()) uris.add(FileProvider.getUriForFile(this, authority, layouts))
 
+            val tasks = TaskStore.file(this)
+            if (tasks.exists()) uris.add(FileProvider.getUriForFile(this, authority, tasks))
+
             val log = LogStore.file(this)
             if (log.exists()) uris.add(FileProvider.getUriForFile(this, authority, log))
 

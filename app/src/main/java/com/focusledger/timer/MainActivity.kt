@@ -58,6 +58,9 @@ class MainActivity : AppCompatActivity() {
     private var slideStartGoal = 0
     private var slideStartY = 0f
 
+    /** When task time was last written to file. See refreshValues. */
+    private var lastTaskSettle = 0L
+
     /** The same, for the elapsed-time slider on the timer column. */
     private var timeSlideLabel: String? = null
     private var timeSlidePendingMinutes = 0
@@ -149,6 +152,17 @@ class MainActivity : AppCompatActivity() {
         binding.btnViewSession.setOnClickListener {
             SettingsStore.setSessionView(this, true); refreshValues(); updateChrome()
         }
+        // All three totals sit at 26sp. Auto-sizing only bites on the one
+        // case that doesn't fit — a clock total with a double-digit hour,
+        // "@11:00a", in a 30% column — so they stay uniform in normal use
+        // rather than every figure shrinking to suit the widest.
+        listOf(binding.tvTotalSub, binding.tvTotalElapsed, binding.tvTotalGoal)
+            .forEach {
+                TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(
+                    it, 19, 26, 1, TypedValue.COMPLEX_UNIT_SP
+                )
+            }
+
         binding.btnCum.setOnClickListener { showColumnPicker() }
         binding.btnCum2.setOnClickListener { showSecondaryPicker() }
         binding.tvHeader.setOnClickListener { showStartTimePicker() }
@@ -281,6 +295,207 @@ class MainActivity : AppCompatActivity() {
         if (!LabelStore.writeLibrary(this, updated)) {
             Toast.makeText(this, "Couldn't save the new order", Toast.LENGTH_LONG).show()
         }
+    }
+
+    /**
+     * The task block, shown under the running row only.
+     *
+     * Every other row stays a single fixed-height line. The block appears when
+     * a label starts and goes when it stops, so the list only grows where
+     * you're actually working.
+     */
+    private fun renderTasks(h: TimerAdapter.Holder, entry: LabelEntry) {
+        val box = h.taskBox ?: return
+        val view = h.tasks ?: return
+
+        val isRunning = TimerStore.getActiveLabel(this) == entry.name
+        val limit = TaskStore.getShowCount(this, entry.name)
+
+        // Fixed height for an ordinary row; the running row wraps so it can
+        // grow by however many task lines it holds.
+        fun setHeight(fixed: Boolean) {
+            val lp = h.itemView.layoutParams as? ViewGroup.MarginLayoutParams ?: return
+            val want = if (fixed && rowHeightPx > 0) rowHeightPx
+                       else ViewGroup.LayoutParams.WRAP_CONTENT
+            if (lp.height != want) { lp.height = want; h.itemView.layoutParams = lp }
+        }
+
+        // Zero opts a label out of tasks entirely.
+        if (!isRunning || limit == 0) {
+            box.visibility = View.GONE
+            setHeight(true)
+            return
+        }
+        box.visibility = View.VISIBLE
+        setHeight(false)
+
+        // The columns keep their normal height inside the taller row.
+        (h.columns?.layoutParams as? LinearLayout.LayoutParams)?.let { lp ->
+            if (lp.height != rowHeightPx && rowHeightPx > 0) {
+                lp.height = rowHeightPx
+                lp.weight = 0f
+                h.columns?.layoutParams = lp
+            }
+        }
+
+        val shown = TaskStore.visibleForRow(this, entry.name, limit)
+        view.text = if (shown.isEmpty()) "No tasks" else shown.joinToString("\n") { t ->
+            val mark = when (t.status) {
+                TaskStatus.DOING -> "\u25b8"
+                TaskStatus.DONE -> "\u2713"
+                else -> "-"
+            }
+            val est = if (t.estimateMinutes > 0) "  ${t.estimateMinutes}m" else ""
+            "$mark ${t.text}$est"
+        }
+        view.setTextColor(if (shown.isEmpty()) 0xFF5C736E.toInt() else 0xFFA9BDB8.toInt())
+
+        h.taskEdit?.setOnClickListener { showTaskEditor(entry.name) }
+    }
+
+    /**
+     * Everything about one label's tasks: add, reorder, set estimates, cycle
+     * status, and choose how many the row shows.
+     *
+     * Tapping a task's marker advances it — open, doing, done, archived — and
+     * marking one "doing" is what starts time accruing against it.
+     */
+    private fun showTaskEditor(label: String) {
+        val view = LayoutInflater.from(this).inflate(R.layout.dialog_tasks, null)
+        val list = view.findViewById<LinearLayout>(R.id.tasksList)
+        val countView = view.findViewById<TextView>(R.id.tasksShowCount)
+        view.findViewById<TextView>(R.id.tasksTitle).text = "$label \u2014 tasks"
+
+        val dialog = AlertDialog.Builder(this).setView(view).create()
+
+        fun render() {
+            countView.text = TaskStore.getShowCount(this, label).toString()
+            list.removeAllViews()
+            val tasks = TaskStore.forLabel(this, label)
+            if (tasks.isEmpty()) {
+                list.addView(TextView(this).apply {
+                    text = "No tasks yet."
+                    setTextColor(0xFF5C736E.toInt())
+                    textSize = 15f
+                    setPadding(4, 12, 4, 12)
+                })
+                return
+            }
+            tasks.forEachIndexed { i, t ->
+                val row = LayoutInflater.from(this)
+                    .inflate(R.layout.row_task_edit, list, false)
+
+                val mark = row.findViewById<TextView>(R.id.taskMark)
+                mark.text = when (t.status) {
+                    TaskStatus.OPEN -> ""
+                    TaskStatus.DOING -> "\u25b8"
+                    TaskStatus.DONE -> "\u2713"
+                    TaskStatus.ARCHIVED -> "\u00d7"
+                }
+                mark.setTextColor(
+                    when (t.status) {
+                        TaskStatus.DOING -> amber
+                        TaskStatus.DONE -> colGoal
+                        else -> muted
+                    }
+                )
+
+                val textView = row.findViewById<TextView>(R.id.taskText)
+                textView.text = t.text
+                textView.setTextColor(
+                    when (t.status) {
+                        TaskStatus.DONE, TaskStatus.ARCHIVED -> 0xFF5C736E.toInt()
+                        else -> 0xFFF1EDE3.toInt()
+                    }
+                )
+
+                // Estimate against what it has actually taken.
+                val actual = TaskStore.liveMs(this, t)
+                row.findViewById<TextView>(R.id.taskTimes).text = buildString {
+                    if (t.estimateMinutes > 0) append("${t.estimateMinutes}m")
+                    if (actual > 0L) {
+                        if (isNotEmpty()) append(" / ")
+                        append("${actual / 60_000L}m")
+                    }
+                }
+
+                mark.setOnClickListener { TaskStore.cycleStatus(this, t); render(); rebuild() }
+                textView.setOnClickListener { editTask(t) { render(); rebuild() } }
+
+                val ids = tasks.map { it.id }.toMutableList()
+                row.findViewById<ImageView>(R.id.taskUp).setOnClickListener {
+                    if (i > 0) {
+                        ids.add(i - 1, ids.removeAt(i))
+                        TaskStore.reorder(this, label, ids); render(); rebuild()
+                    }
+                }
+                row.findViewById<ImageView>(R.id.taskDown).setOnClickListener {
+                    if (i < ids.size - 1) {
+                        ids.add(i + 1, ids.removeAt(i))
+                        TaskStore.reorder(this, label, ids); render(); rebuild()
+                    }
+                }
+                list.addView(row)
+            }
+        }
+        render()
+
+        view.findViewById<Button>(R.id.tasksShowMinus).setOnClickListener {
+            TaskStore.setShowCount(this, label, TaskStore.getShowCount(this, label) - 1)
+            render(); measureAndRebuild()
+        }
+        view.findViewById<Button>(R.id.tasksShowPlus).setOnClickListener {
+            TaskStore.setShowCount(this, label, TaskStore.getShowCount(this, label) + 1)
+            render(); measureAndRebuild()
+        }
+
+        val newText = view.findViewById<EditText>(R.id.taskNewText)
+        val newEst = view.findViewById<EditText>(R.id.taskNewEstimate)
+        view.findViewById<Button>(R.id.taskAdd).setOnClickListener {
+            val entered = newText.text.toString().trim()
+            if (entered.isEmpty()) return@setOnClickListener
+            TaskStore.add(this, label, entered, newEst.text.toString().toIntOrNull() ?: 0)
+            newText.setText(""); newEst.setText("")
+            render(); rebuild()
+        }
+        view.findViewById<Button>(R.id.tasksDone).setOnClickListener { dialog.dismiss() }
+        dialog.show()
+    }
+
+    /** Rename a task, change its estimate, or remove it. */
+    private fun editTask(task: Task, onChange: () -> Unit) {
+        val box = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(40, 20, 40, 0)
+        }
+        val nameField = EditText(this).apply {
+            setText(task.text); setTextColor(0xFFF1EDE3.toInt()); textSize = 16f
+        }
+        val est = EditText(this).apply {
+            setText(if (task.estimateMinutes > 0) task.estimateMinutes.toString() else "")
+            hint = "Estimate in minutes"
+            setTextColor(0xFFF1EDE3.toInt()); setHintTextColor(0xFF5C736E.toInt())
+            textSize = 16f
+            inputType = android.text.InputType.TYPE_CLASS_NUMBER
+        }
+        box.addView(nameField); box.addView(est)
+
+        AlertDialog.Builder(this)
+            .setTitle("Edit task")
+            .setView(box)
+            .setPositiveButton("Save") { _, _ ->
+                TaskStore.update(
+                    this,
+                    task.copy(
+                        text = nameField.text.toString().trim().ifEmpty { task.text },
+                        estimateMinutes = est.text.toString().toIntOrNull() ?: 0
+                    )
+                )
+                onChange()
+            }
+            .setNeutralButton("Delete") { _, _ -> TaskStore.delete(this, task.id); onChange() }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     // ---- row gestures ------------------------------------------------------
@@ -1251,6 +1466,14 @@ class MainActivity : AppCompatActivity() {
 
     /** Per-second refresh: values only, never the order. */
     private fun refreshValues() {
+        // Fold accrued task time roughly once a minute rather than every
+        // tick: it survives the process being killed without writing the
+        // file sixty times a minute.
+        val now = System.currentTimeMillis()
+        if (now - lastTaskSettle > 60_000L) {
+            TaskStore.settleDoing(this)
+            lastTaskSettle = now
+        }
         computeCumulative()
         updateTotals(sessionView())
         for (i in displayed.indices) {
@@ -1380,6 +1603,8 @@ class MainActivity : AppCompatActivity() {
             if (labelsWithNotes.contains(label)) amber else 0xFF5C736E.toInt()
         )
 
+        renderTasks(h, entry)
+
         // Progress is always against the DAY total, since goals are daily.
         drawBar(h, TimerStore.getDayMs(this, label), entry.goalMinutes)
     }
@@ -1406,6 +1631,10 @@ class MainActivity : AppCompatActivity() {
             val label: TextView? = view.findViewById(R.id.rowLabel)
             val sub: TextView? = view.findViewById(R.id.rowSub)
             val content: View? = view.findViewById(R.id.rowContent)
+            val columns: View? = view.findViewById(R.id.rowColumns)
+            val taskBox: View? = view.findViewById(R.id.rowTaskBox)
+            val tasks: TextView? = view.findViewById(R.id.rowTasks)
+            val taskEdit: ImageView? = view.findViewById(R.id.rowTaskEdit)
             val labelBox: View? = view.findViewById(R.id.rowLabelBox)
             val time: TextView? = view.findViewById(R.id.rowTime)
             val goal: TextView? = view.findViewById(R.id.rowGoal)
@@ -1428,11 +1657,8 @@ class MainActivity : AppCompatActivity() {
             }
             val view = LayoutInflater.from(parent.context)
                 .inflate(R.layout.row_timer, parent, false)
-            if (rowHeightPx > 0) {
-                view.layoutParams = (view.layoutParams as ViewGroup.MarginLayoutParams).apply {
-                    height = rowHeightPx
-                }
-            }
+            // Height is set per bind, not here: the running row grows to fit
+            // its tasks while every other row stays fixed.
             return Holder(view)
         }
 

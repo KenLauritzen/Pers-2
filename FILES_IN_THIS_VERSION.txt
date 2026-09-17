@@ -1,29 +1,45 @@
-Focus v60 — complete file list.
+Focus v62 — complete file list.
 
-Fixes the v59 build failure: "$prefix0:00" parses the name as `prefix0`, not
-`prefix` followed by "0:00". Needs ${prefix}0:00.
+TASKS (idea 27)
 
-The -5m / +5m buttons are gone. Long-pressing a row and sliding replaced them,
-and they only ever worked on the running timer anyway.
+Tap the pencil under the running row to open the task editor for that label.
 
-In their place, a third total. The bottom row now has one under each column:
+  Statuses cycle when you tap a task's marker:
+      open  ->  doing (▸)  ->  done (✓, greyed)  ->  archived (×, hidden)
 
-  under the label column   total for the SECOND figure (the sub-line)
-  under the timer column   total time recorded
-  under the right column   total for the PRIMARY figure
+  Four rather than a tick box, because "finished" and "get it off my screen"
+  are different moments.
 
-Each matches the column above it, prefixes and colours included — so you get
-Σ8:35 in mint, or ~2:15p in grey-blue.
+  Tasks accrue their own time, but ONLY while their label's timer is running
+  and the task is marked "doing". The LABEL TOTAL STAYS AUTHORITATIVE — task
+  time will usually sum to less, and that gap is honest: thinking time,
+  interruptions and forgetting to advance a task all live in it.
 
-The clock modes can't sum — adding two times of day means nothing — so Start
-and ETA show WHEN YOU WOULD FINISH instead: the day's start plus every goal, or
-now plus everything still to do.
+  Only one task can be "doing" at a time across all labels. Two accruing
+  against one timer would double-count.
 
-The left total is blank when the second figure is set to None.
+  "Show on the row" is 0-5 per label. Zero opts that label out entirely.
 
-UPLOAD ONLY THESE THREE:
+  Each task can carry an estimate in minutes. The editor shows estimate /
+  actual side by side.
+
+  The running row grows to fit its tasks; every other row keeps its height.
+
+The file is tasks.csv, beside the log, and it is CSV on purpose — it is shaped
+so a spreadsheet of tasks-by-category can be merged into it later. One row per
+task, label as plain text, estimate in whole minutes. It is included in the
+Settings export.
+
+NEW FILES — make sure all four upload:
+  app/src/main/java/com/focusledger/timer/TaskStore.kt
+  app/src/main/res/layout/dialog_tasks.xml
+  app/src/main/res/layout/row_task_edit.xml
+
+ALSO UPLOAD:
   app/src/main/java/com/focusledger/timer/MainActivity.kt
-  app/src/main/res/layout/activity_main.xml
+  app/src/main/java/com/focusledger/timer/TimerStore.kt
+  app/src/main/java/com/focusledger/timer/SettingsActivity.kt
+  app/src/main/res/layout/row_timer.xml
   app/src/main/res/values/strings.xml
 
 Nothing to delete this version.
@@ -44,6 +60,7 @@ app/src/main/java/com/focusledger/timer/MainActivity.kt
 app/src/main/java/com/focusledger/timer/NotesActivity.kt
 app/src/main/java/com/focusledger/timer/SettingsActivity.kt
 app/src/main/java/com/focusledger/timer/SettingsStore.kt
+app/src/main/java/com/focusledger/timer/TaskStore.kt
 app/src/main/java/com/focusledger/timer/TimerForegroundService.kt
 app/src/main/java/com/focusledger/timer/TimerStore.kt
 app/src/main/res/drawable/bg_button_active.xml
@@ -63,9 +80,11 @@ app/src/main/res/layout/activity_settings.xml
 app/src/main/res/layout/dialog_label_edit.xml
 app/src/main/res/layout/dialog_layout_picker.xml
 app/src/main/res/layout/dialog_note_edit.xml
+app/src/main/res/layout/dialog_tasks.xml
 app/src/main/res/layout/row_add_label.xml
 app/src/main/res/layout/row_layout_entry.xml
 app/src/main/res/layout/row_note_entry.xml
+app/src/main/res/layout/row_task_edit.xml
 app/src/main/res/layout/row_timer.xml
 app/src/main/res/values/strings.xml
 app/src/main/res/values/themes.xml

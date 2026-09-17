@@ -159,87 +159,6 @@ much. Worth revisiting once a few months of log has built up.
 
 ---
 
-## 27. Task list under each label
-
-**What:** Each label carries an ordered list of tasks. While that label's timer
-is running — and only then — a compact block of text appears beneath its row
-listing the top few, as a reminder of what you're meant to be doing.
-
-**On the main screen it is display only:**
-
-```
-  Work                    1:13:32        2:00
-    - Draft the Q3 summary
-    - Reply to Sam
-    - Book the venue
-```
-
-- Plain hyphenated lines, tight line spacing. Not rows, not tappable, nothing
-  interactive.
-- Every other label stays a single short row, unchanged.
-- The block disappears when the timer stops.
-- **A label with no tasks still gets the space and the edit icon** — otherwise
-  there'd be no way to add the first one. The running row is always at least
-  tall enough to show it.
-
-**The running row's height therefore varies**, growing with the number of lines
-shown. Every other row keeps the fixed height it has now.
-
-**All editing happens in a maintenance popup**, opened by an icon on the
-expanded block:
-- reorder by dragging
-- add a task
-- tick one off — it stays in the list, greyed, with the date and time it was
-  completed
-- a ± control for **how many lines to show** while running — minimum 1,
-  maximum 5 — so eight prioritised tasks can display as three
-
-No keyboard except when adding a task.
-
-**Why:** The timer says what you're spending time on; the task list says what
-you're trying to finish. Together they close the loop between intent and
-record.
-
-**Notes:**
-- **Screen cost is small.** Display-only text at roughly 18dp a line means
-  three tasks add ~55dp, on one row at a time, and only while a timer runs.
-  Far cheaper than the expandable list this idea started as.
-- **Simple to render.** A single `TextView` with newlines, shown or hidden on
-  the running row. No nested list, no view recycling, no scroll conflicts —
-  which removes most of what would have made this expensive.
-- **Variable row height needs a small change.** `rowHeightPx` is currently
-  applied to every row in `onCreateViewHolder`. The running row will need
-  `wrap_content` instead, with the fixed height kept for the rest. Straight-
-  forward, but it's the one place the current layout assumes uniformity.
-- **Overlap with notes.** Notes record what happened; tasks record what's
-  planned. A completed task with a timestamp sits between the two, which is
-  why writing completions to the log (27.4) is worth doing.
-
-**Notes — implementation:**
-- New file, `tasks.json`, keyed by label: `{ text, order, completedAt }`.
-- The maintenance popup is the same shape as the layout picker plus the drag
-  mechanism already built for the main list, so most of the pieces exist.
-- **This is the largest feature proposed so far** — larger than notes. Not an
-  argument against it, but worth sequencing on its own rather than alongside
-  anything else.
-
-**Open questions — to answer before building:**
-
-| # | Question | Leaning | Answer |
-|---|---|---|---|
-| 27.1 | Default number of tasks shown while running? | 3 | **3, adjustable per label** with the ± control, **range 1–5**. |
-| 27.2 | Do completed tasks appear on the main screen? | Popup only | **Popup only.** The running block shows what's still to do. |
-| 27.3 | Can a task be ticked from the main screen? | Popup only | **Popup only.** The main-screen block is display-only text — no checkboxes, nothing tappable. |
-| 27.4 | Should completing a task write a row to the CSV log? | Yes | **Yes.** Turns the log from a time record into a record of work done. Needs a row type or a marker so completions can be told apart from runs — see 27.8. |
-| 27.5 | Do tasks belong to a label permanently, or reset daily like the counters? | Permanently — a task list isn't a daily total | |
-| 27.6 | Should layouts (idea 20) capture task lists too? | No — layouts are about arrangement, and this would make them much heavier | |
-| 27.7 | Where does the block appear if the running label is scrolled off screen? | Nowhere | **Nowhere** — it's attached to the row. A pinned variant could come later if it proves a nuisance. |
-| 27.8 | How does a completion row differ from a run row in the CSV? Options: a new column, or a convention such as duration 0 with the task text in the note field. | A dedicated `type` column — clearer than overloading existing fields, and the schema has changed before | |
-| 27.9 | Should the icon that opens the popup sit on the task block, or would long-pressing the block be enough? | An icon — long-press is already carrying the label popup on that row | |
-| 27.10 | With no tasks yet, does the block show a prompt such as "No tasks — tap to add", or just the bare icon? | A short prompt; a lone icon with empty space beside it reads as a fault | |
-
----
-
 ## 32. Approaching-goal warning
 
 **What:** A warning a set number of minutes before the running timer reaches
@@ -526,38 +445,6 @@ third being time since the timer was last started.
 still two separate pills and there's no "since last start" option. Worth
 confirming whether you meant something else, or whether it belongs in the open
 list.
-
----
-
-## 66. Three totals, and the ±5m buttons removed  ✅ built in v59
-
-**What:** The `−5m` / `+5m` pair at the bottom left is gone. In its place, a
-third total — the same figure for whatever the second line under each label is
-showing.
-
-The bottom row now has one total under each column:
-
-| Under | Shows |
-|---|---|
-| Label column | total for the secondary figure |
-| Timer column | total time recorded |
-| Right column | total for the primary figure |
-
-**Why:** Long-pressing a row and sliding replaced the buttons, which only ever
-adjusted the running timer and needed a running timer to do it. Three aligned
-totals are a better use of the space.
-
-**The clock modes needed a decision.** Adding two times of day is meaningless,
-so `Start` and `ETA` can't sum. They show **when you would finish** instead —
-the day's start plus every goal, or now plus everything still to do. That's the
-figure the column is building toward on its last row, so the total is its
-natural conclusion rather than an invented one.
-
-**Notes:**
-- Prefixes and colours carry through, so a total reads the same way as the
-  column above it: `Σ8:35` in mint, `~2:15p` in grey-blue.
-- Blank when the secondary is set to None.
-- `adjustActive` had no caller left and was removed.
 
 ---
 
@@ -1478,6 +1365,123 @@ are now independent.
 
 ---
 
+## 27. Task list under each label  ✅ built in v62
+
+**What:** Each label carries an ordered list of tasks. While that label's timer
+is running — and only then — a compact block of text appears beneath its row
+listing the top few, as a reminder of what you're meant to be doing.
+
+**On the main screen it is display only:**
+
+```
+  Work                    1:13:32        2:00
+    - Draft the Q3 summary
+    - Reply to Sam
+    - Book the venue
+```
+
+- Plain hyphenated lines, tight line spacing. Not rows, not tappable, nothing
+  interactive.
+- Every other label stays a single short row, unchanged.
+- The block disappears when the timer stops.
+- **A label with no tasks still gets the space and the edit icon** — otherwise
+  there'd be no way to add the first one. The running row is always at least
+  tall enough to show it.
+
+**The running row's height therefore varies**, growing with the number of lines
+shown. Every other row keeps the fixed height it has now.
+
+**All editing happens in a maintenance popup**, opened by an icon on the
+expanded block:
+- reorder by dragging
+- add a task
+- tick one off — it stays in the list, greyed, with the date and time it was
+  completed
+- a ± control for **how many lines to show** while running — minimum 1,
+  maximum 5 — so eight prioritised tasks can display as three
+
+No keyboard except when adding a task.
+
+**Why:** The timer says what you're spending time on; the task list says what
+you're trying to finish. Together they close the loop between intent and
+record.
+
+**Notes:**
+- **Screen cost is small.** Display-only text at roughly 18dp a line means
+  three tasks add ~55dp, on one row at a time, and only while a timer runs.
+  Far cheaper than the expandable list this idea started as.
+- **Simple to render.** A single `TextView` with newlines, shown or hidden on
+  the running row. No nested list, no view recycling, no scroll conflicts —
+  which removes most of what would have made this expensive.
+- **Variable row height needs a small change.** `rowHeightPx` is currently
+  applied to every row in `onCreateViewHolder`. The running row will need
+  `wrap_content` instead, with the fixed height kept for the rest. Straight-
+  forward, but it's the one place the current layout assumes uniformity.
+- **Overlap with notes.** Notes record what happened; tasks record what's
+  planned. A completed task with a timestamp sits between the two, which is
+  why writing completions to the log (27.4) is worth doing.
+
+**Notes — implementation:**
+- New file, `tasks.json`, keyed by label: `{ text, order, completedAt }`.
+- The maintenance popup is the same shape as the layout picker plus the drag
+  mechanism already built for the main list, so most of the pieces exist.
+- **This is the largest feature proposed so far** — larger than notes. Not an
+  argument against it, but worth sequencing on its own rather than alongside
+  anything else.
+
+**Open questions — to answer before building:**
+
+| # | Question | Leaning | Answer |
+|---|---|---|---|
+| 27.1 | Default number of tasks shown while running? | 3 | **3, adjustable per label** with the ± control, **range 1–5**. |
+| 27.2 | Do completed tasks appear on the main screen? | Popup only | **Popup only.** The running block shows what's still to do. |
+| 27.3 | Can a task be ticked from the main screen? | Popup only | **Popup only.** The main-screen block is display-only text — no checkboxes, nothing tappable. |
+| 27.4 | Should completing a task write a row to the CSV log? | Yes | **Yes.** Turns the log from a time record into a record of work done. Needs a row type or a marker so completions can be told apart from runs — see 27.8. |
+| 27.5 | Do tasks belong to a label permanently, or reset daily like the counters? | Permanently — a task list isn't a daily total | |
+| 27.6 | Should layouts (idea 20) capture task lists too? | No — layouts are about arrangement, and this would make them much heavier | |
+| 27.7 | Where does the block appear if the running label is scrolled off screen? | Nowhere | **Nowhere** — it's attached to the row. A pinned variant could come later if it proves a nuisance. |
+| 27.8 | How does a completion row differ from a run row in the CSV? Options: a new column, or a convention such as duration 0 with the task text in the note field. | A dedicated `type` column — clearer than overloading existing fields, and the schema has changed before | |
+| 27.9 | Should the icon that opens the popup sit on the task block, or would long-pressing the block be enough? | An icon — long-press is already carrying the label popup on that row | |
+| 27.10 | With no tasks yet, does the block show a prompt such as "No tasks — tap to add", or just the bare icon? | A short prompt; a lone icon with empty space beside it reads as a fault | |
+
+
+**Built in v62.**
+
+- **`tasks.csv`**, deliberately CSV and not JSON: the intention is to merge a
+  spreadsheet of tasks-by-category into it one day, so it is shaped for that
+  now — one row per task, the label as plain text, the estimate in whole
+  minutes.
+- **Four statuses, cycled by tapping the marker:** open → doing → done →
+  archived. Four rather than a tick box because "finished" and "get it off my
+  screen" are different moments. Done still shows, greyed; archived drops out
+  of the row but stays in the editor.
+- **Tasks accrue their own time**, but only while their label's timer is
+  running *and* the task is marked doing. **The label total stays
+  authoritative.** Task time will usually sum to less, and that gap is honest
+  — thinking, interruptions and forgetting to advance a task all live in it.
+- Only one task can be doing at a time, across every label. Two accruing
+  against one timer would double-count.
+- **Show count is 0–5 per label**, so zero opts a label out entirely and no
+  separate on/off is needed.
+- The editor is a popup: add, reorder, edit, set estimates, cycle status, set
+  the count.
+- Accrued time is written on stop, on switching label, and about once a
+  minute, so it survives the process being killed without writing sixty times
+  a minute.
+- The running row is `wrap_content` and every other row keeps its fixed
+  height.
+
+**Open questions for after some use:**
+
+| # | Question | Leaning | Answer |
+|---|---|---|---|
+| 27.11 | Should the row let you advance a task without opening the editor? | Probably — but see how often it's wanted first | |
+| 27.12 | Should completing a task write to the CSV log (27.4 said yes)? | Yes, once the shape of a task's life is clear | |
+| 27.13 | Should the gap between label time and task time be shown anywhere? | Only if it turns out to be interesting | |
+| 27.14 | Time-based fitting instead of a fixed count? | Only once estimates prove accurate | |
+
+---
+
 ## 28. Fix the label popup's readout wrapping  ✅ built in v31
 
 **What:** The readout currently wraps mid-phrase — `today` ends one line and
@@ -2239,3 +2243,35 @@ working but not see it.
   the row minimum is 44dp; making it appear mid-drag needs ~45dp, so the row
   would clip for as long as the finger was down. The label line costs no
   height at all.
+
+---
+
+## 66. Three totals, and the ±5m buttons removed  ✅ built in v59
+
+**What:** The `−5m` / `+5m` pair at the bottom left is gone. In its place, a
+third total — the same figure for whatever the second line under each label is
+showing.
+
+The bottom row now has one total under each column:
+
+| Under | Shows |
+|---|---|
+| Label column | total for the secondary figure |
+| Timer column | total time recorded |
+| Right column | total for the primary figure |
+
+**Why:** Long-pressing a row and sliding replaced the buttons, which only ever
+adjusted the running timer and needed a running timer to do it. Three aligned
+totals are a better use of the space.
+
+**The clock modes needed a decision.** Adding two times of day is meaningless,
+so `Start` and `ETA` can't sum. They show **when you would finish** instead —
+the day's start plus every goal, or now plus everything still to do. That's the
+figure the column is building toward on its last row, so the total is its
+natural conclusion rather than an invented one.
+
+**Notes:**
+- Prefixes and colours carry through, so a total reads the same way as the
+  column above it: `Σ8:35` in mint, `~2:15p` in grey-blue.
+- Blank when the secondary is set to None.
+- `adjustActive` had no caller left and was removed.

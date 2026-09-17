@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingTop="6dp"
+    android:paddingBottom="6dp">
+
+    <!-- Tapping the marker cycles open / doing / done / archived -->
+    <TextView
+        android:id="@+id/taskMark"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:gravity="center"
+        android:textSize="15sp"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="@drawable/bg_button_small" />
+
+    <TextView
+        android:id="@+id/taskText"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:textColor="#F1EDE3"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/taskTimes"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:fontFamily="monospace"
+        android:textColor="#8FA39E"
+        android:textSize="13sp" />
+
+    <ImageView
+        android:id="@+id/taskUp"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:padding="5dp"
+        android:src="@android:drawable/arrow_up_float"
+        android:contentDescription="Move up"
+        android:clickable="true"
+        android:focusable="true" />
+
+    <ImageView
+        android:id="@+id/taskDown"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:padding="5dp"
+        android:src="@android:drawable/arrow_down_float"
+        android:contentDescription="Move down"
+        android:clickable="true"
+        android:focusable="true" />
+</LinearLayout>

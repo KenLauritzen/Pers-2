@@ -208,7 +208,6 @@
             android:gravity="start"
             android:text=""
             android:fontFamily="monospace"
-            android:textSize="17sp"
             android:maxLines="1"
             android:ellipsize="end"
             android:includeFontPadding="false" />
@@ -223,8 +222,8 @@
             android:text=""
             android:textColor="#E8A33D"
             android:fontFamily="monospace"
-            android:textSize="24sp"
             android:maxLines="1"
+            android:ellipsize="end"
             android:includeFontPadding="false" />
 
         <TextView
@@ -236,8 +235,8 @@
             android:text=""
             android:textColor="#A9BDB8"
             android:fontFamily="monospace"
-            android:textSize="19sp"
             android:maxLines="1"
+            android:ellipsize="end"
             android:includeFontPadding="false" />
 
     </LinearLayout>

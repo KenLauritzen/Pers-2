@@ -51,6 +51,13 @@
         android:id="@+id/rowContent"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/rowColumns"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:paddingStart="10dp"
@@ -165,6 +172,43 @@
             android:maxLines="1"
             android:ellipsize="end"
             android:includeFontPadding="false" />
+
+    </LinearLayout>
+
+    <!-- Tasks, on the running row only. One TextView with newlines rather
+         than a nested list: no recycling, no scroll conflict, and the row
+         grows by however many lines it holds. The edit icon is always there,
+         even with no tasks, or there'd be no way to add the first one. -->
+    <LinearLayout
+        android:id="@+id/rowTaskBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingStart="14dp"
+        android:paddingEnd="8dp"
+        android:paddingBottom="6dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/rowTasks"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:textColor="#A9BDB8"
+            android:textSize="14sp"
+            android:lineSpacingExtra="1dp"
+            android:includeFontPadding="false" />
+
+        <ImageView
+            android:id="@+id/rowTaskEdit"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:padding="6dp"
+            android:src="@android:drawable/ic_menu_edit"
+            android:contentDescription="Edit tasks"
+            android:clickable="true"
+            android:focusable="true" />
+    </LinearLayout>
 
     </LinearLayout>
 
