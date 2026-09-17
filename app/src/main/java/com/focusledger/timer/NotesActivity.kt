@@ -55,7 +55,7 @@ class NotesActivity : AppCompatActivity() {
         setContentView(b.root)
 
         label = intent.getStringExtra(EXTRA_LABEL) ?: ""
-        b.notesLabel.text = label
+        b.notesLabel.text = "Notes \u2014 $label"
 
         b.switchShowEmpty.isChecked = SettingsStore.isShowEmptyRuns(this)
         b.switchShowEmpty.setOnCheckedChangeListener { _, checked ->

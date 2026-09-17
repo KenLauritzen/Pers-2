@@ -543,6 +543,32 @@ somewhere that switching off doesn't affect.
 
 ---
 
+## 70. Screen names, and the task count in both places  ✅ built in v66
+
+**What:** Every screen and dialog except the main one now says what it is.
+
+| Screen | Heading |
+|---|---|
+| Settings | `Settings` |
+| Notes | `Notes — Work` |
+| Label popup | `Label — Work` |
+| Task editor | `Tasks — Work` |
+| Layout picker | `Layouts` |
+
+Confirmations keep their question titles — `Delete “Work”?` tells you more than
+a screen name would.
+
+**Also: the task count is back in the editor**, alongside the copy in the label
+popup added in v65.
+
+Removing it was a mistake on a bad argument. I said two controls for one
+setting would drift apart; they can't, because both read and write the same
+stored value and both show it. The real problem in v65 was different — the
+*only* control was in a place it could hide — and that was fixed by adding one,
+not by removing one.
+
+---
+
 ## Template for new entries
 
 New ideas go in **Open ideas** with the next unused number. When one ships,

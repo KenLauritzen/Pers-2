@@ -1,22 +1,31 @@
-Focus v65 — complete file list.
+Focus v66 — complete file list.
 
-Fixes a dead end: setting a label's task count to zero hid the task block and
-the edit icon with it, leaving no way back to the editor or the count.
+  1. Every screen says what it is.
 
-The label popup — long-press any row's right column — now has a Tasks row
-beside Goal and Time:
+       Settings        "Settings"
+       Notes           "Notes — Work"
+       Label popup     "Label — Work"
+       Task editor     "Tasks — Work"
+       Layout picker   "Layouts"
 
-    Tasks   −   [3]   +     Edit...
+     Confirmations keep their question titles — "Delete “Work”?" tells you more
+     than a screen name would.
 
-The count is adjustable there, and Edit... opens the editor whatever the count
-is. Neither depends on the block that disappears at zero.
+  2. The task count is back in the task editor, as well as in the label popup.
 
-The editor's own count control has been removed. Two controls for one setting
-is how they drift apart, and there'd be no telling which you last used.
+     Removing it in v65 was a mistake on a bad argument: I said two controls for
+     one setting would drift, but they can't — both read and write the same
+     stored value and both display it. The real v65 problem was that the ONLY
+     control could hide itself, and that was fixed by adding one, not removing
+     one.
 
-UPLOAD ONLY THESE FOUR:
+UPLOAD THESE SIX:
   app/src/main/java/com/focusledger/timer/MainActivity.kt
+  app/src/main/java/com/focusledger/timer/NotesActivity.kt
+  app/src/main/res/layout/activity_settings.xml
+  app/src/main/res/layout/activity_notes.xml
   app/src/main/res/layout/dialog_label_edit.xml
+  app/src/main/res/layout/dialog_layout_picker.xml
   app/src/main/res/layout/dialog_tasks.xml
   app/src/main/res/values/strings.xml
 

@@ -413,11 +413,13 @@ class MainActivity : AppCompatActivity() {
     private fun showTaskEditor(label: String) {
         val view = LayoutInflater.from(this).inflate(R.layout.dialog_tasks, null)
         val list = view.findViewById<LinearLayout>(R.id.tasksList)
-        view.findViewById<TextView>(R.id.tasksTitle).text = "$label \u2014 tasks"
+        val countView = view.findViewById<TextView>(R.id.tasksShowCount)
+        view.findViewById<TextView>(R.id.tasksTitle).text = "Tasks \u2014 $label"
 
         val dialog = AlertDialog.Builder(this).setView(view).create()
 
         fun render() {
+            countView.text = TaskStore.getShowCount(this, label).toString()
             list.removeAllViews()
             val tasks = TaskStore.forLabel(this, label)
             if (tasks.isEmpty()) {
@@ -491,6 +493,15 @@ class MainActivity : AppCompatActivity() {
         }
         render()
 
+
+        view.findViewById<Button>(R.id.tasksShowMinus).setOnClickListener {
+            TaskStore.setShowCount(this, label, TaskStore.getShowCount(this, label) - 1)
+            render(); measureAndRebuild()
+        }
+        view.findViewById<Button>(R.id.tasksShowPlus).setOnClickListener {
+            TaskStore.setShowCount(this, label, TaskStore.getShowCount(this, label) + 1)
+            render(); measureAndRebuild()
+        }
 
         val newText = view.findViewById<EditText>(R.id.taskNewText)
         val newEst = view.findViewById<EditText>(R.id.taskNewEstimate)
@@ -744,6 +755,7 @@ class MainActivity : AppCompatActivity() {
      */
     private fun showLabelPopup(label: String) {
         val view = LayoutInflater.from(this).inflate(R.layout.dialog_label_edit, null)
+        view.findViewById<TextView>(R.id.editHeading).text = "Label \u2014 $label"
         val nameView = view.findViewById<TextView>(R.id.editName)
         val goalView = view.findViewById<TextView>(R.id.editGoal)
         val todayView = view.findViewById<TextView>(R.id.editToday)

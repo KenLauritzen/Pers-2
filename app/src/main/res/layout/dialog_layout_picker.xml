@@ -6,6 +6,16 @@
     android:background="#1A2C2A"
     android:padding="16dp">
 
+    <TextView
+        android:id="@+id/layoutPickerTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Layouts"
+        android:textColor="#E8A33D"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="10dp" />
+
     <EditText
         android:id="@+id/layoutFilter"
         android:layout_width="match_parent"

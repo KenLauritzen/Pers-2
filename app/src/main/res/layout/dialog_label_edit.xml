@@ -6,6 +6,14 @@
     android:background="#1A2C2A"
     android:padding="16dp">
 
+    <TextView
+        android:id="@+id/editHeading"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#8FA39E"
+        android:textSize="14sp"
+        android:layout_marginBottom="8dp" />
+
     <!-- Two explicit lines rather than one wrapping string: a value split
          from its own label reads as broken. Goal and today stack on the right
          so their figures line up under each other. -->
