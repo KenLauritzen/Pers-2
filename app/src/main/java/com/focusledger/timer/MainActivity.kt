@@ -9,6 +9,8 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.text.style.ForegroundColorSpan
+import android.text.style.StrikethroughSpan
+import android.text.style.LeadingMarginSpan
 import android.text.style.RelativeSizeSpan
 import android.text.format.DateFormat
 import android.text.Editable
@@ -109,7 +111,10 @@ class MainActivity : AppCompatActivity() {
      * so the progress bar still reads through it, and applied to every row so
      * it's visible wherever the list happens to be scrolled.
      */
-    private val idleWash = 0x38C97064
+    // Three times the old 0x38. Strong enough to catch the eye on a scrolled
+    // list; strong enough that the timer text has to brighten to stay legible
+    // on top of it — see bindValues.
+    private val idleWash = 0xA8C97064.toInt()
 
     private val tickRunnable = object : Runnable {
         override fun run() {
@@ -372,6 +377,7 @@ class MainActivity : AppCompatActivity() {
         val sb = SpannableStringBuilder()
         shown.forEachIndexed { i, t ->
             if (i > 0) sb.append("\n")
+            val lineFrom = sb.length
             val mark = when (t.status) {
                 TaskStatus.DOING -> "\u25b8"
                 TaskStatus.DONE -> "\u2713"
@@ -382,8 +388,11 @@ class MainActivity : AppCompatActivity() {
                 val from = sb.length
                 sb.append("$mark $times\n")
                 sb.setSpan(RelativeSizeSpan(0.8f), from, sb.length, SPAN_EXCLUSIVE_EXCLUSIVE)
+                // muted scored 2.44 on the green bar. This clears 4.5.
                 sb.setSpan(
-                    ForegroundColorSpan(if (t.status == TaskStatus.DOING) amber else muted),
+                    ForegroundColorSpan(
+                        if (t.status == TaskStatus.DOING) amber else 0xFFCBD9D5.toInt()
+                    ),
                     from, sb.length, SPAN_EXCLUSIVE_EXCLUSIVE
                 )
                 sb.append("   ")
@@ -393,11 +402,22 @@ class MainActivity : AppCompatActivity() {
             val textFrom = sb.length
             sb.append(t.text)
             if (t.status == TaskStatus.DONE) {
+                // Struck through rather than dimmed. Anything faint enough to
+                // read as "done" scored about 1.3 contrast on the green bar —
+                // invisible. A line through it says finished at any brightness.
+                sb.setSpan(StrikethroughSpan(), textFrom, sb.length, SPAN_EXCLUSIVE_EXCLUSIVE)
                 sb.setSpan(
-                    ForegroundColorSpan(0xFF5C736E.toInt()),
+                    ForegroundColorSpan(0xFFCBD9D5.toInt()),
                     textFrom, sb.length, SPAN_EXCLUSIVE_EXCLUSIVE
                 )
             }
+
+            // Wrapped lines hang under the text rather than falling back to
+            // the margin, so a long title stays visually one block.
+            sb.setSpan(
+                LeadingMarginSpan.Standard(0, (18 * resources.displayMetrics.density).toInt()),
+                lineFrom, sb.length, SPAN_EXCLUSIVE_EXCLUSIVE
+            )
         }
         view.text = sb
         view.setTextColor(0xFFDCE6E3.toInt())
@@ -1606,7 +1626,15 @@ class MainActivity : AppCompatActivity() {
                 if (isSession) TimerStore.getSessionMs(this, label)
                 else TimerStore.getDayMs(this, label)
             )
-            hTime.setTextColor(if (isActive) accent else muted)
+            // On the idle wash the muted grey falls to about 2:1, under the
+            // 3:1 large text needs. Near-white brings it back above 3.8.
+            hTime.setTextColor(
+                when {
+                    isActive -> accent
+                    !TimerStore.isRunning(this) -> 0xFFF1EDE3.toInt()
+                    else -> muted
+                }
+            )
         }
 
         // Nothing running anywhere: tint the timer column only.

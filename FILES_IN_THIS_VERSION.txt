@@ -1,32 +1,26 @@
-Focus v66 — complete file list.
+Focus v68 — complete file list.
 
-  1. Every screen says what it is.
+  1. Completed tasks are readable again.
 
-       Settings        "Settings"
-       Notes           "Notes — Work"
-       Label popup     "Label — Work"
-       Task editor     "Tasks — Work"
-       Layout picker   "Layouts"
+     They were greyed to #5C736E, which scores 1.28 contrast on the green
+     progress bar — invisible. And dimming can't work here: the task block sits
+     ON the bar, so anything faint enough to read as "finished" against the
+     dark track vanishes against the green.
 
-     Confirmations keep their question titles — "Delete “Work”?" tells you more
-     than a screen name would.
+     Done is now marked by STRIKING THE TEXT THROUGH rather than dimming it.
+     A line says finished at any brightness, so the colour can be legible:
+     #CBD9D5, which clears 4.5 on green and 10 on the dark track.
 
-  2. The task count is back in the task editor, as well as in the label popup.
+     The figures line had the same problem and moved to the same colour.
 
-     Removing it in v65 was a mistake on a bad argument: I said two controls for
-     one setting would drift, but they can't — both read and write the same
-     stored value and both display it. The real v65 problem was that the ONLY
-     control could hide itself, and that was fixed by adding one, not removing
-     one.
+  2. Wrapped lines now hang.
 
-UPLOAD THESE SIX:
+     A long title's second line was falling back to the left margin, starting
+     under the status marker instead of under its own text. Each task now reads
+     as one block.
+
+UPLOAD ONLY THESE TWO:
   app/src/main/java/com/focusledger/timer/MainActivity.kt
-  app/src/main/java/com/focusledger/timer/NotesActivity.kt
-  app/src/main/res/layout/activity_settings.xml
-  app/src/main/res/layout/activity_notes.xml
-  app/src/main/res/layout/dialog_label_edit.xml
-  app/src/main/res/layout/dialog_layout_picker.xml
-  app/src/main/res/layout/dialog_tasks.xml
   app/src/main/res/values/strings.xml
 
 Nothing to delete this version.

@@ -569,6 +569,31 @@ not by removing one.
 
 ---
 
+## 71. Done tasks unreadable on the green bar  ✅ fixed in v68
+
+**The bug:** completed tasks were greyed to `#5C736E`, which on the green
+progress bar scores **1.28** contrast. Effectively invisible.
+
+**Why dimming can't work here:** the task block sits on the progress bar, so
+its background is green on a row with time against it and near-black on one
+without. Anything faint enough to read as "finished" on the dark track
+disappears on the green. Measured: `#8FA39E` gives 2.44, `#A9BDB8` 3.29 —
+still under the 4.5 normal text needs.
+
+**The fix:** mark done by **striking the text through**, not by dimming it.
+A line says finished at any brightness, so the colour is free to be legible.
+Done tasks now use `#CBD9D5` — 4.46 on green, 10.03 on the track — with a
+strikethrough.
+
+The figures line had the same fault at `muted`, and moved to the same colour.
+
+**Also fixed here:** wrapped lines fell back to the left margin, so a long
+title's second line started under the status marker instead of under its own
+text. A `LeadingMarginSpan` now hangs them, keeping each task one visual
+block.
+
+---
+
 ## Template for new entries
 
 New ideas go in **Open ideas** with the next unused number. When one ships,
@@ -2248,6 +2273,12 @@ anything is running — which is the whole point.
   olive and the green/red distinction vanished — the app lost its colour
   language to gain an indicator it didn't need.
 - Reverted to the original 22% on the timer column alone.
+- **v67: the timer column alone, at three times the intensity** — alpha 0x38
+  → 0xA8. Confined to one column it can be far stronger without flattening
+  the row, which is what made the whole-row version wrong.
+- At that strength the muted timer text falls to about 2:1, under the 3:1
+  large text needs, so it brightens to near-white while the wash is on —
+  back above 3.8 against both the dark track and a green bar.
 
 **The lesson:** contrast maths said the text was still readable, and it was.
 What it couldn't say was that the wash destroyed the meaning of everything
