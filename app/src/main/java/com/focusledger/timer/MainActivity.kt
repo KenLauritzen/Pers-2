@@ -399,6 +399,9 @@ class MainActivity : AppCompatActivity() {
                         else -> muted
                     }
                 )
+                // It's the control you tap to advance a task, so it shouldn't
+                // be the smallest thing in the row.
+                mark.textSize = 22f
 
                 val textView = row.findViewById<TextView>(R.id.taskText)
                 textView.text = t.text
@@ -409,14 +412,20 @@ class MainActivity : AppCompatActivity() {
                     }
                 )
 
-                // Estimate against what it has actually taken.
+                // What it has taken, against what was estimated, and how much
+                // of the estimate that uses. Past 100% keeps counting rather
+                // than capping: how far over is the useful part.
                 val actual = TaskStore.liveMs(this, t)
-                row.findViewById<TextView>(R.id.taskTimes).text = buildString {
-                    if (t.estimateMinutes > 0) append("${t.estimateMinutes}m")
-                    if (actual > 0L) {
-                        if (isNotEmpty()) append(" / ")
-                        append("${actual / 60_000L}m")
-                    }
+                val actualMin = (actual / 60_000L).toInt()
+                val times = row.findViewById<TextView>(R.id.taskTimes)
+                if (t.estimateMinutes > 0) {
+                    val pct = actualMin * 100 / t.estimateMinutes
+                    times.text = "${actualMin}m / ${t.estimateMinutes}m  $pct%"
+                    times.setTextColor(if (pct > 100) colOver else muted)
+                } else {
+                    // Nothing to be a percentage of.
+                    times.text = if (actualMin > 0) "${actualMin}m" else ""
+                    times.setTextColor(muted)
                 }
 
                 mark.setOnClickListener { TaskStore.cycleStatus(this, t); render(); rebuild() }
@@ -458,44 +467,85 @@ class MainActivity : AppCompatActivity() {
             newText.setText(""); newEst.setText("")
             render(); rebuild()
         }
-        view.findViewById<Button>(R.id.tasksDone).setOnClickListener { dialog.dismiss() }
+        view.findViewById<Button>(R.id.tasksDone).setOnClickListener {
+            // Anything typed but not added is saved rather than lost — tapping
+            // Done with a task half-entered clearly means to keep it.
+            val pending = newText.text.toString().trim()
+            if (pending.isNotEmpty()) {
+                TaskStore.add(this, label, pending, newEst.text.toString().toIntOrNull() ?: 0)
+                rebuild()
+            }
+            dialog.dismiss()
+        }
         dialog.show()
     }
 
     /** Rename a task, change its estimate, or remove it. */
     private fun editTask(task: Task, onChange: () -> Unit) {
-        val box = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(40, 20, 40, 0)
-        }
-        val nameField = EditText(this).apply {
-            setText(task.text); setTextColor(0xFFF1EDE3.toInt()); textSize = 16f
-        }
-        val est = EditText(this).apply {
-            setText(if (task.estimateMinutes > 0) task.estimateMinutes.toString() else "")
-            hint = "Estimate in minutes"
-            setTextColor(0xFFF1EDE3.toInt()); setHintTextColor(0xFF5C736E.toInt())
-            textSize = 16f
-            inputType = android.text.InputType.TYPE_CLASS_NUMBER
-        }
-        box.addView(nameField); box.addView(est)
-
-        AlertDialog.Builder(this)
-            .setTitle("Edit task")
-            .setView(box)
-            .setPositiveButton("Save") { _, _ ->
-                TaskStore.update(
-                    this,
-                    task.copy(
-                        text = nameField.text.toString().trim().ifEmpty { task.text },
-                        estimateMinutes = est.text.toString().toIntOrNull() ?: 0
-                    )
+        textInputDialog(
+            title = "Edit task",
+            initial = task.text,
+            hint = "Task",
+            secondInitial = if (task.estimateMinutes > 0) task.estimateMinutes.toString() else "",
+            secondHint = "Estimate in minutes",
+            onDelete = { TaskStore.delete(this, task.id); onChange() }
+        ) { text, estimate ->
+            TaskStore.update(
+                this,
+                task.copy(
+                    text = text.ifEmpty { task.text },
+                    estimateMinutes = estimate.toIntOrNull() ?: 0
                 )
-                onChange()
+            )
+            onChange()
+        }
+    }
+
+    /**
+     * One dark text-entry dialog, shared by everything small enough to need
+     * only a field or two.
+     *
+     * These were EditTexts handed to a plain AlertDialog, which draws white
+     * while the fields carried cream text. Unreadable, and in four places.
+     */
+    private fun textInputDialog(
+        title: String,
+        initial: String = "",
+        hint: String = "",
+        secondInitial: String? = null,
+        secondHint: String = "",
+        onDelete: (() -> Unit)? = null,
+        onSave: (String, String) -> Unit
+    ) {
+        val view = LayoutInflater.from(this).inflate(R.layout.dialog_text_input, null)
+        view.findViewById<TextView>(R.id.inputTitle).text = title
+
+        val primary = view.findViewById<EditText>(R.id.inputPrimary)
+        primary.setText(initial)
+        primary.hint = hint
+        primary.setSelection(primary.text.length)
+
+        val secondary = view.findViewById<EditText>(R.id.inputSecondary)
+        if (secondInitial != null) {
+            secondary.visibility = View.VISIBLE
+            secondary.setText(secondInitial)
+            secondary.hint = secondHint
+        }
+
+        val dialog = AlertDialog.Builder(this).setView(view).create()
+
+        view.findViewById<Button>(R.id.inputSave).setOnClickListener {
+            onSave(primary.text.toString().trim(), secondary.text.toString().trim())
+            dialog.dismiss()
+        }
+        view.findViewById<Button>(R.id.inputCancel).setOnClickListener { dialog.dismiss() }
+        view.findViewById<Button>(R.id.inputDelete).apply {
+            if (onDelete != null) {
+                visibility = View.VISIBLE
+                setOnClickListener { dialog.dismiss(); onDelete() }
             }
-            .setNeutralButton("Delete") { _, _ -> TaskStore.delete(this, task.id); onChange() }
-            .setNegativeButton("Cancel", null)
-            .show()
+        }
+        dialog.show()
     }
 
     // ---- row gestures ------------------------------------------------------
@@ -731,36 +781,21 @@ class MainActivity : AppCompatActivity() {
 
     /** New label, straight from the bottom of the list. */
     private fun promptNewLabel() {
-        val input = EditText(this).apply {
-            hint = "Label name"
-            setTextColor(0xFFF1EDE3.toInt())
-            setHintTextColor(0xFF5C736E.toInt())
-            setBackgroundResource(R.drawable.bg_row_track)
-            setPadding(28, 24, 28, 24)
-            textSize = 15f
-            setSingleLine(true)
-        }
-        AlertDialog.Builder(this)
-            .setTitle("New label")
-            .setView(input)
-            .setPositiveButton("Add") { _, _ ->
-                val name = input.text.toString().trim()
-                if (name.isEmpty()) return@setPositiveButton
-                if (name.contains(',')) {
-                    Toast.makeText(this, "Labels can't contain a comma", Toast.LENGTH_SHORT).show()
-                    return@setPositiveButton
-                }
-                val library = LabelStore.readLibrary(this)
-                if (library.any { it.name.equals(name, ignoreCase = true) }) {
-                    Toast.makeText(this, "That label already exists", Toast.LENGTH_SHORT).show()
-                    return@setPositiveButton
-                }
-                LabelStore.writeLibrary(this, library + LabelEntry(name, 0))
-                rebuild()
-                showLabelPopup(name)   // straight into setting its goal
+        textInputDialog(title = "New label", hint = "Label name") { name, _ ->
+            if (name.isEmpty()) return@textInputDialog
+            if (name.contains(',')) {
+                Toast.makeText(this, "Labels can't contain a comma", Toast.LENGTH_SHORT).show()
+                return@textInputDialog
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+            val library = LabelStore.readLibrary(this)
+            if (library.any { it.name.equals(name, ignoreCase = true) }) {
+                Toast.makeText(this, "That label already exists", Toast.LENGTH_SHORT).show()
+                return@textInputDialog
+            }
+            LabelStore.writeLibrary(this, library + LabelEntry(name, 0))
+            rebuild()
+            showLabelPopup(name)   // straight into setting its goal
+        }
     }
 
     // ---- ordering ----------------------------------------------------------
@@ -801,45 +836,29 @@ class MainActivity : AppCompatActivity() {
 
     /** Saves the current order and visibility under a name. */
     private fun promptSaveLayout() {
-        val input = EditText(this).apply {
+        textInputDialog(
+            title = "Save current arrangement",
             hint = "Layout name"
-            setTextColor(0xFFF1EDE3.toInt())
-            setHintTextColor(0xFF5C736E.toInt())
-            setBackgroundResource(R.drawable.bg_row_track)
-            setPadding(28, 24, 28, 24)
-            textSize = 15f
-            setSingleLine(true)
-        }
+        ) { name, _ ->
+            if (name.isEmpty()) return@textInputDialog
+            val library = LabelStore.readLibrary(this)
 
-        AlertDialog.Builder(this)
-            .setTitle("Save current arrangement")
-            .setMessage("Stores which labels are shown, in what order, and their daily goals.")
-            .setView(input)
-            .setPositiveButton("Save") { _, _ ->
-                val name = input.text.toString().trim()
-                if (name.isEmpty()) return@setPositiveButton
-
-                val library = LabelStore.readLibrary(this)
-                val existing = LayoutStore.exists(this, name)
-
-                fun doSave() {
-                    if (LayoutStore.save(this, name, library))
-                        Toast.makeText(this, "Saved \u201c$name\u201d", Toast.LENGTH_SHORT).show()
-                    else
-                        Toast.makeText(this, "Couldn't save that layout", Toast.LENGTH_LONG).show()
-                }
-
-                if (existing) {
-                    AlertDialog.Builder(this)
-                        .setTitle("Replace \u201c$name\u201d?")
-                        .setMessage("A layout with that name already exists.")
-                        .setPositiveButton("Replace") { _, _ -> doSave() }
-                        .setNegativeButton("Cancel", null)
-                        .show()
-                } else doSave()
+            fun doSave() {
+                if (LayoutStore.save(this, name, library))
+                    Toast.makeText(this, "Saved \u201c$name\u201d", Toast.LENGTH_SHORT).show()
+                else
+                    Toast.makeText(this, "Couldn't save that layout", Toast.LENGTH_LONG).show()
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+
+            if (LayoutStore.exists(this, name)) {
+                AlertDialog.Builder(this)
+                    .setTitle("Replace \u201c$name\u201d?")
+                    .setMessage("A layout with that name already exists.")
+                    .setPositiveButton("Replace") { _, _ -> doSave() }
+                    .setNegativeButton("Cancel", null)
+                    .show()
+            } else doSave()
+        }
     }
 
     /** Searchable list of saved layouts; long-press to rename or delete. */
@@ -907,22 +926,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun promptRenameLayout(layout: SavedLayout) {
-        val input = EditText(this).apply {
-            setText(layout.name)
-            setTextColor(0xFFF1EDE3.toInt())
-            setBackgroundResource(R.drawable.bg_row_track)
-            setPadding(28, 24, 28, 24)
-            textSize = 15f
-            setSingleLine(true)
+        textInputDialog(
+            title = "Rename layout",
+            initial = layout.name,
+            hint = "Layout name"
+        ) { name, _ ->
+            if (name.isNotEmpty()) LayoutStore.rename(this, layout.name, name)
         }
-        AlertDialog.Builder(this)
-            .setTitle("Rename layout")
-            .setView(input)
-            .setPositiveButton("Rename") { _, _ ->
-                LayoutStore.rename(this, layout.name, input.text.toString())
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
     }
 
     private fun confirmDeleteLayout(layout: SavedLayout) {

@@ -1,44 +1,33 @@
-Focus v62 — complete file list.
+Focus v63 — complete file list.
 
-TASKS (idea 27)
+  1. Dialog colours fixed — in four places, not one.
 
-Tap the pencil under the running row to open the task editor for that label.
+     Edit task, New label, Save layout and Rename layout all put cream text on
+     AlertDialog's white background. They now share one dark layout,
+     dialog_text_input.xml, so they match the rest of the app.
 
-  Statuses cycle when you tap a task's marker:
-      open  ->  doing (▸)  ->  done (✓, greyed)  ->  archived (×, hidden)
+  2. Done saves a part-typed task.
 
-  Four rather than a tick box, because "finished" and "get it off my screen"
-  are different moments.
+     Typing a task and tapping Done used to add nothing. It now saves, with its
+     estimate.
 
-  Tasks accrue their own time, but ONLY while their label's timer is running
-  and the task is marked "doing". The LABEL TOTAL STAYS AUTHORITATIVE — task
-  time will usually sum to less, and that gap is honest: thinking time,
-  interruptions and forgetting to advance a task all live in it.
+  3. Larger status markers.
 
-  Only one task can be "doing" at a time across all labels. Two accruing
-  against one timer would double-count.
+     15sp -> 22sp in the editor; the row's task text 14sp -> 17sp and the edit
+     icon 30dp -> 38dp.
 
-  "Show on the row" is 0-5 per label. Zero opts that label out entirely.
+  4. Times reversed, with a percentage.
 
-  Each task can carry an estimate in minutes. The editor shows estimate /
-  actual side by side.
+     "30m / 300m  10%"  — taken, estimated, and how much of the estimate that
+     uses. Past 100% keeps counting and turns peach. With no estimate there's
+     nothing to be a percentage of, so it shows the actual alone.
 
-  The running row grows to fit its tasks; every other row keeps its height.
-
-The file is tasks.csv, beside the log, and it is CSV on purpose — it is shaped
-so a spreadsheet of tasks-by-category can be merged into it later. One row per
-task, label as plain text, estimate in whole minutes. It is included in the
-Settings export.
-
-NEW FILES — make sure all four upload:
-  app/src/main/java/com/focusledger/timer/TaskStore.kt
-  app/src/main/res/layout/dialog_tasks.xml
-  app/src/main/res/layout/row_task_edit.xml
+NEW FILE — make sure this uploads:
+  app/src/main/res/layout/dialog_text_input.xml
 
 ALSO UPLOAD:
   app/src/main/java/com/focusledger/timer/MainActivity.kt
-  app/src/main/java/com/focusledger/timer/TimerStore.kt
-  app/src/main/java/com/focusledger/timer/SettingsActivity.kt
+  app/src/main/res/layout/row_task_edit.xml
   app/src/main/res/layout/row_timer.xml
   app/src/main/res/values/strings.xml
 
@@ -81,6 +70,7 @@ app/src/main/res/layout/dialog_label_edit.xml
 app/src/main/res/layout/dialog_layout_picker.xml
 app/src/main/res/layout/dialog_note_edit.xml
 app/src/main/res/layout/dialog_tasks.xml
+app/src/main/res/layout/dialog_text_input.xml
 app/src/main/res/layout/row_add_label.xml
 app/src/main/res/layout/row_layout_entry.xml
 app/src/main/res/layout/row_note_entry.xml

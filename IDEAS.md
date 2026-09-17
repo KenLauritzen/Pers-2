@@ -448,6 +448,37 @@ list.
 
 ---
 
+## 67. Dialog colours, and four task-editor refinements  ✅ built in v63
+
+**The bug:** four dialogs — Edit task, New label, Save layout, Rename layout —
+put the app's cream text on `AlertDialog`'s white background. Effectively
+invisible. Reported on one; the other three had it too.
+
+**Cause:** those fields were built in code with dark-theme colours and handed
+to a plain `AlertDialog`, which draws white. The dialogs that looked right —
+the label popup, the task editor, the note editor — each carry their own
+background.
+
+**The fix:** one shared `dialog_text_input.xml` with a title, one or two
+fields, and Cancel / Save plus an optional Delete. All four now use it, so they
+match the rest of the app and there is one place to change rather than four.
+This is most of what idea 61 was about.
+
+**Three refinements alongside:**
+- **Done saves a part-typed task.** Typing a task and tapping Done added
+  nothing. It now saves, with its estimate. Same trap as idea 4's unsaved
+  label box.
+- **Larger status markers** — 15sp → 22sp in the editor, and the row's task
+  text 14sp → 17sp. It's the control you tap to advance a task and it was the
+  smallest thing on the row.
+- **Times reversed, with a percentage:** `30m / 300m 10%` — what it has taken,
+  what was estimated, how much of the estimate that uses. Past 100% keeps
+  counting and turns peach, since how far over is the useful part. With no
+  estimate there's nothing to be a percentage of, so it shows the actual
+  alone.
+
+---
+
 ## Template for new entries
 
 New ideas go in **Open ideas** with the next unused number. When one ships,

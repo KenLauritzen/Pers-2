@@ -195,15 +195,15 @@
             android:layout_weight="1"
             android:layout_height="wrap_content"
             android:textColor="#A9BDB8"
-            android:textSize="14sp"
+            android:textSize="17sp"
             android:lineSpacingExtra="1dp"
             android:includeFontPadding="false" />
 
         <ImageView
             android:id="@+id/rowTaskEdit"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:padding="6dp"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:padding="7dp"
             android:src="@android:drawable/ic_menu_edit"
             android:contentDescription="Edit tasks"
             android:clickable="true"
