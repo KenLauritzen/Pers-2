@@ -1,34 +1,31 @@
-Focus v63 — complete file list.
+Focus v64 — complete file list.
 
-  1. Dialog colours fixed — in four places, not one.
+  1. The totals row no longer clips.
 
-     Edit task, New label, Save layout and Rename layout all put cream text on
-     AlertDialog's white background. They now share one dark layout,
-     dialog_text_input.xml, so they match the rest of the app.
+     includeFontPadding="false" on a wrap_content height removes the space a
+     font reserves for descenders — so the tail of the "p" in "@8:30p" was cut
+     and the digits looked shaved. The three totals now take the full 48dp row
+     height and keep their font padding.
 
-  2. Done saves a part-typed task.
+  2. Tasks show on two lines, in the editor and on the row.
 
-     Typing a task and tapping Done used to add nothing. It now saves, with its
-     estimate.
+     ▸ 30m / 300m  10%
+       RDM-1608 - Ryan uploaded not licensed detail
 
-  3. Larger status markers.
+     The description gets the full width and WRAPS, so a task can be several
+     lines and the running row grows with its content. The 0-5 show count is
+     the dial — 2 or 3 is probably the practical setting now.
 
-     15sp -> 22sp in the editor; the row's task text 14sp -> 17sp and the edit
-     icon 30dp -> 38dp.
+     Figures show even at zero, so the shape doesn't change once a task is
+     started.
 
-  4. Times reversed, with a percentage.
+     The row block is still one TextView; spans make the figure lines smaller
+     and dimmer than the description.
 
-     "30m / 300m  10%"  — taken, estimated, and how much of the estimate that
-     uses. Past 100% keeps counting and turns peach. With no estimate there's
-     nothing to be a percentage of, so it shows the actual alone.
-
-NEW FILE — make sure this uploads:
-  app/src/main/res/layout/dialog_text_input.xml
-
-ALSO UPLOAD:
+UPLOAD ONLY THESE FOUR:
   app/src/main/java/com/focusledger/timer/MainActivity.kt
+  app/src/main/res/layout/activity_main.xml
   app/src/main/res/layout/row_task_edit.xml
-  app/src/main/res/layout/row_timer.xml
   app/src/main/res/values/strings.xml
 
 Nothing to delete this version.

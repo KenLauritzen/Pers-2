@@ -8,8 +8,12 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.text.style.ForegroundColorSpan
+import android.text.style.RelativeSizeSpan
 import android.text.format.DateFormat
 import android.text.Editable
+import android.text.SpannableStringBuilder
+import android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
 import android.text.TextWatcher
 import android.util.TypedValue
 import android.view.LayoutInflater
@@ -298,6 +302,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
+     * "30m / 300m  10%" — taken, estimated, and how much of the estimate that
+     * uses. Shown even at zero, so the shape doesn't change once a task is
+     * started. With no estimate there's nothing to be a percentage of.
+     */
+    private fun taskTimes(task: Task): String {
+        val actualMin = (TaskStore.liveMs(this, task) / 60_000L).toInt()
+        return if (task.estimateMinutes > 0)
+            "${actualMin}m / ${task.estimateMinutes}m  ${actualMin * 100 / task.estimateMinutes}%"
+        else if (actualMin > 0) "${actualMin}m"
+        else ""
+    }
+
+    /**
      * The task block, shown under the running row only.
      *
      * Every other row stays a single fixed-height line. The block appears when
@@ -307,6 +324,7 @@ class MainActivity : AppCompatActivity() {
     private fun renderTasks(h: TimerAdapter.Holder, entry: LabelEntry) {
         val box = h.taskBox ?: return
         val view = h.tasks ?: return
+        h.taskEdit?.setOnClickListener { showTaskEditor(entry.name) }
 
         val isRunning = TimerStore.getActiveLabel(this) == entry.name
         val limit = TaskStore.getShowCount(this, entry.name)
@@ -338,19 +356,51 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // Two lines each: marker and figures, then the description beneath it
+        // with the full width to wrap into. Long titles were unreadable
+        // sharing a line with the times.
+        //
+        // One TextView still, with spans for the figure lines — smaller and
+        // dimmer than the description, so the eye goes to the task first.
         val shown = TaskStore.visibleForRow(this, entry.name, limit)
-        view.text = if (shown.isEmpty()) "No tasks" else shown.joinToString("\n") { t ->
+        if (shown.isEmpty()) {
+            view.text = "No tasks"
+            view.setTextColor(0xFF5C736E.toInt())
+            return
+        }
+
+        val sb = SpannableStringBuilder()
+        shown.forEachIndexed { i, t ->
+            if (i > 0) sb.append("\n")
             val mark = when (t.status) {
                 TaskStatus.DOING -> "\u25b8"
                 TaskStatus.DONE -> "\u2713"
-                else -> "-"
+                else -> "\u00b7"
             }
-            val est = if (t.estimateMinutes > 0) "  ${t.estimateMinutes}m" else ""
-            "$mark ${t.text}$est"
+            val times = taskTimes(t)
+            if (times.isNotEmpty()) {
+                val from = sb.length
+                sb.append("$mark $times\n")
+                sb.setSpan(RelativeSizeSpan(0.8f), from, sb.length, SPAN_EXCLUSIVE_EXCLUSIVE)
+                sb.setSpan(
+                    ForegroundColorSpan(if (t.status == TaskStatus.DOING) amber else muted),
+                    from, sb.length, SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                sb.append("   ")
+            } else {
+                sb.append("$mark ")
+            }
+            val textFrom = sb.length
+            sb.append(t.text)
+            if (t.status == TaskStatus.DONE) {
+                sb.setSpan(
+                    ForegroundColorSpan(0xFF5C736E.toInt()),
+                    textFrom, sb.length, SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+            }
         }
-        view.setTextColor(if (shown.isEmpty()) 0xFF5C736E.toInt() else 0xFFA9BDB8.toInt())
-
-        h.taskEdit?.setOnClickListener { showTaskEditor(entry.name) }
+        view.text = sb
+        view.setTextColor(0xFFDCE6E3.toInt())
     }
 
     /**
@@ -412,21 +462,15 @@ class MainActivity : AppCompatActivity() {
                     }
                 )
 
-                // What it has taken, against what was estimated, and how much
-                // of the estimate that uses. Past 100% keeps counting rather
-                // than capping: how far over is the useful part.
-                val actual = TaskStore.liveMs(this, t)
-                val actualMin = (actual / 60_000L).toInt()
+                // Past 100% keeps counting rather than capping: how far over
+                // is the useful part.
+                val actualMin = (TaskStore.liveMs(this, t) / 60_000L).toInt()
                 val times = row.findViewById<TextView>(R.id.taskTimes)
-                if (t.estimateMinutes > 0) {
-                    val pct = actualMin * 100 / t.estimateMinutes
-                    times.text = "${actualMin}m / ${t.estimateMinutes}m  $pct%"
-                    times.setTextColor(if (pct > 100) colOver else muted)
-                } else {
-                    // Nothing to be a percentage of.
-                    times.text = if (actualMin > 0) "${actualMin}m" else ""
-                    times.setTextColor(muted)
-                }
+                times.text = taskTimes(t)
+                times.setTextColor(
+                    if (t.estimateMinutes > 0 && actualMin > t.estimateMinutes) colOver
+                    else muted
+                )
 
                 mark.setOnClickListener { TaskStore.cycleStatus(this, t); render(); rebuild() }
                 textView.setOnClickListener { editTask(t) { render(); rebuild() } }

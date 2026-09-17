@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Two lines per task: figures above, description below.
+
+  The description gets the full width rather than competing with the times,
+  which matters for long titles. It wraps, so a task can be several lines and
+  the row's height varies with its content.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:gravity="center_vertical"
-    android:paddingTop="6dp"
-    android:paddingBottom="6dp">
+    android:paddingTop="7dp"
+    android:paddingBottom="7dp">
 
     <!-- Tapping the marker cycles open / doing / done / archived -->
     <TextView
@@ -18,41 +24,55 @@
         android:focusable="true"
         android:background="@drawable/bg_button_small" />
 
-    <TextView
-        android:id="@+id/taskText"
+    <LinearLayout
         android:layout_width="0dp"
         android:layout_weight="1"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:textColor="#F1EDE3"
-        android:textSize="16sp" />
+        android:orientation="vertical"
+        android:layout_marginStart="10dp"
+        android:gravity="center_vertical">
 
-    <TextView
-        android:id="@+id/taskTimes"
+        <TextView
+            android:id="@+id/taskTimes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:textColor="#8FA39E"
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/taskText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:textColor="#F1EDE3"
+            android:textSize="17sp" />
+    </LinearLayout>
+
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="6dp"
-        android:fontFamily="monospace"
-        android:textColor="#8FA39E"
-        android:textSize="15sp" />
+        android:orientation="vertical"
+        android:gravity="center_vertical">
 
-    <ImageView
-        android:id="@+id/taskUp"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:padding="5dp"
-        android:src="@android:drawable/arrow_up_float"
-        android:contentDescription="Move up"
-        android:clickable="true"
-        android:focusable="true" />
+        <ImageView
+            android:id="@+id/taskUp"
+            android:layout_width="34dp"
+            android:layout_height="30dp"
+            android:padding="5dp"
+            android:src="@android:drawable/arrow_up_float"
+            android:contentDescription="Move up"
+            android:clickable="true"
+            android:focusable="true" />
 
-    <ImageView
-        android:id="@+id/taskDown"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:padding="5dp"
-        android:src="@android:drawable/arrow_down_float"
-        android:contentDescription="Move down"
-        android:clickable="true"
-        android:focusable="true" />
+        <ImageView
+            android:id="@+id/taskDown"
+            android:layout_width="34dp"
+            android:layout_height="30dp"
+            android:padding="5dp"
+            android:src="@android:drawable/arrow_down_float"
+            android:contentDescription="Move down"
+            android:clickable="true"
+            android:focusable="true" />
+    </LinearLayout>
 </LinearLayout>

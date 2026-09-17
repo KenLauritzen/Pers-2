@@ -479,6 +479,41 @@ This is most of what idea 61 was about.
 
 ---
 
+## 68. Two-line tasks, and the totals row clipping  ✅ built in v64
+
+**The clipping:** the three totals were cut off at the bottom — the descender
+on `@8:30p` lost its tail and the digits looked shaved.
+
+`includeFontPadding="false"` on a `wrap_content` height. That attribute removes
+the space a font reserves for ascenders and descenders, which is right in the
+rows where vertical space is fought over and wrong here, where the row is 48dp
+and nothing is competing. The three totals now take the full row height and
+keep their font padding.
+
+**Two-line tasks:**
+
+```
+▸ 30m / 300m  10%
+  RDM-1608 - Ryan uploaded not licensed detail
+```
+
+Marker and figures on the first line, description beneath with the full width
+to wrap into. Long titles were unreadable sharing a line with the times.
+
+**Notes:**
+- **The description wraps rather than truncating**, so a task can be three or
+  four lines and the running row's height varies with its content. The 0–5
+  show count is the dial; 2 or 3 is likely the practical setting now.
+- Figures show even at zero — `0m / 300m 0%` — so the shape doesn't change
+  when a task is started. Only a task with no estimate differs, having nothing
+  to be a percentage of.
+- The row block is still **one TextView**, with spans making the figure lines
+  smaller and dimmer than the description. No nested list, no recycling.
+- One `taskTimes` formatter shared by the row and the editor, so they can't
+  drift apart.
+
+---
+
 ## Template for new entries
 
 New ideas go in **Open ideas** with the next unused number. When one ships,

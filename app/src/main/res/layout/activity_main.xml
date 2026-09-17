@@ -204,40 +204,37 @@
             android:id="@+id/tvTotalSub"
             android:layout_width="0dp"
             android:layout_weight="0.30"
-            android:layout_height="wrap_content"
-            android:gravity="start"
+            android:layout_height="match_parent"
+            android:gravity="start|center_vertical"
             android:text=""
             android:fontFamily="monospace"
             android:maxLines="1"
-            android:ellipsize="end"
-            android:includeFontPadding="false" />
+            android:ellipsize="end"/>
 
 
         <TextView
             android:id="@+id/tvTotalElapsed"
             android:layout_width="0dp"
             android:layout_weight="0.40"
-            android:layout_height="wrap_content"
-            android:gravity="end"
+            android:layout_height="match_parent"
+            android:gravity="end|center_vertical"
             android:text=""
             android:textColor="#E8A33D"
             android:fontFamily="monospace"
             android:maxLines="1"
-            android:ellipsize="end"
-            android:includeFontPadding="false" />
+            android:ellipsize="end"/>
 
         <TextView
             android:id="@+id/tvTotalGoal"
             android:layout_width="0dp"
             android:layout_weight="0.30"
-            android:layout_height="wrap_content"
-            android:gravity="end"
+            android:layout_height="match_parent"
+            android:gravity="end|center_vertical"
             android:text=""
             android:textColor="#A9BDB8"
             android:fontFamily="monospace"
             android:maxLines="1"
-            android:ellipsize="end"
-            android:includeFontPadding="false" />
+            android:ellipsize="end"/>
 
     </LinearLayout>
 
