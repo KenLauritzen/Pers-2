@@ -15,55 +15,6 @@
         android:textStyle="bold"
         android:layout_marginBottom="4dp" />
 
-    <!-- How many of this label's tasks the row shows. Zero opts the label out
-         entirely, so no separate on/off is needed. -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginBottom="10dp">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:text="Show on the row"
-            android:textColor="#8FA39E"
-            android:textSize="15sp" />
-
-        <Button
-            android:id="@+id/tasksShowMinus"
-            android:layout_width="44dp"
-            android:layout_height="40dp"
-            android:text="\u2212"
-            android:textAllCaps="false"
-            android:textColor="#C97064"
-            android:textSize="18sp"
-            android:padding="0dp"
-            android:background="@drawable/bg_button_small" />
-
-        <TextView
-            android:id="@+id/tasksShowCount"
-            android:layout_width="40dp"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:textColor="#F1EDE3"
-            android:fontFamily="monospace"
-            android:textSize="18sp" />
-
-        <Button
-            android:id="@+id/tasksShowPlus"
-            android:layout_width="44dp"
-            android:layout_height="40dp"
-            android:text="+"
-            android:textAllCaps="false"
-            android:textColor="#7DBE7A"
-            android:textSize="18sp"
-            android:padding="0dp"
-            android:background="@drawable/bg_button_small" />
-    </LinearLayout>
-
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"

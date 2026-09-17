@@ -514,6 +514,35 @@ to wrap into. Long titles were unreadable sharing a line with the times.
 
 ---
 
+## 69. Task count in the label popup  ✅ built in v65
+
+**The bug:** setting a label's task count to zero hid the row's task block —
+and the edit icon with it — leaving no way to reach the editor or raise the
+count again. The label was stranded short of clearing app data.
+
+Exactly the trap idea 24 removed for hidden labels. I guarded the case of a
+label with *no tasks*, which keeps its icon, and missed the identical case of a
+count of zero.
+
+**The fix:** a Tasks row in the label popup, beside Goal and Time:
+
+```
+Tasks   −   [3]   +     Edit…
+```
+
+Long-press any row's right column to reach it. Neither the count nor the editor
+now depends on the block that disappears.
+
+**The editor's own count control was removed.** Two controls for one setting is
+how they drift, and there'd be no telling which you last used. The popup is the
+single place.
+
+**Worth generalising:** twice now a control has been the only route to
+something it can hide. Anything that can be switched off needs its switch
+somewhere that switching off doesn't affect.
+
+---
+
 ## Template for new entries
 
 New ideas go in **Open ideas** with the next unused number. When one ships,

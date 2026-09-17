@@ -413,13 +413,11 @@ class MainActivity : AppCompatActivity() {
     private fun showTaskEditor(label: String) {
         val view = LayoutInflater.from(this).inflate(R.layout.dialog_tasks, null)
         val list = view.findViewById<LinearLayout>(R.id.tasksList)
-        val countView = view.findViewById<TextView>(R.id.tasksShowCount)
         view.findViewById<TextView>(R.id.tasksTitle).text = "$label \u2014 tasks"
 
         val dialog = AlertDialog.Builder(this).setView(view).create()
 
         fun render() {
-            countView.text = TaskStore.getShowCount(this, label).toString()
             list.removeAllViews()
             val tasks = TaskStore.forLabel(this, label)
             if (tasks.isEmpty()) {
@@ -493,14 +491,6 @@ class MainActivity : AppCompatActivity() {
         }
         render()
 
-        view.findViewById<Button>(R.id.tasksShowMinus).setOnClickListener {
-            TaskStore.setShowCount(this, label, TaskStore.getShowCount(this, label) - 1)
-            render(); measureAndRebuild()
-        }
-        view.findViewById<Button>(R.id.tasksShowPlus).setOnClickListener {
-            TaskStore.setShowCount(this, label, TaskStore.getShowCount(this, label) + 1)
-            render(); measureAndRebuild()
-        }
 
         val newText = view.findViewById<EditText>(R.id.taskNewText)
         val newEst = view.findViewById<EditText>(R.id.taskNewEstimate)
@@ -759,9 +749,12 @@ class MainActivity : AppCompatActivity() {
         val todayView = view.findViewById<TextView>(R.id.editToday)
         val dialog = AlertDialog.Builder(this).setView(view).create()
 
+        val taskCount = view.findViewById<TextView>(R.id.eTaskCount)
+
         fun refresh() {
             val entry = LabelStore.readLibrary(this).firstOrNull { it.name == label }
             val goal = entry?.goalMinutes ?: 0
+            taskCount.text = TaskStore.getShowCount(this, label).toString()
             nameView.text = label
             // Both in h:mm. The goal was minutes and today's time carried
             // seconds, so two figures a line apart read in different units.
@@ -804,6 +797,19 @@ class MainActivity : AppCompatActivity() {
         view.findViewById<Button>(R.id.eDelete).setOnClickListener {
             dialog.dismiss(); confirmDeleteLabel(label)
         }
+        // The show count lives here as well as nowhere else: at zero the row's
+        // task block and its edit icon both disappear, so the editor has to be
+        // reachable from somewhere that never does.
+        fun changeTaskCount(delta: Int) {
+            TaskStore.setShowCount(this, label, TaskStore.getShowCount(this, label) + delta)
+            refresh(); measureAndRebuild()
+        }
+        view.findViewById<Button>(R.id.eTaskMinus).setOnClickListener { changeTaskCount(-1) }
+        view.findViewById<Button>(R.id.eTaskPlus).setOnClickListener { changeTaskCount(1) }
+        view.findViewById<Button>(R.id.eTaskEdit).setOnClickListener {
+            dialog.dismiss(); showTaskEditor(label)
+        }
+
         view.findViewById<Button>(R.id.eDone).setOnClickListener { dialog.dismiss() }
 
         dialog.show()

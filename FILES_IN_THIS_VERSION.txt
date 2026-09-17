@@ -1,31 +1,23 @@
-Focus v64 — complete file list.
+Focus v65 — complete file list.
 
-  1. The totals row no longer clips.
+Fixes a dead end: setting a label's task count to zero hid the task block and
+the edit icon with it, leaving no way back to the editor or the count.
 
-     includeFontPadding="false" on a wrap_content height removes the space a
-     font reserves for descenders — so the tail of the "p" in "@8:30p" was cut
-     and the digits looked shaved. The three totals now take the full 48dp row
-     height and keep their font padding.
+The label popup — long-press any row's right column — now has a Tasks row
+beside Goal and Time:
 
-  2. Tasks show on two lines, in the editor and on the row.
+    Tasks   −   [3]   +     Edit...
 
-     ▸ 30m / 300m  10%
-       RDM-1608 - Ryan uploaded not licensed detail
+The count is adjustable there, and Edit... opens the editor whatever the count
+is. Neither depends on the block that disappears at zero.
 
-     The description gets the full width and WRAPS, so a task can be several
-     lines and the running row grows with its content. The 0-5 show count is
-     the dial — 2 or 3 is probably the practical setting now.
-
-     Figures show even at zero, so the shape doesn't change once a task is
-     started.
-
-     The row block is still one TextView; spans make the figure lines smaller
-     and dimmer than the description.
+The editor's own count control has been removed. Two controls for one setting
+is how they drift apart, and there'd be no telling which you last used.
 
 UPLOAD ONLY THESE FOUR:
   app/src/main/java/com/focusledger/timer/MainActivity.kt
-  app/src/main/res/layout/activity_main.xml
-  app/src/main/res/layout/row_task_edit.xml
+  app/src/main/res/layout/dialog_label_edit.xml
+  app/src/main/res/layout/dialog_tasks.xml
   app/src/main/res/values/strings.xml
 
 Nothing to delete this version.
