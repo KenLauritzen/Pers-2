@@ -67,6 +67,10 @@ class MainActivity : AppCompatActivity() {
     /** When task time was last written to file. See refreshValues. */
     private var lastTaskSettle = 0L
 
+    /** "9 Sep 3:15p" beside a finished task. */
+    private val doneFmt =
+        java.text.SimpleDateFormat("d MMM h:mma", java.util.Locale.getDefault())
+
     /** The same, for the elapsed-time slider on the timer column. */
     private var timeSlideLabel: String? = null
     private var timeSlidePendingMinutes = 0
@@ -486,7 +490,10 @@ class MainActivity : AppCompatActivity() {
                 // is the useful part.
                 val actualMin = (TaskStore.liveMs(this, t) / 60_000L).toInt()
                 val times = row.findViewById<TextView>(R.id.taskTimes)
-                times.text = taskTimes(t)
+                // When it was finished, beside how long it took.
+                val done = if (t.completedAt > 0L)
+                    "   \u2713 ${doneFmt.format(java.util.Date(t.completedAt))}" else ""
+                times.text = taskTimes(t) + done
                 times.setTextColor(
                     if (t.estimateMinutes > 0 && actualMin > t.estimateMinutes) colOver
                     else muted

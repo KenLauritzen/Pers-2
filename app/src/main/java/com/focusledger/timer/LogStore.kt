@@ -28,11 +28,17 @@ object LogStore {
 
     private const val FILE_NAME = "timer_log.csv"
     private const val HEADER =
-        "session_start,run_start,label,duration_minutes,adjusted,note,duration_ms"
+        "session_start,run_start,label,duration_minutes,adjusted,note,duration_ms,type"
 
-    /** The 6-column header used before duration_ms was added. */
+    /** Row kinds. Anything without the column is a run, which is what they were. */
+    const val TYPE_RUN = "run"
+    const val TYPE_TASK_DONE = "task_done"
+
+    /** Headers from before a column was added. Existing files are upgraded. */
     private const val HEADER_V1 =
         "session_start,run_start,label,duration_minutes,adjusted,note"
+    private const val HEADER_V2 =
+        "session_start,run_start,label,duration_minutes,adjusted,note,duration_ms"
 
     private val stamp = SimpleDateFormat("yyyy-MM-dd'T'HH:mm", Locale.US)
 
@@ -50,7 +56,8 @@ object LogStore {
         // stays sensible opened in a spreadsheet.
         try {
             val lines = f.readLines()
-            if (lines.isNotEmpty() && lines[0].trim() == HEADER_V1) {
+            if (lines.isNotEmpty() &&
+                (lines[0].trim() == HEADER_V1 || lines[0].trim() == HEADER_V2)) {
                 f.writeText((listOf(HEADER) + lines.drop(1)).joinToString("\n") + "\n")
             }
         } catch (e: Exception) {
@@ -181,7 +188,8 @@ object LogStore {
             minutes.toString(),
             adjusted.toString(),
             csvEscape(note),
-            elapsedMs.toString()
+            elapsedMs.toString(),
+            TYPE_RUN
         ).joinToString(",") + "\n"
     }
 
@@ -197,7 +205,15 @@ object LogStore {
             val lines = f.readLines().toMutableList()
             if (lines.size <= 1) return false
 
-            val lastIdx = lines.indexOfLast { it.isNotBlank() }
+            // The last RUN, not simply the last row — a task completion may
+            // have been written after it, and a note belongs to the run.
+            val lastIdx = lines.indexOfLast {
+                if (it.isBlank()) false
+                else {
+                    val parts = parseCsvLine(it)
+                    parts.size < 8 || parts[7] != TYPE_TASK_DONE
+                }
+            }
             if (lastIdx <= 0) return false
 
             val parts = parseCsvLine(lines[lastIdx])
@@ -284,6 +300,11 @@ object LogStore {
                 if (p.size < 6) return@forEachIndexed
                 if (p[2] != label) return@forEachIndexed
 
+                // Task completions are a different kind of row. They carry
+                // time that is already inside the label's runs, so they must
+                // not be listed or summed as runs of their own.
+                if (p.size >= 8 && p[7] == TYPE_TASK_DONE) return@forEachIndexed
+
                 val duration = p[3].toIntOrNull() ?: 0
                 val adjusted = p[4].toIntOrNull() ?: 0
 
@@ -320,6 +341,7 @@ object LogStore {
             f.readLines().forEachIndexed { idx, line ->
                 if (idx == 0 || line.isBlank()) return@forEachIndexed
                 val p = parseCsvLine(line)
+                if (p.size >= 8 && p[7] == TYPE_TASK_DONE) return@forEach
                 if (p.size >= 6 && p[5].isNotBlank()) out.add(p[2])
             }
         } catch (e: Exception) {
@@ -401,6 +423,7 @@ object LogStore {
                 if (line.isBlank()) return@forEach
                 val p = parseCsvLine(line)
                 if (p.size < 6 || p[2] != label) return@forEach
+                if (p.size >= 8 && p[7] == TYPE_TASK_DONE) return@forEach
                 if (!includeEmptyNotes && p[5].isBlank()) return@forEach
                 kept.add(line)
             }
@@ -430,6 +453,9 @@ object LogStore {
                 val p = parseCsvLine(line)
                 if (p.size < 6) return@forEach
 
+                // Completion rows repeat time already counted in the runs.
+                if (p.size >= 8 && p[7] == TYPE_TASK_DONE) return@forEach
+
                 val startMs = try { stamp.parse(p[1])?.time ?: 0L } catch (e: Exception) { 0L }
                 if (startMs < fromMs || startMs >= toMs) return@forEach
 
@@ -444,6 +470,43 @@ object LogStore {
         } catch (e: Exception) {
         }
         return out
+    }
+
+    /**
+     * A completed task, as its own row.
+     *
+     * Kept in the log rather than only on the task so the completion survives
+     * the task being edited, archived or deleted — and so a date range can
+     * count it, which a task's own lifetime figure can't support.
+     *
+     * The duration columns carry the time accrued against the task. That time
+     * is already inside its label's runs, so anything summing recorded time
+     * must exclude these rows or it counts twice.
+     */
+    fun logTaskDone(
+        context: Context,
+        sessionStartMs: Long,
+        label: String,
+        text: String,
+        accruedMs: Long,
+        estimateMinutes: Int
+    ) {
+        try {
+            ensureHeader(context)
+            val now = System.currentTimeMillis()
+            val row = listOf(
+                stamp.format(Date(sessionStartMs)),
+                stamp.format(Date(now)),
+                csvEscape(label),
+                Math.round(accruedMs / 60000.0).toInt().toString(),
+                estimateMinutes.toString(),          // the estimate, for comparison
+                csvEscape(encodeNewlines(text)),
+                accruedMs.toString(),
+                TYPE_TASK_DONE
+            ).joinToString(",") + "\n"
+            file(context).appendText(row)
+        } catch (e: Exception) {
+        }
     }
 
     fun exists(context: Context) = file(context).exists()

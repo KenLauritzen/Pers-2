@@ -22,7 +22,9 @@ data class Task(
     val status: TaskStatus,
     /** Time accrued against this task, in ms. Never exceeds its label's. */
     val actualMs: Long,
-    val order: Int
+    val order: Int,
+    /** When it was first marked done. 0 while it never has been. */
+    val completedAt: Long = 0L
 )
 
 /**
@@ -41,7 +43,8 @@ data class Task(
 object TaskStore {
 
     private const val FILE_NAME = "tasks.csv"
-    private const val HEADER = "label,text,estimate_minutes,status,actual_ms,sort_order,id"
+    private const val HEADER =
+        "label,text,estimate_minutes,status,actual_ms,sort_order,id,completed_at"
 
     /** Which task is accruing, and since when. Only ever one. */
     private const val KEY_DOING_ID = "task_doing_id"
@@ -71,7 +74,8 @@ object TaskStore {
                         estimateMinutes = p[2].toIntOrNull() ?: 0,
                         status = status,
                         actualMs = p[4].toLongOrNull() ?: 0L,
-                        order = p[5].toIntOrNull() ?: 0
+                        order = p[5].toIntOrNull() ?: 0,
+                        completedAt = if (p.size >= 8) p[7].toLongOrNull() ?: 0L else 0L
                     )
                 )
             }
@@ -91,7 +95,8 @@ object TaskStore {
                     t.status.name,
                     t.actualMs.toString(),
                     t.order.toString(),
-                    t.id
+                    t.id,
+                    t.completedAt.toString()
                 ).joinToString(",")
             }
             file(context).writeText(HEADER + "\n" + body + if (body.isEmpty()) "" else "\n")
@@ -120,7 +125,7 @@ object TaskStore {
         return writeAll(
             context,
             all + Task(newId(), label, text.trim(), estimate.coerceAtLeast(0),
-                       TaskStatus.OPEN, 0L, nextOrder)
+                       TaskStatus.OPEN, 0L, nextOrder, 0L)
         )
     }
 
@@ -154,9 +159,16 @@ object TaskStore {
     fun cycleStatus(context: Context, task: Task): Boolean {
         settleDoing(context)
         val next = task.status.next()
+        val now = System.currentTimeMillis()
+
+        // Stamped the first time it is completed and kept thereafter, so
+        // cycling past DONE and back doesn't rewrite the date it was finished.
+        val firstCompletion = next == TaskStatus.DONE && task.completedAt == 0L
+
         val all = readAll(context).map { t ->
             when {
-                t.id == task.id -> t.copy(status = next)
+                t.id == task.id ->
+                    t.copy(status = next, completedAt = if (firstCompletion) now else t.completedAt)
                 // only one DOING anywhere
                 next == TaskStatus.DOING && t.status == TaskStatus.DOING ->
                     t.copy(status = TaskStatus.OPEN)
@@ -165,6 +177,16 @@ object TaskStore {
         }
         val ok = writeAll(context, all)
         if (next == TaskStatus.DOING) startDoing(context, task.id) else clearDoing(context)
+
+        // A row in the log, so the completion survives the task being edited,
+        // archived or deleted — and so a date range can count it.
+        if (firstCompletion) {
+            val accrued = all.firstOrNull { it.id == task.id }?.actualMs ?: task.actualMs
+            LogStore.logTaskDone(
+                context, TimerStore.getSessionStartMs(context),
+                task.label, task.text, accrued, task.estimateMinutes
+            )
+        }
         return ok
     }
 

@@ -448,6 +448,43 @@ list.
 
 ---
 
+## 73. When a task was completed  ✅ built in v70
+
+**What:** Two records of a completion, not one.
+
+- **`completed_at` on the task**, shown in the editor: `✓ 9 Sep 3:15p` beside
+  how long it took.
+- **A row in `timer_log.csv`**, typed `task_done`, carrying the task's text,
+  the time accrued against it and its estimate.
+
+**Why both:** the field answers "when did I finish this" while the task still
+exists. The log row survives the task being edited, archived or deleted, and
+is what a date range can count — which a task's own lifetime figure never
+could. It's also what makes idea 72.4 possible, the task totals I had to leave
+out of the range screen.
+
+**Why not written into notes**, which was the first thought: notes are free
+text tied to a run, so completions would be mixed in with what you actually
+wrote, unqueryable and awkward to separate later. It would also only catch
+completions that happened to coincide with a timer switch.
+
+**Notes:**
+- A `type` column on the log. Rows without it read as `run`, which is what they
+  all were. Existing files have their header upgraded in place; both earlier
+  headers are recognised.
+- **The time on a completion row is already inside its label's runs**, so
+  every reader excludes these rows or it would count twice. That meant touching
+  all five: `readRunsForLabel`, `sumByLabel`, `labelsWithNotes`,
+  `exportForLabel`, and `attachNoteToLastRow` — which had to start finding the
+  last *run* rather than the last row, since a completion can be written after
+  one.
+- Only completion logs a row. The other statuses are intermediate and get
+  cycled through by accident as often as not.
+- `completed_at` is stamped the first time and kept, so cycling past DONE and
+  round again doesn't rewrite the date it was actually finished.
+
+---
+
 ## Template for new entries
 
 New ideas go in **Open ideas** with the next unused number. When one ships,

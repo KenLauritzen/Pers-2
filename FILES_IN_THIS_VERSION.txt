@@ -1,49 +1,37 @@
-Focus v69 — complete file list.
+Focus v70 — complete file list.
 
-RANGE TOTALS (idea 72)
+Task completions are now recorded in two places.
 
-Settings -> "Totals" opens a new screen: hours by label between two dates.
+  1. completed_at on the task. The editor shows "✓ 9 Sep 3:15p" beside how long
+     it took.
 
-  Sun 7 Sep  →  now
+  2. A row in timer_log.csv, typed "task_done", carrying the task text, the
+     time accrued against it, and its estimate.
 
-    Work           18:45   45%  ██████████
-    App Dev        12:10   29%  ██████░░░░
-    Planning        4:30   11%  ██░░░░░░░░
-    Nutrition       0:00        ░░░░░░░░░░
+Both, because they answer different questions. The field tells you when you
+finished something while the task still exists. The log row survives the task
+being edited, archived or deleted — and it's what a date range can count, which
+a task's own lifetime figure never could.
 
-    Total          40:50
-    7 days  ·  5:50 a day
+Not written into notes: notes are free text tied to a run, so completions would
+be mixed in with what you actually wrote, and it would only catch the ones that
+happened to coincide with a timer switch.
 
-  Defaults to the most recent Sunday at midnight. Tap either end for a date
-  picker.
+A new "type" column on the log. Rows without it read as "run", which is what
+they all were, and existing files have their header upgraded in place.
 
-  Labels with no time in the range are shown, dimmed, at the bottom — absence
-  is information.
+IMPORTANT, and handled: the time on a completion row is ALREADY inside its
+label's runs. Every reader excludes these rows or it would count twice — the
+Notes screen, the range totals, the per-label export, and note attachment,
+which now finds the last RUN rather than simply the last row.
 
-  The bar is each label's SHARE, scaled against the largest, not progress
-  toward a goal. Goals are daily and mean nothing across a fortnight.
+This also unlocks task totals on the range screen, which had to be left out of
+v69 because task time had no timestamps.
 
-  The average line matters: 40:50 across a week is 5:50 a day, across a
-  fortnight less than 3. The total alone is ambiguous.
-
-  h:mm throughout — seconds are noise over a week.
-
-NOT INCLUDED: task totals.
-  TaskStore keeps a lifetime figure per task with no timestamps, so there's no
-  way to know how much of it fell inside your dates. A number that ignored the
-  range on a range screen would mislead. It needs task time logged with
-  timestamps first.
-
-NEW FILES — make sure all three upload:
-  app/src/main/java/com/focusledger/timer/RangeActivity.kt
-  app/src/main/res/layout/activity_range.xml
-  app/src/main/res/layout/row_range_entry.xml
-
-ALSO UPLOAD:
-  app/src/main/AndroidManifest.xml     <- the new activity is registered here
+UPLOAD THESE FIVE:
   app/src/main/java/com/focusledger/timer/LogStore.kt
-  app/src/main/java/com/focusledger/timer/SettingsActivity.kt
-  app/src/main/res/layout/activity_settings.xml
+  app/src/main/java/com/focusledger/timer/TaskStore.kt
+  app/src/main/java/com/focusledger/timer/MainActivity.kt
   app/src/main/res/values/strings.xml
 
 Nothing to delete this version.
