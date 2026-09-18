@@ -341,7 +341,7 @@ object LogStore {
             f.readLines().forEachIndexed { idx, line ->
                 if (idx == 0 || line.isBlank()) return@forEachIndexed
                 val p = parseCsvLine(line)
-                if (p.size >= 8 && p[7] == TYPE_TASK_DONE) return@forEach
+                if (p.size >= 8 && p[7] == TYPE_TASK_DONE) return@forEachIndexed
                 if (p.size >= 6 && p[5].isNotBlank()) out.add(p[2])
             }
         } catch (e: Exception) {
@@ -500,7 +500,7 @@ object LogStore {
                 csvEscape(label),
                 Math.round(accruedMs / 60000.0).toInt().toString(),
                 estimateMinutes.toString(),          // the estimate, for comparison
-                csvEscape(encodeNewlines(text)),
+                csvEscape(text),
                 accruedMs.toString(),
                 TYPE_TASK_DONE
             ).joinToString(",") + "\n"

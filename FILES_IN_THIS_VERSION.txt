@@ -1,4 +1,9 @@
-Focus v70 — complete file list.
+Focus v71 — complete file list.
+
+Fixes the v70 build failure, two small things in LogStore:
+  - a return@forEach inside a forEachIndexed loop
+  - a call to encodeNewlines, which doesn't exist — csvEscape already encodes
+    newlines, so the call was redundant as well as undefined
 
 Task completions are now recorded in two places.
 
@@ -28,7 +33,7 @@ which now finds the last RUN rather than simply the last row.
 This also unlocks task totals on the range screen, which had to be left out of
 v69 because task time had no timestamps.
 
-UPLOAD THESE FIVE:
+UPLOAD THESE FOUR:
   app/src/main/java/com/focusledger/timer/LogStore.kt
   app/src/main/java/com/focusledger/timer/TaskStore.kt
   app/src/main/java/com/focusledger/timer/MainActivity.kt
