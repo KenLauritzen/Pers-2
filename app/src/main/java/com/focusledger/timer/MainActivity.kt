@@ -167,10 +167,7 @@ class MainActivity : AppCompatActivity() {
         binding.btnViewDay.setOnClickListener {
             SettingsStore.setSessionView(this, !sessionView()); refreshValues(); updateChrome()
         }
-        binding.btnTasks.setOnClickListener {
-            SettingsStore.setTaskPill(this, (SettingsStore.getTaskPill(this) + 1) % 3)
-            measureAndRebuild(); updateChrome()
-        }
+        binding.btnTasks.setOnClickListener { showTaskPillPicker() }
         // All three totals sit at 26sp. Auto-sizing only bites on the one
         // case that doesn't fit — a clock total with a double-digit hour,
         // "@11:00a", in a 30% column — so they stay uniform in normal use
@@ -347,12 +344,15 @@ class MainActivity : AppCompatActivity() {
 
         val isRunning = TimerStore.getActiveLabel(this) == entry.name
 
-        // The running row uses its own per-label count, which goes to 5. Every
-        // other row uses the T pill. Detail where you're working, a uniform
-        // view for planning.
-        val limit =
-            if (isRunning) TaskStore.getShowCount(this, entry.name)
-            else SettingsStore.getTaskPill(this)
+        // Under Dflt every row takes its own count, so the running row isn't a
+        // special case. Under T0/T1/T2 the list is uniform for comparison, and
+        // the running row keeps its own detail.
+        val pill = SettingsStore.getTaskPill(this)
+        val limit = when {
+            pill == SettingsStore.TASK_PILL_DEFAULT -> TaskStore.getShowCount(this, entry.name)
+            isRunning -> TaskStore.getShowCount(this, entry.name)
+            else -> pill
+        }
 
         // Fixed height for an ordinary row; the running row wraps so it can
         // grow by however many task lines it holds.
@@ -1409,7 +1409,7 @@ class MainActivity : AppCompatActivity() {
         binding.btnViewDay.setTextColor(if (isSession) blueGrey else amber)
 
         val taskPill = SettingsStore.getTaskPill(this)
-        binding.btnTasks.text = "T$taskPill"
+        binding.btnTasks.text = SettingsStore.TASK_PILL_SHORT[taskPill]
         binding.btnTasks.setBackgroundResource(
             if (taskPill > 0) R.drawable.bg_pill_on else R.drawable.bg_pill_off
         )
@@ -1514,6 +1514,24 @@ class MainActivity : AppCompatActivity() {
                 SettingsStore.setColumnMode(this, which)
                 dialog.dismiss()
                 refreshValues(); updateChrome()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    /**
+     * How many tasks the rows show. A list rather than a cycle: four options
+     * means up to three taps to reach one, and no way to see the choices.
+     */
+    private fun showTaskPillPicker() {
+        AlertDialog.Builder(this)
+            .setTitle("Tasks on the rows")
+            .setSingleChoiceItems(
+                SettingsStore.TASK_PILL_NAMES, SettingsStore.getTaskPill(this)
+            ) { dialog, which ->
+                SettingsStore.setTaskPill(this, which)
+                dialog.dismiss()
+                measureAndRebuild(); updateChrome()
             }
             .setNegativeButton("Cancel", null)
             .show()

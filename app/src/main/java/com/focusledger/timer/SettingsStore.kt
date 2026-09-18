@@ -90,15 +90,27 @@ object SettingsStore {
     val SECONDARY_NAMES = arrayOf("None \u2014 no second figure") + COLUMN_NAMES
 
     /**
-     * How many tasks every row shows — 0, 1 or 2.
+     * How many tasks every row shows.
      *
-     * The running row ignores this and uses its own per-label count, which
-     * goes to 5: you want detail where you're working and a uniform view for
-     * planning, and those aren't the same thing.
+     * 0, 1 and 2 are uniform across the list, which makes labels comparable
+     * for planning. [TASK_PILL_DEFAULT] hands each label its own count instead
+     * — the 0–5 set in its popup — so the list is as detailed as each label
+     * deserves. Under 0, 1 and 2 the running row still uses its own count;
+     * under the default it isn't a special case at all.
      */
-    fun getTaskPill(c: Context) = p(c).getInt(KEY_TASK_PILL, 0).coerceIn(0, 2)
+    const val TASK_PILL_DEFAULT = 3
+
+    val TASK_PILL_NAMES = arrayOf(
+        "T0 \u2014 no tasks on any row",
+        "T1 \u2014 one task on every row",
+        "T2 \u2014 two tasks on every row",
+        "Dflt \u2014 each label's own count"
+    )
+    val TASK_PILL_SHORT = arrayOf("T0", "T1", "T2", "Dflt")
+
+    fun getTaskPill(c: Context) = p(c).getInt(KEY_TASK_PILL, 0).coerceIn(0, 3)
     fun setTaskPill(c: Context, v: Int) =
-        p(c).edit().putInt(KEY_TASK_PILL, v.coerceIn(0, 2)).apply()
+        p(c).edit().putInt(KEY_TASK_PILL, v.coerceIn(0, 3)).apply()
 
     /**
      * The hour the day is planned from, used by the Start column. Persists

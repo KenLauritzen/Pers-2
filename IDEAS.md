@@ -2671,3 +2671,49 @@ only thing saying which task is accruing time.
 a green progress bar. Done tasks don't appear on rows at all since v74, so the
 mint there is for one consistent rule rather than for effect. If done tasks
 ever return to the row, that colour has to be revisited.
+
+---
+
+## 78. Task pill becomes a four-option dropdown  ✅ built in v77
+
+**What:** The `T` pill stops cycling and opens a list instead:
+
+| Option | Every row shows |
+|---|---|
+| `T0` | nothing |
+| `T1` | one outstanding task |
+| `T2` | two |
+| `Dflt` | each label's own count, the 0–5 set in its popup |
+
+**Why the dropdown:** cycling four options means up to three taps to reach the
+one you want, and no way to see what the choices are. The sort and column
+pills are already lists.
+
+**Why `Dflt` is the interesting one:** the per-label count currently governs
+only the running row, so the counts set for every other label do nothing
+unless that label happens to be running. `Dflt` makes them all take effect at
+once — a label with five tasks configured shows five, one with none shows
+none.
+
+That gives three distinct views rather than two:
+- **Planning** — `T1` or `T2`, uniform, comparable
+- **Working** — `Dflt`, each label as detailed as it deserves
+- **Clean** — `T0`
+
+**Notes:**
+- The running row keeps its per-label count under `T0`, `T1` and `T2`, as now.
+  Under `Dflt` everything uses the per-label count, so the running row isn't a
+  special case at all.
+- Pill text follows the choice: `T0`, `T1`, `T2`, `Dflt`. Four characters fits
+  the slot the two merged Day/Ses pills freed.
+- Row heights vary much more under `Dflt`, since labels differ. Worth seeing
+  whether that reads as useful or as untidy.
+
+
+**Built in v77.** The pill opens a list with the current choice ticked, and
+its own text follows the choice — `T0`, `T1`, `T2`, `Dflt`.
+
+`Dflt` turned out to be more than a fourth option. The per-label counts had
+been governing only the running row, so every other label's count sat idle
+unless that label happened to be running. Under `Dflt` they all take effect,
+and the running row stops being a special case.
