@@ -100,6 +100,13 @@
         android:orientation="horizontal" android:weightSum="3"
         android:layout_marginTop="10dp">
         <Button
+            android:id="@+id/btnRange"
+            android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="46dp" android:layout_marginEnd="4dp"
+            android:text="Totals" android:textAllCaps="false"
+            android:textColor="#9FD8A8" android:textSize="13sp"
+            android:background="@drawable/bg_button_small" />
+        <Button
             android:id="@+id/btnExport"
             android:layout_width="0dp" android:layout_weight="1"
             android:layout_height="46dp" android:layout_marginEnd="4dp"

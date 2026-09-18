@@ -413,6 +413,39 @@ object LogStore {
         }
     }
 
+    /**
+     * Total recorded time per label for runs starting in [fromMs, toMs).
+     *
+     * Reads the log, so it covers completed runs only — today's time in
+     * progress lives in TimerStore's counters and has to be added separately.
+     * Callers must not do both for the same day or it counts twice.
+     */
+    fun sumByLabel(context: Context, fromMs: Long, toMs: Long): Map<String, Long> {
+        val out = mutableMapOf<String, Long>()
+        try {
+            val f = file(context)
+            if (!f.exists()) return out
+            f.readLines().drop(1).forEach { line ->
+                if (line.isBlank()) return@forEach
+                val p = parseCsvLine(line)
+                if (p.size < 6) return@forEach
+
+                val startMs = try { stamp.parse(p[1])?.time ?: 0L } catch (e: Exception) { 0L }
+                if (startMs < fromMs || startMs >= toMs) return@forEach
+
+                val minutes = p[3].toIntOrNull() ?: 0
+                val adjusted = p[4].toIntOrNull() ?: 0
+                // Exact ms where the row has it; older rows only have minutes.
+                val ms = (if (p.size >= 7) p[6].toLongOrNull() ?: (minutes * 60_000L)
+                          else minutes * 60_000L) + adjusted * 60_000L
+
+                out[p[2]] = (out[p[2]] ?: 0L) + ms
+            }
+        } catch (e: Exception) {
+        }
+        return out
+    }
+
     fun exists(context: Context) = file(context).exists()
     fun path(context: Context): String = file(context).absolutePath
 }

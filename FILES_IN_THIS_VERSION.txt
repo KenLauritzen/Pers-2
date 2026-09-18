@@ -1,26 +1,49 @@
-Focus v68 — complete file list.
+Focus v69 — complete file list.
 
-  1. Completed tasks are readable again.
+RANGE TOTALS (idea 72)
 
-     They were greyed to #5C736E, which scores 1.28 contrast on the green
-     progress bar — invisible. And dimming can't work here: the task block sits
-     ON the bar, so anything faint enough to read as "finished" against the
-     dark track vanishes against the green.
+Settings -> "Totals" opens a new screen: hours by label between two dates.
 
-     Done is now marked by STRIKING THE TEXT THROUGH rather than dimming it.
-     A line says finished at any brightness, so the colour can be legible:
-     #CBD9D5, which clears 4.5 on green and 10 on the dark track.
+  Sun 7 Sep  →  now
 
-     The figures line had the same problem and moved to the same colour.
+    Work           18:45   45%  ██████████
+    App Dev        12:10   29%  ██████░░░░
+    Planning        4:30   11%  ██░░░░░░░░
+    Nutrition       0:00        ░░░░░░░░░░
 
-  2. Wrapped lines now hang.
+    Total          40:50
+    7 days  ·  5:50 a day
 
-     A long title's second line was falling back to the left margin, starting
-     under the status marker instead of under its own text. Each task now reads
-     as one block.
+  Defaults to the most recent Sunday at midnight. Tap either end for a date
+  picker.
 
-UPLOAD ONLY THESE TWO:
-  app/src/main/java/com/focusledger/timer/MainActivity.kt
+  Labels with no time in the range are shown, dimmed, at the bottom — absence
+  is information.
+
+  The bar is each label's SHARE, scaled against the largest, not progress
+  toward a goal. Goals are daily and mean nothing across a fortnight.
+
+  The average line matters: 40:50 across a week is 5:50 a day, across a
+  fortnight less than 3. The total alone is ambiguous.
+
+  h:mm throughout — seconds are noise over a week.
+
+NOT INCLUDED: task totals.
+  TaskStore keeps a lifetime figure per task with no timestamps, so there's no
+  way to know how much of it fell inside your dates. A number that ignored the
+  range on a range screen would mislead. It needs task time logged with
+  timestamps first.
+
+NEW FILES — make sure all three upload:
+  app/src/main/java/com/focusledger/timer/RangeActivity.kt
+  app/src/main/res/layout/activity_range.xml
+  app/src/main/res/layout/row_range_entry.xml
+
+ALSO UPLOAD:
+  app/src/main/AndroidManifest.xml     <- the new activity is registered here
+  app/src/main/java/com/focusledger/timer/LogStore.kt
+  app/src/main/java/com/focusledger/timer/SettingsActivity.kt
+  app/src/main/res/layout/activity_settings.xml
   app/src/main/res/values/strings.xml
 
 Nothing to delete this version.
@@ -39,6 +62,7 @@ app/src/main/java/com/focusledger/timer/LayoutStore.kt
 app/src/main/java/com/focusledger/timer/LogStore.kt
 app/src/main/java/com/focusledger/timer/MainActivity.kt
 app/src/main/java/com/focusledger/timer/NotesActivity.kt
+app/src/main/java/com/focusledger/timer/RangeActivity.kt
 app/src/main/java/com/focusledger/timer/SettingsActivity.kt
 app/src/main/java/com/focusledger/timer/SettingsStore.kt
 app/src/main/java/com/focusledger/timer/TaskStore.kt
@@ -57,6 +81,7 @@ app/src/main/res/drawable/ic_launcher.xml
 app/src/main/res/drawable/ic_note.xml
 app/src/main/res/layout/activity_main.xml
 app/src/main/res/layout/activity_notes.xml
+app/src/main/res/layout/activity_range.xml
 app/src/main/res/layout/activity_settings.xml
 app/src/main/res/layout/dialog_label_edit.xml
 app/src/main/res/layout/dialog_layout_picker.xml
@@ -66,6 +91,7 @@ app/src/main/res/layout/dialog_text_input.xml
 app/src/main/res/layout/row_add_label.xml
 app/src/main/res/layout/row_layout_entry.xml
 app/src/main/res/layout/row_note_entry.xml
+app/src/main/res/layout/row_range_entry.xml
 app/src/main/res/layout/row_task_edit.xml
 app/src/main/res/layout/row_timer.xml
 app/src/main/res/values/strings.xml

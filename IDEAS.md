@@ -448,152 +448,6 @@ list.
 
 ---
 
-## 67. Dialog colours, and four task-editor refinements  ✅ built in v63
-
-**The bug:** four dialogs — Edit task, New label, Save layout, Rename layout —
-put the app's cream text on `AlertDialog`'s white background. Effectively
-invisible. Reported on one; the other three had it too.
-
-**Cause:** those fields were built in code with dark-theme colours and handed
-to a plain `AlertDialog`, which draws white. The dialogs that looked right —
-the label popup, the task editor, the note editor — each carry their own
-background.
-
-**The fix:** one shared `dialog_text_input.xml` with a title, one or two
-fields, and Cancel / Save plus an optional Delete. All four now use it, so they
-match the rest of the app and there is one place to change rather than four.
-This is most of what idea 61 was about.
-
-**Three refinements alongside:**
-- **Done saves a part-typed task.** Typing a task and tapping Done added
-  nothing. It now saves, with its estimate. Same trap as idea 4's unsaved
-  label box.
-- **Larger status markers** — 15sp → 22sp in the editor, and the row's task
-  text 14sp → 17sp. It's the control you tap to advance a task and it was the
-  smallest thing on the row.
-- **Times reversed, with a percentage:** `30m / 300m 10%` — what it has taken,
-  what was estimated, how much of the estimate that uses. Past 100% keeps
-  counting and turns peach, since how far over is the useful part. With no
-  estimate there's nothing to be a percentage of, so it shows the actual
-  alone.
-
----
-
-## 68. Two-line tasks, and the totals row clipping  ✅ built in v64
-
-**The clipping:** the three totals were cut off at the bottom — the descender
-on `@8:30p` lost its tail and the digits looked shaved.
-
-`includeFontPadding="false"` on a `wrap_content` height. That attribute removes
-the space a font reserves for ascenders and descenders, which is right in the
-rows where vertical space is fought over and wrong here, where the row is 48dp
-and nothing is competing. The three totals now take the full row height and
-keep their font padding.
-
-**Two-line tasks:**
-
-```
-▸ 30m / 300m  10%
-  RDM-1608 - Ryan uploaded not licensed detail
-```
-
-Marker and figures on the first line, description beneath with the full width
-to wrap into. Long titles were unreadable sharing a line with the times.
-
-**Notes:**
-- **The description wraps rather than truncating**, so a task can be three or
-  four lines and the running row's height varies with its content. The 0–5
-  show count is the dial; 2 or 3 is likely the practical setting now.
-- Figures show even at zero — `0m / 300m 0%` — so the shape doesn't change
-  when a task is started. Only a task with no estimate differs, having nothing
-  to be a percentage of.
-- The row block is still **one TextView**, with spans making the figure lines
-  smaller and dimmer than the description. No nested list, no recycling.
-- One `taskTimes` formatter shared by the row and the editor, so they can't
-  drift apart.
-
----
-
-## 69. Task count in the label popup  ✅ built in v65
-
-**The bug:** setting a label's task count to zero hid the row's task block —
-and the edit icon with it — leaving no way to reach the editor or raise the
-count again. The label was stranded short of clearing app data.
-
-Exactly the trap idea 24 removed for hidden labels. I guarded the case of a
-label with *no tasks*, which keeps its icon, and missed the identical case of a
-count of zero.
-
-**The fix:** a Tasks row in the label popup, beside Goal and Time:
-
-```
-Tasks   −   [3]   +     Edit…
-```
-
-Long-press any row's right column to reach it. Neither the count nor the editor
-now depends on the block that disappears.
-
-**The editor's own count control was removed.** Two controls for one setting is
-how they drift, and there'd be no telling which you last used. The popup is the
-single place.
-
-**Worth generalising:** twice now a control has been the only route to
-something it can hide. Anything that can be switched off needs its switch
-somewhere that switching off doesn't affect.
-
----
-
-## 70. Screen names, and the task count in both places  ✅ built in v66
-
-**What:** Every screen and dialog except the main one now says what it is.
-
-| Screen | Heading |
-|---|---|
-| Settings | `Settings` |
-| Notes | `Notes — Work` |
-| Label popup | `Label — Work` |
-| Task editor | `Tasks — Work` |
-| Layout picker | `Layouts` |
-
-Confirmations keep their question titles — `Delete “Work”?` tells you more than
-a screen name would.
-
-**Also: the task count is back in the editor**, alongside the copy in the label
-popup added in v65.
-
-Removing it was a mistake on a bad argument. I said two controls for one
-setting would drift apart; they can't, because both read and write the same
-stored value and both show it. The real problem in v65 was different — the
-*only* control was in a place it could hide — and that was fixed by adding one,
-not by removing one.
-
----
-
-## 71. Done tasks unreadable on the green bar  ✅ fixed in v68
-
-**The bug:** completed tasks were greyed to `#5C736E`, which on the green
-progress bar scores **1.28** contrast. Effectively invisible.
-
-**Why dimming can't work here:** the task block sits on the progress bar, so
-its background is green on a row with time against it and near-black on one
-without. Anything faint enough to read as "finished" on the dark track
-disappears on the green. Measured: `#8FA39E` gives 2.44, `#A9BDB8` 3.29 —
-still under the 4.5 normal text needs.
-
-**The fix:** mark done by **striking the text through**, not by dimming it.
-A line says finished at any brightness, so the colour is free to be legible.
-Done tasks now use `#CBD9D5` — 4.46 on green, 10.03 on the track — with a
-strikethrough.
-
-The figures line had the same fault at `muted`, and moved to the same colour.
-
-**Also fixed here:** wrapped lines fell back to the left margin, so a long
-title's second line started under the status marker instead of under its own
-text. A `LeadingMarginSpan` now hangs them, keeping each task one visual
-block.
-
----
-
 ## Template for new entries
 
 New ideas go in **Open ideas** with the next unused number. When one ships,
@@ -2427,3 +2281,216 @@ natural conclusion rather than an invented one.
   column above it: `Σ8:35` in mint, `~2:15p` in grey-blue.
 - Blank when the secondary is set to None.
 - `adjustActive` had no caller left and was removed.
+
+---
+
+## 67. Dialog colours, and four task-editor refinements  ✅ built in v63
+
+**The bug:** four dialogs — Edit task, New label, Save layout, Rename layout —
+put the app's cream text on `AlertDialog`'s white background. Effectively
+invisible. Reported on one; the other three had it too.
+
+**Cause:** those fields were built in code with dark-theme colours and handed
+to a plain `AlertDialog`, which draws white. The dialogs that looked right —
+the label popup, the task editor, the note editor — each carry their own
+background.
+
+**The fix:** one shared `dialog_text_input.xml` with a title, one or two
+fields, and Cancel / Save plus an optional Delete. All four now use it, so they
+match the rest of the app and there is one place to change rather than four.
+This is most of what idea 61 was about.
+
+**Three refinements alongside:**
+- **Done saves a part-typed task.** Typing a task and tapping Done added
+  nothing. It now saves, with its estimate. Same trap as idea 4's unsaved
+  label box.
+- **Larger status markers** — 15sp → 22sp in the editor, and the row's task
+  text 14sp → 17sp. It's the control you tap to advance a task and it was the
+  smallest thing on the row.
+- **Times reversed, with a percentage:** `30m / 300m 10%` — what it has taken,
+  what was estimated, how much of the estimate that uses. Past 100% keeps
+  counting and turns peach, since how far over is the useful part. With no
+  estimate there's nothing to be a percentage of, so it shows the actual
+  alone.
+
+---
+
+## 68. Two-line tasks, and the totals row clipping  ✅ built in v64
+
+**The clipping:** the three totals were cut off at the bottom — the descender
+on `@8:30p` lost its tail and the digits looked shaved.
+
+`includeFontPadding="false"` on a `wrap_content` height. That attribute removes
+the space a font reserves for ascenders and descenders, which is right in the
+rows where vertical space is fought over and wrong here, where the row is 48dp
+and nothing is competing. The three totals now take the full row height and
+keep their font padding.
+
+**Two-line tasks:**
+
+```
+▸ 30m / 300m  10%
+  RDM-1608 - Ryan uploaded not licensed detail
+```
+
+Marker and figures on the first line, description beneath with the full width
+to wrap into. Long titles were unreadable sharing a line with the times.
+
+**Notes:**
+- **The description wraps rather than truncating**, so a task can be three or
+  four lines and the running row's height varies with its content. The 0–5
+  show count is the dial; 2 or 3 is likely the practical setting now.
+- Figures show even at zero — `0m / 300m 0%` — so the shape doesn't change
+  when a task is started. Only a task with no estimate differs, having nothing
+  to be a percentage of.
+- The row block is still **one TextView**, with spans making the figure lines
+  smaller and dimmer than the description. No nested list, no recycling.
+- One `taskTimes` formatter shared by the row and the editor, so they can't
+  drift apart.
+
+---
+
+## 69. Task count in the label popup  ✅ built in v65
+
+**The bug:** setting a label's task count to zero hid the row's task block —
+and the edit icon with it — leaving no way to reach the editor or raise the
+count again. The label was stranded short of clearing app data.
+
+Exactly the trap idea 24 removed for hidden labels. I guarded the case of a
+label with *no tasks*, which keeps its icon, and missed the identical case of a
+count of zero.
+
+**The fix:** a Tasks row in the label popup, beside Goal and Time:
+
+```
+Tasks   −   [3]   +     Edit…
+```
+
+Long-press any row's right column to reach it. Neither the count nor the editor
+now depends on the block that disappears.
+
+**The editor's own count control was removed.** Two controls for one setting is
+how they drift, and there'd be no telling which you last used. The popup is the
+single place.
+
+**Worth generalising:** twice now a control has been the only route to
+something it can hide. Anything that can be switched off needs its switch
+somewhere that switching off doesn't affect.
+
+---
+
+## 70. Screen names, and the task count in both places  ✅ built in v66
+
+**What:** Every screen and dialog except the main one now says what it is.
+
+| Screen | Heading |
+|---|---|
+| Settings | `Settings` |
+| Notes | `Notes — Work` |
+| Label popup | `Label — Work` |
+| Task editor | `Tasks — Work` |
+| Layout picker | `Layouts` |
+
+Confirmations keep their question titles — `Delete “Work”?` tells you more than
+a screen name would.
+
+**Also: the task count is back in the editor**, alongside the copy in the label
+popup added in v65.
+
+Removing it was a mistake on a bad argument. I said two controls for one
+setting would drift apart; they can't, because both read and write the same
+stored value and both show it. The real problem in v65 was different — the
+*only* control was in a place it could hide — and that was fixed by adding one,
+not by removing one.
+
+---
+
+## 71. Done tasks unreadable on the green bar  ✅ fixed in v68
+
+**The bug:** completed tasks were greyed to `#5C736E`, which on the green
+progress bar scores **1.28** contrast. Effectively invisible.
+
+**Why dimming can't work here:** the task block sits on the progress bar, so
+its background is green on a row with time against it and near-black on one
+without. Anything faint enough to read as "finished" on the dark track
+disappears on the green. Measured: `#8FA39E` gives 2.44, `#A9BDB8` 3.29 —
+still under the 4.5 normal text needs.
+
+**The fix:** mark done by **striking the text through**, not by dimming it.
+A line says finished at any brightness, so the colour is free to be legible.
+Done tasks now use `#CBD9D5` — 4.46 on green, 10.03 on the track — with a
+strikethrough.
+
+The figures line had the same fault at `muted`, and moved to the same colour.
+
+**Also fixed here:** wrapped lines fell back to the left margin, so a long
+title's second line started under the status marker instead of under its own
+text. A `LeadingMarginSpan` now hangs them, keeping each task one visual
+block.
+
+---
+
+## 72. Totals over a date range — on its own screen  ✅ built in v69
+
+**What:** Hours by label between two dates. Default from the previous Sunday
+midnight to now, with a date picker to change the start — a fortnight, a
+month, whatever.
+
+**Why:** "How many hours did I put in this week" is the obvious question the
+app can't currently answer, despite having every figure needed.
+
+**Why not on the main screen** — tried and set aside, because a range breaks
+three things there that a separate screen doesn't have to care about:
+
+- **Goals are daily.** Over a week, is a 6-hour goal 6:00 or 42:00? Scaling by
+  days makes remaining meaningful but assumes you work every day, which drags
+  in idea 7's scheduling questions. Leaving it daily makes the comparison
+  meaningless.
+- **The bar** would be 700% over on every row, so uniformly red and useless.
+- **`Start` and `ETA`** plan a single day. They mean nothing across a
+  fortnight.
+
+On its own screen, none of these arise: there is no bar, no goal column and no
+projection to reconcile.
+
+**Notes:**
+- **The data comes from `timer_log.csv`**, not the preference counters. Those
+  hold today only. Everything needed is in the log — `run_start`,
+  `duration_ms`, `adjusted`, per label.
+- Sum completed days from the log once and cache; add today's live counters on
+  top. Then it recomputes on a date change or a midnight crossing, not every
+  second.
+- **Show h:mm, not seconds.** A week is `41:23:07` — eight characters, and
+  seconds mean nothing over that span.
+- Natural home for things that would crowd the main screen: week against week,
+  where the unattributed gap between label and task time went, a label's share
+  of the total.
+
+**Open questions — to answer before building:**
+
+| # | Question | Leaning | Answer |
+|---|---|---|---|
+| 72.1 | Reached from where? | Settings | **Settings**, beside Export. The main screen stays a working view; this is a reviewing one. |
+| 72.2 | Does the default recompute? | Recompute | **Recomputed each time the screen opens** — the most recent Sunday at midnight, today included. A picked date holds until you leave. |
+| 72.3 | Configurable week start? | Yes | **Not yet** — Sunday, changed by picking a date. Worth a setting if you change it often. |
+| 72.4 | Task totals too? | Toggle, off | **Not built, and it can't be yet.** `TaskStore` keeps a lifetime `actualMs` per task with no timestamps, so there is no way to know how much fell inside the dates. A figure that ignored the range on a range screen would mislead. Needs task time logged with timestamps first — idea 27.12. |
+| 72.5 | Labels with no time in the range? | Shown | **Shown**, dimmed, sorted to the bottom. Absence is information — a column of zeros says which labels you carry but don't use. No prompt to delete them. |
+
+
+**How it turned out:**
+- Sorted by hours, so the answer is the first line. Percentage of the range's
+  total beside each.
+- **The bar is a share of the largest label**, not progress toward a goal.
+  Goals are daily and mean nothing over a fortnight; a share always means
+  something. Scaled against the largest rather than the total, or every bar is
+  a sliver once there are a dozen labels.
+- **`48:55` needs its context**, so a line underneath gives the day count and
+  the daily average. The same total across a week and a fortnight are very
+  different facts.
+- h:mm throughout. Seconds are noise across a week.
+- **Where the figures come from:** completed runs from `timer_log.csv`, but
+  only up to the start of today. Today's time is still only in TimerStore's
+  counters and is added separately — the log and the counters describe the
+  same time for today, so reading both would double it.
+- Older log rows have no exact millisecond figure and fall back to their
+  rounded minutes.

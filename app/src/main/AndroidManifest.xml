@@ -40,6 +40,11 @@
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize" />
 
+        <activity
+            android:name=".RangeActivity"
+            android:exported="false"
+            android:label="Range totals" />
+
         <service
             android:name=".TimerForegroundService"
             android:exported="false"

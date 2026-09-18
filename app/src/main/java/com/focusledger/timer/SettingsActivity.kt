@@ -45,6 +45,9 @@ class SettingsActivity : AppCompatActivity() {
         b.switchSound.isChecked = originalSound
         b.switchNote.isChecked = originalNote
 
+        b.btnRange.setOnClickListener {
+            startActivity(Intent(this, RangeActivity::class.java))
+        }
         b.btnExport.setOnClickListener { exportFiles() }
         b.btnCancel.setOnClickListener { attemptExit() }
         b.btnSave.setOnClickListener { save() }
