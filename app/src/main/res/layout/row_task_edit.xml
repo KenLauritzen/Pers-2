@@ -49,13 +49,4 @@
             android:textSize="17sp" />
     </LinearLayout>
 
-    <!-- Long-press anywhere on the row to drag; this just says so. -->
-    <ImageView
-        android:id="@+id/taskDrag"
-        android:layout_width="34dp"
-        android:layout_height="34dp"
-        android:padding="7dp"
-        android:src="@android:drawable/ic_menu_sort_by_size"
-        android:contentDescription="Drag to reorder"
-        android:alpha="0.5" />
 </LinearLayout>

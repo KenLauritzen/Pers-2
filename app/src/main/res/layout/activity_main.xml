@@ -40,6 +40,23 @@
             android:focusable="true"
             android:layout_marginEnd="3dp" />
 
+        <!-- T0 / T1 / T2: how many tasks every row shows. Sits beside the
+             pill that chooses the figure under the label, since both control
+             what appears there. -->
+        <TextView
+            android:id="@+id/btnTasks"
+            android:layout_width="wrap_content"
+            android:layout_height="32dp"
+            android:gravity="center"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:minWidth="40dp"
+            android:text="T0"
+            android:textSize="11sp"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginEnd="3dp" />
+
         <TextView
             android:id="@+id/btnSort"
             android:layout_width="58dp"
@@ -64,19 +81,6 @@
             android:textSize="12sp"
             android:clickable="true"
             android:focusable="true" />
-
-        <TextView
-            android:id="@+id/btnViewSession"
-            android:layout_width="wrap_content"
-            android:layout_height="32dp"
-            android:gravity="center"
-            android:paddingStart="10dp"
-            android:paddingEnd="10dp"
-            android:text="Ses"
-            android:textSize="12sp"
-            android:clickable="true"
-            android:focusable="true"
-            android:layout_marginStart="3dp" />
 
         <!-- Independent of the Day/Ses pair: switches the right-hand column
              from each label's own figure to a running total down the rows. -->

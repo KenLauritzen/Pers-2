@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 8dp of vertical padding rather than the ~18dp a default list item uses,
+     which roughly doubles how many fit on screen. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp"
+    android:paddingStart="6dp"
+    android:paddingEnd="6dp"
+    android:textColor="#F1EDE3"
+    android:textSize="16sp"
+    android:maxLines="1"
+    android:ellipsize="end"
+    android:clickable="true"
+    android:focusable="true"
+    android:background="?android:attr/selectableItemBackground" />

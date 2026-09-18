@@ -18,6 +18,7 @@ object SettingsStore {
     private const val KEY_SHOW_EMPTY_RUNS = "show_empty_runs"
     private const val KEY_CUMULATIVE = "column_mode"
     private const val KEY_SECONDARY = "column_mode_secondary"
+    private const val KEY_TASK_PILL = "task_pill_rows"
     private const val KEY_START_HOUR = "day_start_hour"
     private const val KEY_START_MINUTE = "day_start_minute"
 
@@ -87,6 +88,17 @@ object SettingsStore {
 
     /** Picker entries for the secondary, with "None" first. */
     val SECONDARY_NAMES = arrayOf("None \u2014 no second figure") + COLUMN_NAMES
+
+    /**
+     * How many tasks every row shows — 0, 1 or 2.
+     *
+     * The running row ignores this and uses its own per-label count, which
+     * goes to 5: you want detail where you're working and a uniform view for
+     * planning, and those aren't the same thing.
+     */
+    fun getTaskPill(c: Context) = p(c).getInt(KEY_TASK_PILL, 0).coerceIn(0, 2)
+    fun setTaskPill(c: Context, v: Int) =
+        p(c).edit().putInt(KEY_TASK_PILL, v.coerceIn(0, 2)).apply()
 
     /**
      * The hour the day is planned from, used by the Start column. Persists

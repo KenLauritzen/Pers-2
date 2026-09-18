@@ -436,73 +436,24 @@ would need a defined place, probably the bottom.
 
 ---
 
-## 63. One pill for Day / Session / Since last start  — NEEDS CHECKING
+## 76. Compact "move above" picker  ✅ built in v75
 
-**What:** Collapse Day and Ses into a single pill cycling three options, the
-third being time since the timer was last started.
+**What:** The list you get from tapping a label name uses its own rows at 8dp
+of vertical padding, rather than AlertDialog's default of about 18dp. Roughly
+twice as many labels fit on screen.
 
-**Note:** Your list has this under Done, but it isn't built — Day and Ses are
-still two separate pills and there's no "since last start" option. Worth
-confirming whether you meant something else, or whether it belongs in the open
-list.
-
----
-
-## 73. When a task was completed  ✅ built in v70
-
-**What:** Two records of a completion, not one.
-
-- **`completed_at` on the task**, shown in the editor: `✓ 9 Sep 3:15p` beside
-  how long it took.
-- **A row in `timer_log.csv`**, typed `task_done`, carrying the task's text,
-  the time accrued against it and its estimate.
-
-**Why both:** the field answers "when did I finish this" while the task still
-exists. The log row survives the task being edited, archived or deleted, and
-is what a date range can count — which a task's own lifetime figure never
-could. It's also what makes idea 72.4 possible, the task totals I had to leave
-out of the range screen.
-
-**Why not written into notes**, which was the first thought: notes are free
-text tied to a run, so completions would be mixed in with what you actually
-wrote, unqueryable and awkward to separate later. It would also only catch
-completions that happened to coincide with a timer switch.
+**Why:** The default padding sizes every item as a large touch target, which
+is right for three options and wasteful for twenty — you could see half what
+the screen could hold, and the list you're choosing from is the whole point.
 
 **Notes:**
-- A `type` column on the log. Rows without it read as `run`, which is what they
-  all were. Existing files have their header upgraded in place; both earlier
-  headers are recognised.
-- **The time on a completion row is already inside its label's runs**, so
-  every reader excludes these rows or it would count twice. That meant touching
-  all five: `readRunsForLabel`, `sumByLabel`, `labelsWithNotes`,
-  `exportForLabel`, and `attachNoteToLastRow` — which had to start finding the
-  last *run* rather than the last row, since a completion can be written after
-  one.
-- Only completion logs a row. The other statuses are intermediate and get
-  cycled through by accident as often as not.
-- `completed_at` is stamped the first time and kept, so cycling past DONE and
-  round again doesn't rewrite the date it was actually finished.
-
----
-
-## 74. Drag tasks instead of arrow buttons  ✅ built in v72
-
-**What:** Long-press a task in the editor and drag it. The up/down arrows are
-gone.
-
-**Why:** Two taps per position is tedious once a list is more than a few long,
-and the arrows took width from the text they were beside.
-
-**Notes:**
-- The editor's list was a plain `LinearLayout` inside a `ScrollView`, which
-  can't drag. It's a `RecyclerView` with `ItemTouchHelper` now — the same
-  mechanism the main list uses, so the gesture matches.
-- **Fixed 340dp height rather than wrap_content.** A RecyclerView scrolls
-  itself, and inside a dialog there's nothing to bound a wrapping one.
-- The new order is written **when the finger lifts**, not on every swap — one
-  file write per drag instead of a dozen.
-- Gestures in the editor: tap the marker to cycle status, tap the text to edit,
-  long-press the row to drag.
+- 8dp still leaves about 36dp a row, comfortably above the 32dp a fingertip
+  needs. Below that it would start costing accuracy.
+- Only this picker changed. The sort dialog, the rename/delete menu and the
+  column choosers are two to seven items, where compact rows would look
+  cramped for no gain.
+- The list scrolls inside a 420dp cap, so a long library doesn't push the
+  Cancel button off the bottom.
 
 ---
 
@@ -2260,6 +2211,20 @@ keeps seconds, being the one figure that visibly ticks.
 
 ---
 
+## 63. One pill for Day / Session  ✅ built in v74 (partly)
+
+**What:** Collapse Day and Ses into a single pill cycling three options, the
+third being time since the timer was last started.
+
+**Built in v74:** Day and Ses are one pill, cycling between them. It's always
+filled, since it's a choice of one rather than an on/off. The freed slot went
+to the task pill (idea 75).
+
+**"Since last start" is still not built** — a third option on the same pill
+whenever it's wanted.
+
+---
+
 ## 64. Clear a note, and larger type for writing one  ✅ built in v54
 
 **What:**
@@ -2552,3 +2517,103 @@ projection to reconcile.
   same time for today, so reading both would double it.
 - Older log rows have no exact millisecond figure and fall back to their
   rounded minutes.
+
+---
+
+## 73. When a task was completed  ✅ built in v70
+
+**What:** Two records of a completion, not one.
+
+- **`completed_at` on the task**, shown in the editor: `✓ 9 Sep 3:15p` beside
+  how long it took.
+- **A row in `timer_log.csv`**, typed `task_done`, carrying the task's text,
+  the time accrued against it and its estimate.
+
+**Why both:** the field answers "when did I finish this" while the task still
+exists. The log row survives the task being edited, archived or deleted, and
+is what a date range can count — which a task's own lifetime figure never
+could. It's also what makes idea 72.4 possible, the task totals I had to leave
+out of the range screen.
+
+**Why not written into notes**, which was the first thought: notes are free
+text tied to a run, so completions would be mixed in with what you actually
+wrote, unqueryable and awkward to separate later. It would also only catch
+completions that happened to coincide with a timer switch.
+
+**Notes:**
+- A `type` column on the log. Rows without it read as `run`, which is what they
+  all were. Existing files have their header upgraded in place; both earlier
+  headers are recognised.
+- **The time on a completion row is already inside its label's runs**, so
+  every reader excludes these rows or it would count twice. That meant touching
+  all five: `readRunsForLabel`, `sumByLabel`, `labelsWithNotes`,
+  `exportForLabel`, and `attachNoteToLastRow` — which had to start finding the
+  last *run* rather than the last row, since a completion can be written after
+  one.
+- Only completion logs a row. The other statuses are intermediate and get
+  cycled through by accident as often as not.
+- `completed_at` is stamped the first time and kept, so cycling past DONE and
+  round again doesn't rewrite the date it was actually finished.
+
+---
+
+## 74. Drag tasks instead of arrow buttons  ✅ built in v72
+
+**What:** Long-press a task in the editor and drag it. The up/down arrows are
+gone.
+
+**Why:** Two taps per position is tedious once a list is more than a few long,
+and the arrows took width from the text they were beside.
+
+**Notes:**
+- The editor's list was a plain `LinearLayout` inside a `ScrollView`, which
+  can't drag. It's a `RecyclerView` with `ItemTouchHelper` now — the same
+  mechanism the main list uses, so the gesture matches.
+- **Fixed 340dp height rather than wrap_content.** A RecyclerView scrolls
+  itself, and inside a dialog there's nothing to bound a wrapping one.
+- The new order is written **when the finger lifts**, not on every swap — one
+  file write per drag instead of a dozen.
+- Gestures in the editor: tap the marker to cycle status, tap the text to edit,
+  long-press the row to drag.
+
+**v73: the handle removed, and long-press made to work everywhere.**
+
+A clickable child consumes a long press rather than passing it to its parent,
+so long-pressing the marker or the text did nothing — only the gaps and the
+handle started a drag. That's why the handle felt necessary.
+
+The main list never had this problem because its note icon and label were each
+given a tap *and* a long-press from the start. The editor's rows only got taps.
+Every child now carries the drag listener, the handle is gone, and the task
+text has its width back.
+
+---
+
+## 75. Tasks on every row, and centring the running label  ✅ built in v74
+
+**The T pill:** `T0` / `T1` / `T2`, beside the pill that chooses the figure
+under the label. It sets how many outstanding tasks **every** row shows, which
+turns the list into something you can plan against rather than only work from.
+
+**The running row keeps its own 0–5 count.** Detail where you're working, a
+uniform view for planning — different needs, so a single control for both
+would compromise one of them.
+
+**Only outstanding work shows** — `OPEN` and `DOING`. Done and archived tasks
+never appear on a row. The row is a prompt about what's next; the editor holds
+the record of what's behind.
+
+**A row with nothing outstanding takes no extra space at all.** Previously the
+running row reserved the block even when empty, which was right when only one
+row could have it and wrong once every row can.
+
+**Centring the running label:** on a cold start and on returning from another
+screen, the list scrolls so the running row sits about a third from the top.
+
+- **A third rather than the middle**, because the running row is the tall one
+  when it carries tasks — centring its midpoint would push its label and timer
+  above the fold. A third keeps the row's head where the eye lands.
+- Only on resume, never on a refresh: scrolling every tick would fight you
+  whenever you'd deliberately looked somewhere else.
+- Near the ends of the list it settles as close as the list allows. Correct,
+  but it won't look centred there.

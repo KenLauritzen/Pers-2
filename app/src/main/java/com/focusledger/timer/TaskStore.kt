@@ -109,11 +109,16 @@ object TaskStore {
     fun forLabel(context: Context, label: String): List<Task> =
         readAll(context).filter { it.label == label }.sortedBy { it.order }
 
-    /** What the row shows: open and in-progress work, plus finished-but-visible. */
+    /**
+     * What a row shows: work still to do.
+     *
+     * Finished and archived tasks are left out. The row is a prompt about what
+     * is next, not a record of what is behind — the editor holds that.
+     */
     fun visibleForRow(context: Context, label: String, limit: Int): List<Task> {
         if (limit <= 0) return emptyList()
         return forLabel(context, label)
-            .filter { it.status != TaskStatus.ARCHIVED }
+            .filter { it.status == TaskStatus.OPEN || it.status == TaskStatus.DOING }
             .take(limit)
     }
 

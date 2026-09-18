@@ -1,25 +1,25 @@
-Focus v72 — complete file list.
+Focus v75 — complete file list.
 
-Tasks are dragged rather than nudged with arrows.
+The "move above" list — the one you get by tapping a label name — is half as
+tall per row, so roughly twice as many labels fit on screen.
 
-  Long-press a task in the editor and drag it. The up/down arrows are gone,
-  which also gives the task text back the width they were taking.
+  AlertDialog's own list pads every item as a large touch target, about 18dp
+  top and bottom. These rows use 8dp, which still leaves about 36dp a row,
+  comfortably above the 32dp a fingertip needs.
 
-  The editor's list was a plain LinearLayout in a ScrollView, which can't drag.
-  It's a RecyclerView with ItemTouchHelper now — the same mechanism the main
-  list uses, so the gesture is the one you already know.
+  Only this picker changed. The sort dialog, the rename/delete menu and the
+  column choosers are two to seven items, where compact rows would look
+  cramped for no gain.
 
-  The new order is written when your finger lifts, not on every swap.
+  The list scrolls inside a 420dp cap, so a long library doesn't push Cancel
+  off the bottom.
 
-  Editor gestures:
-    tap the marker     cycle open / doing / done / archived
-    tap the text       edit name, estimate, or delete
-    long-press a row   drag to reorder
+NEW FILES — make sure both upload:
+  app/src/main/res/layout/dialog_pick_list.xml
+  app/src/main/res/layout/row_pick_item.xml
 
-UPLOAD THESE FOUR:
+ALSO UPLOAD:
   app/src/main/java/com/focusledger/timer/MainActivity.kt
-  app/src/main/res/layout/dialog_tasks.xml
-  app/src/main/res/layout/row_task_edit.xml
   app/src/main/res/values/strings.xml
 
 Nothing to delete this version.
@@ -62,11 +62,13 @@ app/src/main/res/layout/activity_settings.xml
 app/src/main/res/layout/dialog_label_edit.xml
 app/src/main/res/layout/dialog_layout_picker.xml
 app/src/main/res/layout/dialog_note_edit.xml
+app/src/main/res/layout/dialog_pick_list.xml
 app/src/main/res/layout/dialog_tasks.xml
 app/src/main/res/layout/dialog_text_input.xml
 app/src/main/res/layout/row_add_label.xml
 app/src/main/res/layout/row_layout_entry.xml
 app/src/main/res/layout/row_note_entry.xml
+app/src/main/res/layout/row_pick_item.xml
 app/src/main/res/layout/row_range_entry.xml
 app/src/main/res/layout/row_task_edit.xml
 app/src/main/res/layout/row_timer.xml

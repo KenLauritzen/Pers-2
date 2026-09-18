@@ -67,6 +67,9 @@ class MainActivity : AppCompatActivity() {
     /** When task time was last written to file. See refreshValues. */
     private var lastTaskSettle = 0L
 
+    /** Set when the list should scroll to the running label on the next bind. */
+    private var pendingScrollToActive = true
+
     /** "9 Sep 3:15p" beside a finished task. */
     private val doneFmt =
         java.text.SimpleDateFormat("d MMM h:mma", java.util.Locale.getDefault())
@@ -159,11 +162,14 @@ class MainActivity : AppCompatActivity() {
         binding.diffDismiss.setOnClickListener { binding.diffBanner.visibility = View.GONE }
         binding.btnSort.setOnClickListener { showSortPicker() }
 
+        // One pill instead of two: Day and Session are a choice of one, and
+        // the freed slot carries the task pill.
         binding.btnViewDay.setOnClickListener {
-            SettingsStore.setSessionView(this, false); refreshValues(); updateChrome()
+            SettingsStore.setSessionView(this, !sessionView()); refreshValues(); updateChrome()
         }
-        binding.btnViewSession.setOnClickListener {
-            SettingsStore.setSessionView(this, true); refreshValues(); updateChrome()
+        binding.btnTasks.setOnClickListener {
+            SettingsStore.setTaskPill(this, (SettingsStore.getTaskPill(this) + 1) % 3)
+            measureAndRebuild(); updateChrome()
         }
         // All three totals sit at 26sp. Auto-sizing only bites on the one
         // case that doesn't fit — a clock total with a double-digit hour,
@@ -234,6 +240,10 @@ class MainActivity : AppCompatActivity() {
         // must match the new displayed list rather than the previous one.
         computeCumulative()
         adapter.notifyDataSetChanged()
+        if (pendingScrollToActive) {
+            pendingScrollToActive = false
+            scrollToActive()
+        }
         refreshValues()
         updateChrome()
     }
@@ -336,7 +346,13 @@ class MainActivity : AppCompatActivity() {
         h.taskEdit?.setOnClickListener { showTaskEditor(entry.name) }
 
         val isRunning = TimerStore.getActiveLabel(this) == entry.name
-        val limit = TaskStore.getShowCount(this, entry.name)
+
+        // The running row uses its own per-label count, which goes to 5. Every
+        // other row uses the T pill. Detail where you're working, a uniform
+        // view for planning.
+        val limit =
+            if (isRunning) TaskStore.getShowCount(this, entry.name)
+            else SettingsStore.getTaskPill(this)
 
         // Fixed height for an ordinary row; the running row wraps so it can
         // grow by however many task lines it holds.
@@ -347,8 +363,10 @@ class MainActivity : AppCompatActivity() {
             if (lp.height != want) { lp.height = want; h.itemView.layoutParams = lp }
         }
 
-        // Zero opts a label out of tasks entirely.
-        if (!isRunning || limit == 0) {
+        // Nothing to show means no space taken — a row with no outstanding
+        // tasks stays exactly as tall as one that has none configured.
+        val shownTasks = TaskStore.visibleForRow(this, entry.name, limit)
+        if (limit == 0 || shownTasks.isEmpty()) {
             box.visibility = View.GONE
             setHeight(true)
             return
@@ -371,13 +389,7 @@ class MainActivity : AppCompatActivity() {
         //
         // One TextView still, with spans for the figure lines — smaller and
         // dimmer than the description, so the eye goes to the task first.
-        val shown = TaskStore.visibleForRow(this, entry.name, limit)
-        if (shown.isEmpty()) {
-            view.text = "No tasks"
-            view.setTextColor(0xFF5C736E.toInt())
-            return
-        }
-
+        val shown = shownTasks
         val sb = SpannableStringBuilder()
         shown.forEachIndexed { i, t ->
             if (i > 0) sb.append("\n")
@@ -536,7 +548,6 @@ class MainActivity : AppCompatActivity() {
             val mark: TextView = v.findViewById(R.id.taskMark)
             val text: TextView = v.findViewById(R.id.taskText)
             val times: TextView = v.findViewById(R.id.taskTimes)
-            val drag: View = v.findViewById(R.id.taskDrag)
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder =
@@ -587,10 +598,16 @@ class MainActivity : AppCompatActivity() {
             holder.text.setOnClickListener {
                 editTask(t) { onChanged?.invoke() }
             }
-            holder.itemView.setOnLongClickListener {
-                dragHelper?.startDrag(holder); true
-            }
-            holder.drag.setOnLongClickListener { dragHelper?.startDrag(holder); true }
+
+            // A clickable child consumes the long press rather than passing it
+            // up, so the marker and the text each need their own — otherwise
+            // dragging only works on the gaps between them. The main list
+            // works because its icon and label were given both from the start.
+            val startDrag = View.OnLongClickListener { dragHelper?.startDrag(holder); true }
+            holder.mark.setOnLongClickListener(startDrag)
+            holder.text.setOnLongClickListener(startDrag)
+            holder.times.setOnLongClickListener(startDrag)
+            holder.itemView.setOnLongClickListener(startDrag)
         }
     }
 
@@ -660,6 +677,29 @@ class MainActivity : AppCompatActivity() {
             }
         }
         dialog.show()
+    }
+
+    /**
+     * Brings the running label into view, roughly a third from the top.
+     *
+     * A third rather than the middle: the running row is the tall one when it
+     * carries tasks, and centring its midpoint would push its label and timer
+     * above the fold. A third keeps the row's head where the eye lands.
+     *
+     * Near the ends of the list it settles as close as the list allows, which
+     * is the right behaviour even though it won't look centred.
+     */
+    private fun scrollToActive() {
+        val active = TimerStore.getActiveLabel(this)
+        if (active == TimerStore.NONE) return
+        val index = displayed.indexOfFirst { it.name == active }
+        if (index < 0) return
+
+        binding.rowsList.post {
+            val lm = binding.rowsList.layoutManager as? LinearLayoutManager ?: return@post
+            val offset = (binding.rowsList.height / 3) - (rowHeightPx / 2)
+            lm.scrollToPositionWithOffset(index, offset.coerceAtLeast(0))
+        }
     }
 
     // ---- row gestures ------------------------------------------------------
@@ -1154,14 +1194,37 @@ class MainActivity : AppCompatActivity() {
             if (e.goalMinutes > 0) "${e.name}   \u2014   ${fmtGoal(e.goalMinutes)}" else e.name
         }.toTypedArray() + arrayOf("\u2500\u2500  Move to the end")
 
-        AlertDialog.Builder(this)
-            .setTitle("Move \u201c${moving.name}\u201d above\u2026")
-            .setItems(display) { _, which ->
-                if (which == choices.size) moveToEnd(moving.name)
-                else moveAbove(moving.name, choices[which].name)
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
+        pickFromList("Move \u201c${moving.name}\u201d above\u2026", display.toList()) { which ->
+            if (which == choices.size) moveToEnd(moving.name)
+            else moveAbove(moving.name, choices[which].name)
+        }
+    }
+
+    /**
+     * A compact chooser.
+     *
+     * AlertDialog's own list pads each item for a large touch target, which is
+     * right for three options and wasteful for twenty — half as many fit as
+     * the screen could hold. These rows are 8dp rather than about 18dp, which
+     * roughly doubles what's visible without making them hard to hit.
+     */
+    private fun pickFromList(title: String, items: List<String>, onPick: (Int) -> Unit) {
+        val view = LayoutInflater.from(this).inflate(R.layout.dialog_pick_list, null)
+        view.findViewById<TextView>(R.id.pickTitle).text = title
+        val list = view.findViewById<LinearLayout>(R.id.pickList)
+        val dialog = AlertDialog.Builder(this).setView(view).create()
+
+        val inflater = LayoutInflater.from(this)
+        items.forEachIndexed { i, text ->
+            val row = inflater.inflate(R.layout.row_pick_item, list, false) as TextView
+            row.text = text
+            // The trailing entry is an action rather than a label.
+            if (text.startsWith("\u2500")) row.setTextColor(muted)
+            row.setOnClickListener { dialog.dismiss(); onPick(i) }
+            list.addView(row)
+        }
+        view.findViewById<Button>(R.id.pickCancel).setOnClickListener { dialog.dismiss() }
+        dialog.show()
     }
 
     /** Sends [moving] to the bottom, since there's no row to sit above. */
@@ -1303,15 +1366,18 @@ class MainActivity : AppCompatActivity() {
             if (running) fmtClock(dayStartMs()) else "\u25cf ${fmtClock(dayStartMs())}"
         binding.tvHeader.setTextColor(if (running) muted else overRed)
 
-        binding.btnViewDay.setBackgroundResource(
-            if (isSession) R.drawable.bg_pill_off else R.drawable.bg_pill_on
-        )
-        binding.btnViewSession.setBackgroundResource(
-            if (isSession) R.drawable.bg_pill_on else R.drawable.bg_pill_off
-        )
+        // Always filled: it's a choice of one, not an on/off.
+        binding.btnViewDay.setBackgroundResource(R.drawable.bg_pill_on)
         binding.btnSort.text = SettingsStore.SORT_SHORT[SettingsStore.getSortMode(this)]
-        binding.btnViewDay.setTextColor(if (isSession) muted else amber)
-        binding.btnViewSession.setTextColor(if (isSession) blueGrey else muted)
+        binding.btnViewDay.text = if (isSession) "Ses" else "Day"
+        binding.btnViewDay.setTextColor(if (isSession) blueGrey else amber)
+
+        val taskPill = SettingsStore.getTaskPill(this)
+        binding.btnTasks.text = "T$taskPill"
+        binding.btnTasks.setBackgroundResource(
+            if (taskPill > 0) R.drawable.bg_pill_on else R.drawable.bg_pill_off
+        )
+        binding.btnTasks.setTextColor(if (taskPill > 0) colGoal else muted)
 
         val secondary = SettingsStore.getSecondaryMode(this)
         binding.btnCum2.text =
@@ -1852,6 +1918,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        // Coming back from Settings, Notes or a cold start: put the running
+        // label where it can be seen. Not on every refresh — that would fight
+        // you whenever you scrolled somewhere deliberately.
+        pendingScrollToActive = true
         if (!TimerStore.hasOpenSession(this)) TimerStore.beginNewSession(this)
         // Row height is derived from the measured list, so wait for layout.
         if (binding.rowsList.height > 0) measureAndRebuild()
