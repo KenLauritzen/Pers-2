@@ -485,6 +485,27 @@ completions that happened to coincide with a timer switch.
 
 ---
 
+## 74. Drag tasks instead of arrow buttons  ✅ built in v72
+
+**What:** Long-press a task in the editor and drag it. The up/down arrows are
+gone.
+
+**Why:** Two taps per position is tedious once a list is more than a few long,
+and the arrows took width from the text they were beside.
+
+**Notes:**
+- The editor's list was a plain `LinearLayout` inside a `ScrollView`, which
+  can't drag. It's a `RecyclerView` with `ItemTouchHelper` now — the same
+  mechanism the main list uses, so the gesture matches.
+- **Fixed 340dp height rather than wrap_content.** A RecyclerView scrolls
+  itself, and inside a dialog there's nothing to bound a wrapping one.
+- The new order is written **when the finger lifts**, not on every swap — one
+  file write per drag instead of a dozen.
+- Gestures in the editor: tap the marker to cycle status, tap the text to edit,
+  long-press the row to drag.
+
+---
+
 ## Template for new entries
 
 New ideas go in **Open ideas** with the next unused number. When one ships,

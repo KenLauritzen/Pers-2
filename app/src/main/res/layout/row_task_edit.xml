@@ -49,30 +49,13 @@
             android:textSize="17sp" />
     </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center_vertical">
-
-        <ImageView
-            android:id="@+id/taskUp"
-            android:layout_width="34dp"
-            android:layout_height="30dp"
-            android:padding="5dp"
-            android:src="@android:drawable/arrow_up_float"
-            android:contentDescription="Move up"
-            android:clickable="true"
-            android:focusable="true" />
-
-        <ImageView
-            android:id="@+id/taskDown"
-            android:layout_width="34dp"
-            android:layout_height="30dp"
-            android:padding="5dp"
-            android:src="@android:drawable/arrow_down_float"
-            android:contentDescription="Move down"
-            android:clickable="true"
-            android:focusable="true" />
-    </LinearLayout>
+    <!-- Long-press anywhere on the row to drag; this just says so. -->
+    <ImageView
+        android:id="@+id/taskDrag"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:padding="7dp"
+        android:src="@android:drawable/ic_menu_sort_by_size"
+        android:contentDescription="Drag to reorder"
+        android:alpha="0.5" />
 </LinearLayout>

@@ -64,18 +64,24 @@
             android:background="@drawable/bg_button_small" />
     </LinearLayout>
 
-    <ScrollView
+    <!-- A RecyclerView rather than a plain list, so rows can be dragged.
+         Fixed height: it scrolls itself, and a wrap_content list inside a
+         dialog has nothing to bound it. -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/tasksRecycler"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:minHeight="120dp">
+        android:layout_height="340dp"
+        android:scrollbars="vertical" />
 
-        <LinearLayout
-            android:id="@+id/tasksList"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical" />
-    </ScrollView>
+    <TextView
+        android:id="@+id/tasksEmpty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="No tasks yet."
+        android:textColor="#5C736E"
+        android:textSize="15sp"
+        android:padding="12dp"
+        android:visibility="gone" />
 
     <!-- New task: text and an estimate in minutes -->
     <LinearLayout

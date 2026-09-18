@@ -436,98 +436,71 @@ class MainActivity : AppCompatActivity() {
      */
     private fun showTaskEditor(label: String) {
         val view = LayoutInflater.from(this).inflate(R.layout.dialog_tasks, null)
-        val list = view.findViewById<LinearLayout>(R.id.tasksList)
+        val recycler = view.findViewById<RecyclerView>(R.id.tasksRecycler)
+        val empty = view.findViewById<TextView>(R.id.tasksEmpty)
         val countView = view.findViewById<TextView>(R.id.tasksShowCount)
         view.findViewById<TextView>(R.id.tasksTitle).text = "Tasks \u2014 $label"
 
         val dialog = AlertDialog.Builder(this).setView(view).create()
 
-        fun render() {
+        val tasks = TaskStore.forLabel(this, label).toMutableList()
+        val adapter = TaskAdapter(tasks)
+
+        recycler.layoutManager = LinearLayoutManager(this)
+        recycler.adapter = adapter
+
+        fun refreshEmpty() {
+            empty.visibility = if (tasks.isEmpty()) View.VISIBLE else View.GONE
+            recycler.visibility = if (tasks.isEmpty()) View.GONE else View.VISIBLE
             countView.text = TaskStore.getShowCount(this, label).toString()
-            list.removeAllViews()
-            val tasks = TaskStore.forLabel(this, label)
-            if (tasks.isEmpty()) {
-                list.addView(TextView(this).apply {
-                    text = "No tasks yet."
-                    setTextColor(0xFF5C736E.toInt())
-                    textSize = 15f
-                    setPadding(4, 12, 4, 12)
-                })
-                return
-            }
-            tasks.forEachIndexed { i, t ->
-                val row = LayoutInflater.from(this)
-                    .inflate(R.layout.row_task_edit, list, false)
-
-                val mark = row.findViewById<TextView>(R.id.taskMark)
-                mark.text = when (t.status) {
-                    TaskStatus.OPEN -> ""
-                    TaskStatus.DOING -> "\u25b8"
-                    TaskStatus.DONE -> "\u2713"
-                    TaskStatus.ARCHIVED -> "\u00d7"
-                }
-                mark.setTextColor(
-                    when (t.status) {
-                        TaskStatus.DOING -> amber
-                        TaskStatus.DONE -> colGoal
-                        else -> muted
-                    }
-                )
-                // It's the control you tap to advance a task, so it shouldn't
-                // be the smallest thing in the row.
-                mark.textSize = 22f
-
-                val textView = row.findViewById<TextView>(R.id.taskText)
-                textView.text = t.text
-                textView.setTextColor(
-                    when (t.status) {
-                        TaskStatus.DONE, TaskStatus.ARCHIVED -> 0xFF5C736E.toInt()
-                        else -> 0xFFF1EDE3.toInt()
-                    }
-                )
-
-                // Past 100% keeps counting rather than capping: how far over
-                // is the useful part.
-                val actualMin = (TaskStore.liveMs(this, t) / 60_000L).toInt()
-                val times = row.findViewById<TextView>(R.id.taskTimes)
-                // When it was finished, beside how long it took.
-                val done = if (t.completedAt > 0L)
-                    "   \u2713 ${doneFmt.format(java.util.Date(t.completedAt))}" else ""
-                times.text = taskTimes(t) + done
-                times.setTextColor(
-                    if (t.estimateMinutes > 0 && actualMin > t.estimateMinutes) colOver
-                    else muted
-                )
-
-                mark.setOnClickListener { TaskStore.cycleStatus(this, t); render(); rebuild() }
-                textView.setOnClickListener { editTask(t) { render(); rebuild() } }
-
-                val ids = tasks.map { it.id }.toMutableList()
-                row.findViewById<ImageView>(R.id.taskUp).setOnClickListener {
-                    if (i > 0) {
-                        ids.add(i - 1, ids.removeAt(i))
-                        TaskStore.reorder(this, label, ids); render(); rebuild()
-                    }
-                }
-                row.findViewById<ImageView>(R.id.taskDown).setOnClickListener {
-                    if (i < ids.size - 1) {
-                        ids.add(i + 1, ids.removeAt(i))
-                        TaskStore.reorder(this, label, ids); render(); rebuild()
-                    }
-                }
-                list.addView(row)
-            }
         }
-        render()
+        refreshEmpty()
 
+        // Long-press a row to drag it, the same gesture the main list uses.
+        val touchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
+            ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0
+        ) {
+            override fun onMove(
+                rv: RecyclerView,
+                vh: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
+                val from = vh.bindingAdapterPosition
+                val to = target.bindingAdapterPosition
+                if (from == RecyclerView.NO_POSITION || to == RecyclerView.NO_POSITION) return false
+                tasks.add(to, tasks.removeAt(from))
+                adapter.notifyItemMoved(from, to)
+                return true
+            }
+
+            override fun onSwiped(vh: RecyclerView.ViewHolder, dir: Int) {}
+
+            override fun clearView(rv: RecyclerView, vh: RecyclerView.ViewHolder) {
+                super.clearView(rv, vh)
+                // Written once the finger lifts, not on every swap.
+                TaskStore.reorder(this@MainActivity, label, tasks.map { it.id })
+                rebuild()
+            }
+        })
+        touchHelper.attachToRecyclerView(recycler)
+        adapter.dragHelper = touchHelper
+
+        fun reload() {
+            tasks.clear()
+            tasks.addAll(TaskStore.forLabel(this, label))
+            adapter.notifyDataSetChanged()
+            refreshEmpty()
+            rebuild()
+        }
+        adapter.onChanged = { reload() }
 
         view.findViewById<Button>(R.id.tasksShowMinus).setOnClickListener {
             TaskStore.setShowCount(this, label, TaskStore.getShowCount(this, label) - 1)
-            render(); measureAndRebuild()
+            refreshEmpty(); measureAndRebuild()
         }
         view.findViewById<Button>(R.id.tasksShowPlus).setOnClickListener {
             TaskStore.setShowCount(this, label, TaskStore.getShowCount(this, label) + 1)
-            render(); measureAndRebuild()
+            refreshEmpty(); measureAndRebuild()
         }
 
         val newText = view.findViewById<EditText>(R.id.taskNewText)
@@ -537,11 +510,10 @@ class MainActivity : AppCompatActivity() {
             if (entered.isEmpty()) return@setOnClickListener
             TaskStore.add(this, label, entered, newEst.text.toString().toIntOrNull() ?: 0)
             newText.setText(""); newEst.setText("")
-            render(); rebuild()
+            reload()
         }
         view.findViewById<Button>(R.id.tasksDone).setOnClickListener {
-            // Anything typed but not added is saved rather than lost — tapping
-            // Done with a task half-entered clearly means to keep it.
+            // Anything typed but not added is saved rather than lost.
             val pending = newText.text.toString().trim()
             if (pending.isNotEmpty()) {
                 TaskStore.add(this, label, pending, newEst.text.toString().toIntOrNull() ?: 0)
@@ -550,6 +522,76 @@ class MainActivity : AppCompatActivity() {
             dialog.dismiss()
         }
         dialog.show()
+    }
+
+    /** Rows in the task editor. Long-press drags; tap the marker or the text. */
+    inner class TaskAdapter(
+        private val items: MutableList<Task>
+    ) : RecyclerView.Adapter<TaskAdapter.Holder>() {
+
+        var dragHelper: ItemTouchHelper? = null
+        var onChanged: (() -> Unit)? = null
+
+        inner class Holder(v: View) : RecyclerView.ViewHolder(v) {
+            val mark: TextView = v.findViewById(R.id.taskMark)
+            val text: TextView = v.findViewById(R.id.taskText)
+            val times: TextView = v.findViewById(R.id.taskTimes)
+            val drag: View = v.findViewById(R.id.taskDrag)
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): Holder =
+            Holder(
+                LayoutInflater.from(parent.context)
+                    .inflate(R.layout.row_task_edit, parent, false)
+            )
+
+        override fun getItemCount(): Int = items.size
+
+        override fun onBindViewHolder(holder: Holder, position: Int) {
+            val t = items.getOrNull(position) ?: return
+
+            holder.mark.text = when (t.status) {
+                TaskStatus.OPEN -> ""
+                TaskStatus.DOING -> "\u25b8"
+                TaskStatus.DONE -> "\u2713"
+                TaskStatus.ARCHIVED -> "\u00d7"
+            }
+            holder.mark.setTextColor(
+                when (t.status) {
+                    TaskStatus.DOING -> amber
+                    TaskStatus.DONE -> colGoal
+                    else -> muted
+                }
+            )
+            holder.mark.textSize = 22f
+
+            holder.text.text = t.text
+            holder.text.setTextColor(
+                when (t.status) {
+                    TaskStatus.DONE, TaskStatus.ARCHIVED -> 0xFF5C736E.toInt()
+                    else -> 0xFFF1EDE3.toInt()
+                }
+            )
+
+            val actualMin = (TaskStore.liveMs(this@MainActivity, t) / 60_000L).toInt()
+            val done = if (t.completedAt > 0L)
+                "   \u2713 ${doneFmt.format(java.util.Date(t.completedAt))}" else ""
+            holder.times.text = taskTimes(t) + done
+            holder.times.setTextColor(
+                if (t.estimateMinutes > 0 && actualMin > t.estimateMinutes) colOver else muted
+            )
+
+            holder.mark.setOnClickListener {
+                TaskStore.cycleStatus(this@MainActivity, t); onChanged?.invoke()
+            }
+            holder.text.setOnClickListener {
+                editTask(t) { onChanged?.invoke() }
+            }
+            holder.itemView.setOnLongClickListener {
+                dragHelper?.startDrag(holder); true
+            }
+            holder.drag.setOnLongClickListener { dragHelper?.startDrag(holder); true }
+        }
     }
 
     /** Rename a task, change its estimate, or remove it. */
