@@ -23,7 +23,7 @@
         android:gravity="top|start"
         android:inputType="textMultiLine|textCapSentences"
         android:textColor="#F1EDE3"
-        android:textColorHint="#5C736E"
+        android:textColorHint="#8FA39E"
         android:textSize="22sp"
         android:padding="12dp"
         android:background="@drawable/bg_row_track"

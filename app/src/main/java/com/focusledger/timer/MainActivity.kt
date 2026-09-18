@@ -400,20 +400,38 @@ class MainActivity : AppCompatActivity() {
                 else -> "\u00b7"
             }
             val times = taskTimes(t)
+            val finished = t.status == TaskStatus.DONE || t.status == TaskStatus.ARCHIVED
+            val lineColour = when {
+                t.status == TaskStatus.DOING -> amber
+                finished -> colGoal
+                else -> 0xFFCBD9D5.toInt()
+            }
             if (times.isNotEmpty()) {
                 val from = sb.length
-                sb.append("$mark $times\n")
-                sb.setSpan(RelativeSizeSpan(0.8f), from, sb.length, SPAN_EXCLUSIVE_EXCLUSIVE)
-                // muted scored 2.44 on the green bar. This clears 4.5.
+                sb.append(mark)
+                // The marker sits inside a line shrunk to 0.8, which made it
+                // the smallest glyph on the row — and it's the only thing
+                // saying which task is accruing time. Scaled back up on its
+                // own so the figures stay small.
+                sb.setSpan(RelativeSizeSpan(1.5f), from, sb.length, SPAN_EXCLUSIVE_EXCLUSIVE)
+
+                val figuresFrom = sb.length
+                sb.append(" $times\n")
                 sb.setSpan(
-                    ForegroundColorSpan(
-                        if (t.status == TaskStatus.DOING) amber else 0xFFCBD9D5.toInt()
-                    ),
-                    from, sb.length, SPAN_EXCLUSIVE_EXCLUSIVE
+                    RelativeSizeSpan(0.8f), figuresFrom, sb.length, SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                // muted scored 2.44 on the green bar. These clear 4.5.
+                sb.setSpan(
+                    ForegroundColorSpan(lineColour), from, sb.length, SPAN_EXCLUSIVE_EXCLUSIVE
                 )
                 sb.append("   ")
             } else {
+                val from = sb.length
                 sb.append("$mark ")
+                sb.setSpan(RelativeSizeSpan(1.2f), from, sb.length, SPAN_EXCLUSIVE_EXCLUSIVE)
+                sb.setSpan(
+                    ForegroundColorSpan(lineColour), from, sb.length, SPAN_EXCLUSIVE_EXCLUSIVE
+                )
             }
             val textFrom = sb.length
             sb.append(t.text)
@@ -561,35 +579,53 @@ class MainActivity : AppCompatActivity() {
         override fun onBindViewHolder(holder: Holder, position: Int) {
             val t = items.getOrNull(position) ?: return
 
+            // \u2715 rather than \u00d7: the multiplication sign is an ASCII-height
+            // glyph and looked half the size of the tick beside it.
             holder.mark.text = when (t.status) {
                 TaskStatus.OPEN -> ""
                 TaskStatus.DOING -> "\u25b8"
                 TaskStatus.DONE -> "\u2713"
-                TaskStatus.ARCHIVED -> "\u00d7"
+                TaskStatus.ARCHIVED -> "\u2715"
             }
+            // One colour language: amber is accruing time, mint is finished,
+            // neutral is waiting. Archived is the same mint, quieter \u2014 the
+            // relationship between done and put away.
             holder.mark.setTextColor(
                 when (t.status) {
                     TaskStatus.DOING -> amber
                     TaskStatus.DONE -> colGoal
+                    TaskStatus.ARCHIVED -> colGoal
                     else -> muted
                 }
             )
-            holder.mark.textSize = 22f
+            holder.mark.alpha = if (t.status == TaskStatus.ARCHIVED) 0.55f else 1f
 
-            holder.text.text = t.text
+            // Struck through, not dimmed. The line carries "finished", so the
+            // colour can stay legible.
+            val finished = t.status == TaskStatus.DONE || t.status == TaskStatus.ARCHIVED
+            holder.text.text =
+                if (finished) SpannableStringBuilder(t.text).apply {
+                    setSpan(StrikethroughSpan(), 0, length, SPAN_EXCLUSIVE_EXCLUSIVE)
+                } else t.text
             holder.text.setTextColor(
-                when (t.status) {
-                    TaskStatus.DONE, TaskStatus.ARCHIVED -> 0xFF5C736E.toInt()
-                    else -> 0xFFF1EDE3.toInt()
-                }
+                if (finished) 0xFFCBD9D5.toInt() else 0xFFF1EDE3.toInt()
             )
+            holder.text.alpha = if (t.status == TaskStatus.ARCHIVED) 0.7f else 1f
 
             val actualMin = (TaskStore.liveMs(this@MainActivity, t) / 60_000L).toInt()
+            // The tick that used to precede this was redundant beside a marker
+            // already showing one.
             val done = if (t.completedAt > 0L)
-                "   \u2713 ${doneFmt.format(java.util.Date(t.completedAt))}" else ""
-            holder.times.text = taskTimes(t) + done
+                "   ${doneFmt.format(java.util.Date(t.completedAt))}" else ""
+            holder.times.text = taskTimes(t).ifEmpty { "min?" } + done
             holder.times.setTextColor(
-                if (t.estimateMinutes > 0 && actualMin > t.estimateMinutes) colOver else muted
+                when {
+                    finished -> colGoal
+                    t.estimateMinutes > 0 && actualMin > t.estimateMinutes -> colOver
+                    // An absence, not a value \u2014 quieter, but still readable.
+                    t.estimateMinutes <= 0 -> 0xFF8FA39E.toInt()
+                    else -> muted
+                }
             )
 
             holder.mark.setOnClickListener {

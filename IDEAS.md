@@ -436,27 +436,6 @@ would need a defined place, probably the bottom.
 
 ---
 
-## 76. Compact "move above" picker  ✅ built in v75
-
-**What:** The list you get from tapping a label name uses its own rows at 8dp
-of vertical padding, rather than AlertDialog's default of about 18dp. Roughly
-twice as many labels fit on screen.
-
-**Why:** The default padding sizes every item as a large touch target, which
-is right for three options and wasteful for twenty — you could see half what
-the screen could hold, and the list you're choosing from is the whole point.
-
-**Notes:**
-- 8dp still leaves about 36dp a row, comfortably above the 32dp a fingertip
-  needs. Below that it would start costing accuracy.
-- Only this picker changed. The sort dialog, the rename/delete menu and the
-  column choosers are two to seven items, where compact rows would look
-  cramped for no gain.
-- The list scrolls inside a 420dp cap, so a long library doesn't push the
-  Cancel button off the bottom.
-
----
-
 ## Template for new entries
 
 New ideas go in **Open ideas** with the next unused number. When one ships,
@@ -2617,3 +2596,78 @@ screen, the list scrolls so the running row sits about a third from the top.
   whenever you'd deliberately looked somewhere else.
 - Near the ends of the list it settles as close as the list allows. Correct,
   but it won't look centred there.
+
+---
+
+## 76. Compact "move above" picker  ✅ built in v75
+
+**What:** The list you get from tapping a label name uses its own rows at 8dp
+of vertical padding, rather than AlertDialog's default of about 18dp. Roughly
+twice as many labels fit on screen.
+
+**Why:** The default padding sizes every item as a large touch target, which
+is right for three options and wasteful for twenty — you could see half what
+the screen could hold, and the list you're choosing from is the whole point.
+
+**Notes:**
+- 8dp still leaves about 36dp a row, comfortably above the 32dp a fingertip
+  needs. Below that it would start costing accuracy.
+- Only this picker changed. The sort dialog, the rename/delete menu and the
+  column choosers are two to seven items, where compact rows would look
+  cramped for no gain.
+- The list scrolls inside a 420dp cap, so a long library doesn't push the
+  Cancel button off the bottom.
+
+---
+
+## 77. Task display: contrast, markers and colour  ✅ built in v76
+
+**What:** Two things sit at `#5C736E`, which scores **2.87** against the
+dialog background — under two-thirds of the 4.5 normal text needs, and it's
+bright sunlight where that shortfall bites.
+
+- **Completed tasks in the task editor.** The row was fixed in v68; the editor
+  kept the old colour, so the same task reads differently in the two places.
+- **Every input hint** — "New task", "min", "Label name", "Layout name" and
+  the rest. Eight of them, all the same value.
+
+**The mistake in both:** dimness used to mean "secondary". Secondary only needs
+to be *quieter*, not *harder to read*.
+
+**Proposed:**
+- Done tasks → `#CBD9D5` with a strikethrough, matching the row exactly. The
+  line carries "finished", so the colour is free to be legible.
+- Hints → `#8FA39E`, which is 5.50 against the background — a real jump from
+  2.87, and still visibly a hint rather than typed text.
+
+**Also spotted:** completed rows read `11m ✓ 18 Sep 9:39AM`. The `✓` is
+redundant beside a marker that already shows one. Dropping it leaves the date
+cleaner.
+
+
+**Built in v76 — eight changes, all to how tasks read:**
+
+| | |
+|---|---|
+| Hints | `#5C736E` → `#8FA39E`, all eight. 2.87 → 5.50 contrast |
+| Done in the editor | `#CBD9D5` struck through, matching the row since v68 |
+| Redundant `✓` | Dropped from before the completion date |
+| Missing estimate | Shows `min?` rather than an empty line |
+| `✓` and `✕` | Both mint; archived at 55% alpha |
+| `×` → `✕` | The multiplication sign is ASCII-height and looked half the size of the tick |
+| `▸` on the row | Its own 1.5× span, so it grows while the figures stay small |
+| Figures line | Follows the marker: amber accruing, mint finished, neutral waiting |
+
+**Why `min?` rather than hiding the line:** an empty figures line pushed the
+description below the marker, which is what made the text look misaligned. A
+prompt keeps every row the same shape *and* nudges at the missing estimate,
+and tapping the text opens the editor where it's set.
+
+**Why the marker needed its own span:** it sits inside a line shrunk to 0.8 for
+the figures, making it about 13.6sp — the smallest glyph on the row, and the
+only thing saying which task is accruing time.
+
+**Worth recording:** mint is 8.95 on the editor's background but only 3.97 on
+a green progress bar. Done tasks don't appear on rows at all since v74, so the
+mint there is for one consistent rule rather than for effect. If done tasks
+ever return to the row, that colour has to be revisited.

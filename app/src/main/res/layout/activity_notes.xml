@@ -90,7 +90,7 @@
         android:background="@drawable/bg_row_track"
         android:padding="12dp"
         android:hint="Note for this run"
-        android:textColorHint="#5C736E"
+        android:textColorHint="#8FA39E"
         android:textColor="#F1EDE3"
         android:textSize="27sp"
         android:inputType="textMultiLine|textCapSentences"

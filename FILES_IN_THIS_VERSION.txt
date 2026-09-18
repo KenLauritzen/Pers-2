@@ -1,25 +1,49 @@
-Focus v75 — complete file list.
+Focus v76 — complete file list.
 
-The "move above" list — the one you get by tapping a label name — is half as
-tall per row, so roughly twice as many labels fit on screen.
+Eight changes to how tasks read.
 
-  AlertDialog's own list pads every item as a large touch target, about 18dp
-  top and bottom. These rows use 8dp, which still leaves about 36dp a row,
-  comfortably above the 32dp a fingertip needs.
+  Hints                 #5C736E -> #8FA39E, all eight of them. That's 2.87
+                        contrast up to 5.50 — the old value was under
+                        two-thirds of what normal text needs, which is why it
+                        disappeared in daylight.
 
-  Only this picker changed. The sort dialog, the rename/delete menu and the
-  column choosers are two to seven items, where compact rows would look
-  cramped for no gain.
+  Done in the editor    #CBD9D5, struck through — matching the row, which was
+                        fixed in v68 while the editor kept the old colour.
 
-  The list scrolls inside a 420dp cap, so a long library doesn't push Cancel
-  off the bottom.
+  Completion date       The redundant ✓ before it is gone. The marker beside
+                        it already shows one. Date and time unchanged.
 
-NEW FILES — make sure both upload:
-  app/src/main/res/layout/dialog_pick_list.xml
-  app/src/main/res/layout/row_pick_item.xml
+  Missing estimate      Shows "min?" instead of an empty line. That empty line
+                        was what pushed the description below the marker and
+                        made the text look misaligned.
 
-ALSO UPLOAD:
+  ✓ and ✕               Both mint. Archived is the same colour at 55% alpha —
+                        one colour saying "finished", the fade saying "put
+                        away".
+
+  × became ✕            The multiplication sign is an ASCII-height glyph and
+                        looked half the size of the tick beside it.
+
+  ▸ on the main row     Its own 1.5× span. It sits inside a line shrunk to 0.8
+                        for the figures, making it the smallest glyph on the
+                        row — and it's the only thing showing which task is
+                        accruing time.
+
+  Figures line          Follows the marker: amber accruing, mint finished,
+                        neutral waiting.
+
+Note: done tasks don't appear on the main row at all since v74, so the mint
+there is for one consistent rule rather than for visible effect.
+
+UPLOAD THESE SIX:
   app/src/main/java/com/focusledger/timer/MainActivity.kt
+  app/src/main/res/layout/row_task_edit.xml
+  app/src/main/res/layout/activity_main.xml
+  app/src/main/res/layout/activity_notes.xml
+  app/src/main/res/layout/dialog_layout_picker.xml
+  app/src/main/res/layout/dialog_note_edit.xml
+  app/src/main/res/layout/dialog_tasks.xml
+  app/src/main/res/layout/dialog_text_input.xml
   app/src/main/res/values/strings.xml
 
 Nothing to delete this version.
