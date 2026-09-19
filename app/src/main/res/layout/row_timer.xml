@@ -189,15 +189,14 @@
         android:paddingBottom="6dp"
         android:visibility="gone">
 
-        <TextView
+        <!-- One view per task rather than one block of text, so each can be
+             tapped. Never more than five, so no recycling is needed. -->
+        <LinearLayout
             android:id="@+id/rowTasks"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:textColor="#A9BDB8"
-            android:textSize="17sp"
-            android:lineSpacingExtra="1dp"
-            android:includeFontPadding="false" />
+            android:orientation="vertical" />
 
         <ImageView
             android:id="@+id/rowTaskEdit"

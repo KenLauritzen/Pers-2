@@ -509,6 +509,36 @@ object LogStore {
         }
     }
 
+    /**
+     * Removes the logged completion for [label] at [completedAtMs].
+     *
+     * Reopening a task clears its date, but the log row it wrote would
+     * otherwise stay — a completion that didn't happen, counted in every
+     * future range total. Matched on the minute, which is the resolution the
+     * log stores.
+     */
+    fun deleteTaskDone(context: Context, label: String, completedAtMs: Long): Boolean {
+        return try {
+            val f = file(context)
+            if (!f.exists() || completedAtMs <= 0L) return false
+            val target = stamp.format(Date(completedAtMs))
+
+            val lines = f.readLines()
+            val idx = lines.indexOfLast { line ->
+                if (line.isBlank()) false
+                else {
+                    val p = parseCsvLine(line)
+                    p.size >= 8 && p[7] == TYPE_TASK_DONE && p[2] == label && p[1] == target
+                }
+            }
+            if (idx <= 0) return false
+            f.writeText(lines.filterIndexed { i, _ -> i != idx }.joinToString("\n") + "\n")
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     fun exists(context: Context) = file(context).exists()
     fun path(context: Context): String = file(context).absolutePath
 }

@@ -140,6 +140,10 @@ object TimerStore {
             .putLong(KEY_RUN_START_TS, now)
             .putLong(KEY_REMINDER_BASE_TS, now)
             .apply()
+
+        // If this label already has a task marked doing, it starts accruing
+        // now rather than waiting to be re-marked.
+        TaskStore.onLabelStarted(c, label)
     }
 
     /** Stops the running timer, banking its time and writing a log row. */

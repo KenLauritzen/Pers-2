@@ -47,6 +47,7 @@ object TaskStore {
         "label,text,estimate_minutes,status,actual_ms,sort_order,id,completed_at"
 
     /** Which task is accruing, and since when. Only ever one. */
+    private const val KEY_LAST_SORT_DAY = "task_last_sort_day"
     private const val KEY_DOING_ID = "task_doing_id"
     private const val KEY_DOING_SINCE = "task_doing_since"
 
@@ -109,17 +110,50 @@ object TaskStore {
     fun forLabel(context: Context, label: String): List<Task> =
         readAll(context).filter { it.label == label }.sortedBy { it.order }
 
+    /** Completed tasks shown on a row beyond the count, at most. */
+    private const val DONE_TODAY_MAX = 2
+
     /**
-     * What a row shows: work still to do.
+     * What a row shows: [limit] outstanding tasks, plus anything finished
+     * today, in their stored positions.
      *
-     * Finished and archived tasks are left out. The row is a prompt about what
-     * is next, not a record of what is behind — the editor holds that.
+     * Today's completions are **extras beyond the count**, not part of it.
+     * Counted against it, finishing two at T2 would leave the row showing two
+     * ticks and nothing upcoming — the block would go blank exactly when you'd
+     * been productive.
+     *
+     * Capped so a heavy day doesn't produce a ten-line row. Yesterday's
+     * completions never show; they sink below the outstanding work at the
+     * first open of a new day.
      */
     fun visibleForRow(context: Context, label: String, limit: Int): List<Task> {
         if (limit <= 0) return emptyList()
-        return forLabel(context, label)
+        val all = forLabel(context, label)
+
+        val outstanding = all
             .filter { it.status == TaskStatus.OPEN || it.status == TaskStatus.DOING }
             .take(limit)
+            .map { it.id }
+            .toSet()
+
+        val doneToday = all
+            .filter { it.status == TaskStatus.DONE && isToday(it.completedAt) }
+            .sortedByDescending { it.completedAt }
+            .take(DONE_TODAY_MAX)
+            .map { it.id }
+            .toSet()
+
+        // Stored order, so a completion stays where it was rather than
+        // jumping to the top the moment it's ticked.
+        return all.filter { it.id in outstanding || it.id in doneToday }
+    }
+
+    private fun isToday(ms: Long): Boolean {
+        if (ms <= 0L) return false
+        val a = java.util.Calendar.getInstance().apply { timeInMillis = ms }
+        val b = java.util.Calendar.getInstance()
+        return a.get(java.util.Calendar.YEAR) == b.get(java.util.Calendar.YEAR) &&
+            a.get(java.util.Calendar.DAY_OF_YEAR) == b.get(java.util.Calendar.DAY_OF_YEAR)
     }
 
     // ---- editing ------------------------------------------------------------
@@ -152,6 +186,59 @@ object TaskStore {
         })
     }
 
+    /**
+     * Once a day, sinks older completions below the outstanding work.
+     *
+     * Within each label:
+     *   1. outstanding \u2014 open and doing \u2014 keeping the order you dragged them into
+     *   2. completed before today, newest completion first
+     *   3. archived, oldest last
+     *
+     * **This rewrites the stored order**, not just the display. That makes the
+     * file easy to sweep later \u2014 old completions collect at the end of each
+     * label's block \u2014 at the cost of one thing: un-ticking a task from a
+     * previous day won't return it to where it used to sit.
+     *
+     * Runs on the first open of a new day rather than at midnight, so it still
+     * happens when the app wasn't running.
+     */
+    fun sortIfNewDay(context: Context) {
+        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
+            .format(java.util.Date())
+        if (p(context).getString(KEY_LAST_SORT_DAY, "") == today) return
+
+        val all = readAll(context)
+        if (all.isNotEmpty()) {
+            val resorted = all
+                .groupBy { it.label }
+                .flatMap { (_, tasks) ->
+                    val ordered = tasks.sortedBy { it.order }
+                    val outstanding = ordered.filter {
+                        it.status == TaskStatus.OPEN || it.status == TaskStatus.DOING
+                    }
+                    // Today's stay in place; only older ones sink.
+                    val doneToday = ordered.filter {
+                        it.status == TaskStatus.DONE && isToday(it.completedAt)
+                    }
+                    // Archived merges with the older completions rather than
+                    // forming a tier of its own. The cross only ever meant
+                    // "don't show this today"; once the day has turned it has
+                    // served its purpose and the two are the same thing.
+                    val finishedOlder = ordered
+                        .filter {
+                            (it.status == TaskStatus.DONE && !isToday(it.completedAt)) ||
+                                it.status == TaskStatus.ARCHIVED
+                        }
+                        .sortedByDescending { it.completedAt }
+
+                    (outstanding + doneToday + finishedOlder)
+                        .mapIndexed { i, t -> t.copy(order = i) }
+                }
+            writeAll(context, resorted)
+        }
+        p(context).edit().putString(KEY_LAST_SORT_DAY, today).apply()
+    }
+
     // ---- accrual ------------------------------------------------------------
 
     /**
@@ -166,26 +253,45 @@ object TaskStore {
         val next = task.status.next()
         val now = System.currentTimeMillis()
 
-        // Stamped the first time it is completed and kept thereafter, so
-        // cycling past DONE and back doesn't rewrite the date it was finished.
-        val firstCompletion = next == TaskStatus.DONE && task.completedAt == 0L
+        // Every arrival at DONE is a completion, not just the first. Stamping
+        // only once meant a task finished twice recorded the second one
+        // nowhere, and kept showing the older date — which made recurring work
+        // invisible in the history.
+        //
+        // Cycling round to OPEN clears the date: an open task has no
+        // completion date, and leaving one attached showed a finished date on
+        // something still to do. ARCHIVED keeps it, being still finished.
+        val completion = next == TaskStatus.DONE
+        val reopened = next == TaskStatus.OPEN
 
         val all = readAll(context).map { t ->
             when {
-                t.id == task.id ->
-                    t.copy(status = next, completedAt = if (firstCompletion) now else t.completedAt)
-                // only one DOING anywhere
-                next == TaskStatus.DOING && t.status == TaskStatus.DOING ->
-                    t.copy(status = TaskStatus.OPEN)
+                t.id == task.id -> t.copy(
+                    status = next,
+                    completedAt = when {
+                        completion -> now
+                        reopened -> 0L
+                        else -> t.completedAt
+                    }
+                )
+                // one DOING per label
+                next == TaskStatus.DOING && t.status == TaskStatus.DOING &&
+                    t.label == task.label -> t.copy(status = TaskStatus.OPEN)
                 else -> t
             }
         }
         val ok = writeAll(context, all)
-        if (next == TaskStatus.DOING) startDoing(context, task.id) else clearDoing(context)
+        // The accrual clock follows the label that's running, not every task
+        // marked doing — so it only starts when this task's label is the
+        // active one, and stops when this task stops being doing.
+        if (next == TaskStatus.DOING && TimerStore.getActiveLabel(context) == task.label)
+            startDoing(context, task.id)
+        else if (p(context).getString(KEY_DOING_ID, "") == task.id)
+            clearDoing(context)
 
         // A row in the log, so the completion survives the task being edited,
         // archived or deleted — and so a date range can count it.
-        if (firstCompletion) {
+        if (completion) {
             val accrued = all.firstOrNull { it.id == task.id }?.actualMs ?: task.actualMs
             LogStore.logTaskDone(
                 context, TimerStore.getSessionStartMs(context),
@@ -193,6 +299,19 @@ object TaskStore {
             )
         }
         return ok
+    }
+
+    /**
+     * Called when a label starts running: if it already has a task marked
+     * doing, that task begins accruing now.
+     *
+     * Needed once a task can be marked doing while its label is stopped —
+     * otherwise the marker would sit there and count nothing.
+     */
+    fun onLabelStarted(context: Context, label: String) {
+        val doing = readAll(context)
+            .firstOrNull { it.label == label && it.status == TaskStatus.DOING }
+        if (doing != null) startDoing(context, doing.id) else clearDoing(context)
     }
 
     private fun startDoing(context: Context, id: String) {

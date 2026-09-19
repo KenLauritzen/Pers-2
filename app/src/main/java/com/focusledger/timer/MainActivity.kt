@@ -318,6 +318,42 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
+     * Cycles a task's status, asking first when that would reopen a completed
+     * one.
+     *
+     * Reopening clears the date, but the log row the completion wrote would
+     * otherwise remain — a completion that didn't happen, counted in every
+     * future total. A mistaken tick is easy, so this is worth a question.
+     */
+    private fun cycleTask(task: Task, onDone: () -> Unit) {
+        val reopening = task.status.next() == TaskStatus.OPEN && task.completedAt > 0L
+        if (!reopening) {
+            TaskStore.cycleStatus(this, task)
+            onDone()
+            return
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("Reopen this task?")
+            .setMessage(
+                "It was marked done on ${doneFmt.format(java.util.Date(task.completedAt))}.\n\n" +
+                "Remove that from the log too, or keep it as something you did " +
+                "and are now doing again?"
+            )
+            .setPositiveButton("Remove it") { _, _ ->
+                LogStore.deleteTaskDone(this, task.label, task.completedAt)
+                TaskStore.cycleStatus(this, task)
+                onDone()
+            }
+            .setNeutralButton("Keep it") { _, _ ->
+                TaskStore.cycleStatus(this, task)
+                onDone()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    /**
      * "30m / 300m  10%" — taken, estimated, and how much of the estimate that
      * uses. Shown even at zero, so the shape doesn't change once a task is
      * started. With no estimate there's nothing to be a percentage of.
@@ -383,78 +419,70 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Two lines each: marker and figures, then the description beneath it
-        // with the full width to wrap into. Long titles were unreadable
-        // sharing a line with the times.
-        //
-        // One TextView still, with spans for the figure lines — smaller and
-        // dimmer than the description, so the eye goes to the task first.
-        val shown = shownTasks
-        val sb = SpannableStringBuilder()
-        shown.forEachIndexed { i, t ->
-            if (i > 0) sb.append("\n")
-            val lineFrom = sb.length
+        // One view per task rather than one block of text, so each is
+        // tappable. Spans still do the sizing and colour within a task: the
+        // figures small and coloured by status, the description full size.
+        view.removeAllViews()
+        val inflater = LayoutInflater.from(this)
+
+        shownTasks.forEach { t ->
+            val line = inflater.inflate(R.layout.row_task_line, view, false) as TextView
+            val sb = SpannableStringBuilder()
+
             val mark = when (t.status) {
                 TaskStatus.DOING -> "\u25b8"
                 TaskStatus.DONE -> "\u2713"
                 else -> "\u00b7"
             }
-            val times = taskTimes(t)
             val finished = t.status == TaskStatus.DONE || t.status == TaskStatus.ARCHIVED
             val lineColour = when {
                 t.status == TaskStatus.DOING -> amber
                 finished -> colGoal
                 else -> 0xFFCBD9D5.toInt()
             }
-            if (times.isNotEmpty()) {
-                val from = sb.length
-                sb.append(mark)
-                // The marker sits inside a line shrunk to 0.8, which made it
-                // the smallest glyph on the row — and it's the only thing
-                // saying which task is accruing time. Scaled back up on its
-                // own so the figures stay small.
-                sb.setSpan(RelativeSizeSpan(1.5f), from, sb.length, SPAN_EXCLUSIVE_EXCLUSIVE)
 
+            val times = taskTimes(t)
+            val from = sb.length
+            sb.append(mark)
+            // The marker sits in a line shrunk to 0.8 for the figures, which
+            // made it the smallest glyph on the row \u2014 and it's the only thing
+            // saying which task is current. Scaled up on its own.
+            sb.setSpan(RelativeSizeSpan(1.5f), from, sb.length, SPAN_EXCLUSIVE_EXCLUSIVE)
+
+            if (times.isNotEmpty()) {
                 val figuresFrom = sb.length
-                sb.append(" $times\n")
+                sb.append(" $times")
                 sb.setSpan(
                     RelativeSizeSpan(0.8f), figuresFrom, sb.length, SPAN_EXCLUSIVE_EXCLUSIVE
                 )
-                // muted scored 2.44 on the green bar. These clear 4.5.
-                sb.setSpan(
-                    ForegroundColorSpan(lineColour), from, sb.length, SPAN_EXCLUSIVE_EXCLUSIVE
-                )
-                sb.append("   ")
-            } else {
-                val from = sb.length
-                sb.append("$mark ")
-                sb.setSpan(RelativeSizeSpan(1.2f), from, sb.length, SPAN_EXCLUSIVE_EXCLUSIVE)
-                sb.setSpan(
-                    ForegroundColorSpan(lineColour), from, sb.length, SPAN_EXCLUSIVE_EXCLUSIVE
-                )
             }
+            sb.setSpan(ForegroundColorSpan(lineColour), from, sb.length, SPAN_EXCLUSIVE_EXCLUSIVE)
+
+            sb.append("\n   ")
             val textFrom = sb.length
             sb.append(t.text)
-            if (t.status == TaskStatus.DONE) {
-                // Struck through rather than dimmed. Anything faint enough to
-                // read as "done" scored about 1.3 contrast on the green bar —
-                // invisible. A line through it says finished at any brightness.
+            if (finished) {
                 sb.setSpan(StrikethroughSpan(), textFrom, sb.length, SPAN_EXCLUSIVE_EXCLUSIVE)
                 sb.setSpan(
-                    ForegroundColorSpan(0xFFCBD9D5.toInt()),
-                    textFrom, sb.length, SPAN_EXCLUSIVE_EXCLUSIVE
+                    ForegroundColorSpan(colGoal), textFrom, sb.length, SPAN_EXCLUSIVE_EXCLUSIVE
                 )
             }
-
             // Wrapped lines hang under the text rather than falling back to
-            // the margin, so a long title stays visually one block.
+            // the margin, so a long title stays one visual block.
             sb.setSpan(
                 LeadingMarginSpan.Standard(0, (18 * resources.displayMetrics.density).toInt()),
-                lineFrom, sb.length, SPAN_EXCLUSIVE_EXCLUSIVE
+                0, sb.length, SPAN_EXCLUSIVE_EXCLUSIVE
             )
+
+            line.text = sb
+            line.setTextColor(0xFFDCE6E3.toInt())
+
+            // Status only. No timer is started or stopped: marking the task
+            // you're on while reviewing the list shouldn't move the clock.
+            line.setOnClickListener { cycleTask(t) { rebuild() } }
+            view.addView(line)
         }
-        view.text = sb
-        view.setTextColor(0xFFDCE6E3.toInt())
+
     }
 
     /**
@@ -629,7 +657,7 @@ class MainActivity : AppCompatActivity() {
             )
 
             holder.mark.setOnClickListener {
-                TaskStore.cycleStatus(this@MainActivity, t); onChanged?.invoke()
+                cycleTask(t) { onChanged?.invoke() }
             }
             holder.text.setOnClickListener {
                 editTask(t) { onChanged?.invoke() }
@@ -655,6 +683,7 @@ class MainActivity : AppCompatActivity() {
             hint = "Task",
             secondInitial = if (task.estimateMinutes > 0) task.estimateMinutes.toString() else "",
             secondHint = "Estimate in minutes",
+            multiline = true,
             onDelete = { TaskStore.delete(this, task.id); onChange() }
         ) { text, estimate ->
             TaskStore.update(
@@ -681,6 +710,7 @@ class MainActivity : AppCompatActivity() {
         hint: String = "",
         secondInitial: String? = null,
         secondHint: String = "",
+        multiline: Boolean = false,
         onDelete: (() -> Unit)? = null,
         onSave: (String, String) -> Unit
     ) {
@@ -688,6 +718,19 @@ class MainActivity : AppCompatActivity() {
         view.findViewById<TextView>(R.id.inputTitle).text = title
 
         val primary = view.findViewById<EditText>(R.id.inputPrimary)
+        if (multiline) {
+            // Grows with what's typed rather than scrolling sideways. Capped
+            // so a long description doesn't push the buttons off the screen.
+            primary.setSingleLine(false)
+            primary.inputType =
+                android.text.InputType.TYPE_CLASS_TEXT or
+                android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE or
+                android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+            primary.minLines = 3
+            primary.maxLines = 6
+        } else {
+            primary.setSingleLine(true)
+        }
         primary.setText(initial)
         primary.hint = hint
         primary.setSelection(primary.text.length)
@@ -1902,7 +1945,7 @@ class MainActivity : AppCompatActivity() {
             val content: View? = view.findViewById(R.id.rowContent)
             val columns: View? = view.findViewById(R.id.rowColumns)
             val taskBox: View? = view.findViewById(R.id.rowTaskBox)
-            val tasks: TextView? = view.findViewById(R.id.rowTasks)
+            val tasks: LinearLayout? = view.findViewById(R.id.rowTasks)
             val taskEdit: ImageView? = view.findViewById(R.id.rowTaskEdit)
             val labelBox: View? = view.findViewById(R.id.rowLabelBox)
             val time: TextView? = view.findViewById(R.id.rowTime)
@@ -1972,6 +2015,11 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        // First open of a new day: yesterday's completions sink below the
+        // outstanding work. Here rather than at midnight, so it still happens
+        // when the app wasn't running.
+        TaskStore.sortIfNewDay(this)
+
         // Coming back from Settings, Notes or a cold start: put the running
         // label where it can be seen. Not on every refresh — that would fight
         // you whenever you scrolled somewhere deliberately.

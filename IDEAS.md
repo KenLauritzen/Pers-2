@@ -436,6 +436,25 @@ would need a defined place, probably the bottom.
 
 ---
 
+## 81. Batch cleanup of old completions
+
+**What:** Archive or delete tasks finished more than some number of days ago,
+in one action rather than one at a time.
+
+**Why:** Completions accumulate. Idea 80 sorts them to the end of each label's
+block precisely so this is easy — the file is already in the right shape.
+
+**Open questions — to answer before building:**
+
+| # | Question | Leaning | Answer |
+|---|---|---|---|
+| 81.1 | Archive or delete? | Archive — the log already holds the permanent record, but the task is still worth keeping until you say otherwise | |
+| 81.2 | Where does it live — Settings, or the task editor? | Settings, applying to every label at once | |
+| 81.3 | Fixed threshold or configurable? | Configurable in days, defaulting to 30 | |
+| 81.4 | Automatic, or a button you press? | A button. Anything that deletes on its own needs more trust than this has earned yet | |
+
+---
+
 ## Template for new entries
 
 New ideas go in **Open ideas** with the next unused number. When one ships,
@@ -2717,3 +2736,145 @@ its own text follows the choice — `T0`, `T1`, `T2`, `Dflt`.
 been governing only the running row, so every other label's count sat idle
 unless that label happened to be running. Under `Dflt` they all take effect,
 and the running row stops being a special case.
+
+---
+
+## 79. Tap a task on the main row, and a multiline description  ✅ built in v78
+
+**What:**
+- **Tapping a task on a main-screen row cycles its status** — open, doing,
+  done, archived. No timer starts or stops.
+- **The task description is a growing block** in the edit dialog rather than a
+  single line scrolling off to the right.
+
+**Why no timer:** you wanted to review the whole list and mark where you are on
+each label without starting anything. Status and timing stay separate.
+
+**The change underneath:** `DOING` used to be one task **anywhere**. Reviewing
+the list would have silently un-marked each previous label as you went. It's
+now **one per label**, which is still safe — time accrues only for the task
+whose label is actually running, so two can be marked without two counting.
+
+**A gap that followed:** a task marked doing while its label is stopped needs
+to begin accruing when that label starts. `TimerStore.start` now asks
+`TaskStore` for that label's doing task and starts the clock there. Without it
+the marker would sit and count nothing.
+
+**Expect to see `▸` on rows that aren't running.** It's correct — a marker of
+where you are, not of a clock — but it reads oddly until it's familiar.
+
+**Why single tap, not double:** a double-tap costs ~300ms on every tap while
+the app waits for a second one, and it's undiscoverable. A mis-tap here is
+cheap — tap the right task and the marker moves — so the accident wasn't worth
+that price.
+
+**Notes:**
+- The task block was one TextView with newlines; it's a small vertical stack
+  now, one view per task. Never more than five, so no recycling.
+- Spans still do the sizing and colour within each line.
+- The multiline field is per caller, not global: a label or layout name
+  genuinely is one line. It grows between 3 and 6 lines so the buttons stay on
+  screen.
+- A real newline in a task exercises the `\n` encoding `tasks.csv` has always
+  had, since a line break would otherwise split the row. Round-trips
+  correctly.
+
+---
+
+## 80. Completions show for the day, then sink  ✅ built in v79
+
+**What:**
+- A task ticked today **stays on the row**, in its stored position, as an
+  **extra beyond** the T1/T2 count.
+- `✕` archived is the only thing that hides something the same day, so it has
+  a distinct meaning again.
+- At the **first open of a new day**, completions from before today move below
+  the outstanding work, newest first.
+
+**Why extras rather than counted:** if completions filled the count, finishing
+two at T2 would leave a row showing two ticks and nothing upcoming. The block
+would go blank exactly when you'd been productive.
+
+Capped at **two** completions, or a heavy day gives a ten-line row.
+
+**What changed and when:** `✓` hid tasks from v74, at the request to show only
+outstanding work. That made `✓` and `✕` behave identically on the row, which
+was flagged at the time and is now resolved.
+
+**The daily reorder rewrites the stored order**, not just the display. Per
+label: outstanding in your dragged order, then today's completions in place,
+then older completions newest-first, then archived.
+
+- **Stored rather than display-time** because a batch cleanup is planned. Old
+  completions collect at the end of each label's block, so "archive anything
+  finished more than N days ago" becomes a simple sweep.
+- **The cost:** un-ticking a task from a previous day won't return it to where
+  it used to sit. It stays where the reorder left it.
+- Runs on first open of a new day rather than at midnight, so it still happens
+  when the app wasn't running.
+- The editor follows automatically, since it reads stored order.
+
+---
+
+## 82. Completion dates through the full cycle  ✅ fixed in v80
+
+**The bug:** `completedAt` was stamped only when it had been zero, so cycling
+round to `OPEN` left the old date attached — a task still to do, showing a
+date it was finished.
+
+**Worse, underneath:** finishing something a *second* time recorded nothing.
+The guard was false because a date already existed, so no log row was written
+and the displayed date stayed the old one. A task done weekly appeared in the
+history once, ever.
+
+My reasoning had been "don't rewrite the date it was actually finished" —
+right for cycling past `DONE` and straight back, wrong for genuinely finishing
+something again.
+
+**Fixed:**
+- Every arrival at `DONE` stamps the date and writes a log row. Two
+  completions, two rows.
+- Reaching `OPEN` clears the date. An open task has no completion date.
+- `ARCHIVED` keeps it: still finished, just hidden for the day.
+
+**Also: archived merges with completed at the daily sort.** It had been a tier
+of its own, below the older completions. But `✕` only ever meant "don't show
+this today" — once the day has turned it has served its purpose, and the two
+are the same thing. Three tiers now, not four:
+
+1. Outstanding, in your dragged order
+2. Completed today, in place
+3. Everything finished before today — done or archived — newest first
+
+**A consequence for idea 81:** the batch cleanup loses archived as an easy
+target and would sweep by date instead. Which is what it wanted anyway.
+
+---
+
+## 83. Asking before reopening a completed task  ✅ built in v81
+
+**What:** Cycling a completed task round to open asks first:
+
+> **Reopen this task?**
+> It was marked done on 19 Sep 10:03a.
+> Remove that from the log too, or keep it as something you did and are now
+> doing again?
+>
+> `Remove it`  `Keep it`  `Cancel`
+
+**Why:** v80 made reopening clear the date, but **the log row stayed**. A
+mistaken tick left a completion in the history that never happened, counted in
+every future range total, with nothing able to remove it.
+
+Both answers are legitimate, which is why it asks rather than deciding:
+- **Remove it** — the tick was a mistake, and it should leave no trace
+- **Keep it** — genuinely finished, and now being done again, so both
+  completions belong in the history
+
+**Notes:**
+- Only the `task_done` row goes. The runs stay, so the time worked still
+  counts — only the claim that a task was finished is withdrawn.
+- Matched on label and the minute, which is the resolution the log stores.
+- Asked from both places a status can be cycled: the main row and the editor.
+- Only when reopening something that has a date. Every other step of the cycle
+  is silent, as before.

@@ -1,32 +1,31 @@
-Focus v77 — complete file list.
+Focus v81 — complete file list.
 
-The T pill is a dropdown with four options instead of a cycle.
+Cycling a completed task round to open now asks first.
 
-    T0     nothing on any row
-    T1     one outstanding task on every row
-    T2     two
-    Dflt   each label's own count, the 0-5 set in its popup
+    Reopen this task?
+    It was marked done on 19 Sep 10:03a.
+    Remove that from the log too, or keep it as something you did and are
+    now doing again?
 
-Dflt is the interesting one. The per-label counts had been governing only the
-running row, so every other label's count sat idle unless that label happened
-to be running. Under Dflt they all take effect at once — a label set to five
-shows five, one set to none shows none — and the running row stops being a
-special case.
+        Remove it     Keep it     Cancel
 
-That gives three different views:
-    planning   T1 or T2, uniform and comparable
-    working    Dflt, each label as detailed as you decided it deserves
-    clean      T0
+v80 made reopening clear the date, but the LOG ROW stayed — so a mistaken tick
+left a completion in the history that never happened, counted in every future
+range total, and nothing could remove it.
 
-Under T0, T1 and T2 the running row still uses its own count, as before.
+Both answers are legitimate, which is why it asks:
+    Remove it — the tick was a mistake and should leave no trace
+    Keep it   — genuinely finished, now being done again, so both belong
 
-Row heights will vary more under Dflt, since labels differ. Worth a few days
-to see whether that reads as useful or untidy.
+Only the task_done row is removed. The runs stay, so the time worked still
+counts — only the claim that a task was finished is withdrawn.
 
-UPLOAD THESE FOUR:
+Asked from both places a status can be cycled: the main row and the editor.
+Every other step of the cycle stays silent.
+
+UPLOAD THESE THREE:
+  app/src/main/java/com/focusledger/timer/LogStore.kt
   app/src/main/java/com/focusledger/timer/MainActivity.kt
-  app/src/main/java/com/focusledger/timer/SettingsStore.kt
-  app/src/main/res/layout/activity_main.xml
   app/src/main/res/values/strings.xml
 
 Nothing to delete this version.
@@ -78,6 +77,7 @@ app/src/main/res/layout/row_note_entry.xml
 app/src/main/res/layout/row_pick_item.xml
 app/src/main/res/layout/row_range_entry.xml
 app/src/main/res/layout/row_task_edit.xml
+app/src/main/res/layout/row_task_line.xml
 app/src/main/res/layout/row_timer.xml
 app/src/main/res/values/strings.xml
 app/src/main/res/values/themes.xml
