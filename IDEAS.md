@@ -16,7 +16,7 @@ starts.
 
 ---
 
-## 7. Scheduled layouts
+## 7. Scheduled layouts  — LIKELY SUPERSEDED by idea 90
 
 *Rewritten. This was originally "scheduled visibility" — a schedule attached to
 each individual label. Idea 20 (named layouts) and the removal of per-label
@@ -351,7 +351,7 @@ label and a 4-hour one look identical at 50%. This shows the shape of the day.
 
 ---
 
-## 54. Split a label into numbered parts  — MEDIUM
+## 54. Split a label into numbered parts  — SUPERSEDED by idea 90
 
 **What:** Write `Work (1)`, `Work (2)` and so on, so a large area can be
 placed at several points in the day, then recombined by stripping everything
@@ -452,6 +452,156 @@ block precisely so this is easy — the file is already in the right shape.
 | 81.2 | Where does it live — Settings, or the task editor? | Settings, applying to every label at once | |
 | 81.3 | Fixed threshold or configurable? | Configurable in days, defaulting to 30 | |
 | 81.4 | Automatic, or a button you press? | A button. Anything that deletes on its own needs more trust than this has earned yet | |
+
+---
+
+## 87. Fit-to-goal highlight on the main row
+
+**What:** Tasks whose cumulative estimates fit inside the label's remaining
+time are highlighted — plus one more, which probably won't get done but is
+next.
+
+**Why:** It answers the planning question the app can't: of the five things
+queued, which will realistically happen today?
+
+**Notes:**
+- **Highlight, don't filter.** The T setting controls how many you see; the
+  colour says which are plausible. Hiding the rest would remove information.
+- **A task in progress counts its remainder**, not its whole estimate — 45m
+  estimated with 30m done leaves 15m against the goal.
+- **Tasks with no estimate contribute nothing**, so they always appear to fit.
+  `min?` already flags them, but they'd quietly inflate what looks achievable.
+- Remaining changes all day, so the boundary moves as you work. Correct, but
+  it won't sit still.
+
+| # | Question | Leaning |
+|---|---|---|
+| 87.1 | Highlight how — background, or brighter text? | A subtle background; text colour already carries status |
+| 87.2 | Is the "one more" marked differently from those that fit? | Yes, or it reads as fitting |
+
+---
+
+## 88. Completed tasks: a list, and moving their time
+
+**What:** Three things, increasingly expensive:
+
+1. **A completed-tasks list** — chronological, newest first, across all
+   labels. The `task_done` rows in the log are already exactly this.
+2. **Reassign a task** to a different label. Its label changes; time untouched.
+3. **Move the time too** — an adjustment subtracting from the old label and
+   adding to the new.
+
+**Why they're separate:** filed under the wrong label needs only (2). Genuinely
+having worked on B while the timer said A needs (3).
+
+**Why (3) is a real edit:** a task's accrued time sits *inside* its label's
+runs, and those runs are the authoritative record. Changing a task's label
+doesn't move a minute. A transfer means writing adjustments on both labels —
+honest and auditable, since the runs stay as they happened and the corrections
+show as corrections, but it is an edit to your recorded day.
+
+| # | Question | Leaning |
+|---|---|---|
+| 88.1 | Where does the list live? | Settings, with Range totals |
+| 88.2 | Partial transfers, or all of a task's time? | All. Partial needs an amount picker for a rarer case |
+| 88.3 | What happens to notes on the affected runs? | They stay with the original label — probably right, but a note and its time could end up apart |
+
+---
+
+## 91. Planning time with other people
+
+**What:** Tag a person to a block in the week grid with a number of hours —
+4h of Home Org, 1h of it with Janice — so the schedule you share shows where
+your time overlaps.
+
+**The one rule that keeps this simple: people never affect timing.** You tap
+the task as you always do. A person is a tag on the *plan*, not something the
+timer knows about. Nothing to start, nothing to switch between, no question
+of whether you tap the person or the task.
+
+---
+
+### The model
+
+**Hours live on the block.** `Home Org 4h`, and against it `Janice 1h`. That's
+the target figure, deliberately vague about *which* hour — she knows the day
+and the block, which is how the arrangement actually works.
+
+**People are tags, and tags carry no hours.** Tag someone to the block, or to
+two of the five tasks under it, or both. Tagging a task says "she's involved
+in this", not "she's doing 45 minutes of it".
+
+**Tagging tasks is optional refinement.** No tags and her hour is somewhere in
+the block. Tags and she can see which parts concern her.
+
+This is clean because **each number lives in exactly one place**. Task
+estimates are about fitting the block; a person's hours are about a target.
+They never need reconciling — which they would if both sat on tasks.
+
+**Her hour is inside your four, not added to them.** If people and tasks ever
+shared a mechanism, that would have to be explicit or the sums would be wrong.
+
+---
+
+### Minimum viable version — build this first
+
+1. A list of people, maintained like labels
+2. Tag one to a block, with hours
+3. A weekly total per person, per label, against a target
+4. Share or print the week showing where the overlap falls
+
+Nothing else. **This is three nested planning structures deep** — your week,
+your default week, and the same pair per person — which either becomes
+indispensable or collapses under its own maintenance. A small version answers
+that cheaply.
+
+---
+
+### Kept for later, if it proves useful
+
+**The comparison view**, per label and total:
+
+```
+  Janice          planned    goal
+    Home Org         1:00    2:00
+    Yard Work        2:30    2:00
+    Fam              0:30    2:00
+    ────────────────────────────
+                     4:00    6:00
+```
+
+Two hours short, and where. **"Goal" rather than "agreed"** — a target to aim
+at, not a commitment to answer for.
+
+**Per-person defaults and weekly overrides**, mirroring layouts: a default
+spread of hours across labels, overridable for a particular week, prompted
+when it differs from the default.
+
+**Tagging people to individual tasks**, so a shared schedule can be filtered —
+her tasks only, or everything with hers highlighted for context.
+
+**Adding a third drag action** for setting a person's hours. This would be the
+first case where idea 90's action registry earns itself, and the first where a
+mode is genuinely necessary rather than a convenience.
+
+**Calendar integration**, eventually. Worth noting the target is really
+*hers*, not yours — you'd be recording a shared commitment in your own app.
+If it ever became something she could see or edit, those figures want to live
+somewhere you both reach. That's where this points.
+
+---
+
+### Open questions
+
+| # | Question | Leaning |
+|---|---|---|
+| 91.1 | Can more than one person be on a block? | Yes, from the start — retrofitting a list is worse than starting with one |
+| 91.2 | Where do people come from? | A maintained list, like labels. Typed per block risks "Janice" and "janice" |
+| 91.3 | Does a person's time show on the main screen while you work? | No. It's a planning figure; the main screen is for working |
+| 91.4 | Does anything compare planned overlap against what happened? | Not initially. The log doesn't know who was there, and nothing could tell it without asking |
+| 91.5 | Share as text, or a file? | Text to a share sheet, as with the other exports |
+
+**Depends on idea 90.** There is nothing to tag until the week grid exists.
 
 ---
 
@@ -2930,3 +3080,174 @@ the day turning over.
 
 **The lesson:** a default I chose quietly overrode a decision that had been
 made deliberately. It should have been a question.
+
+---
+
+## 90. The week grid — planning seven days at once  ✅ built in v83
+
+**What:** A landscape screen showing the coming week as seven columns, each a
+stack of time blocks you drag into shape.
+
+```
+  Sun 05:00 > 6:20h    Mon 05:00 > 16:00h   Tue 05:00 > 8:00h  ...
+  05:00 120m Fitness   05:00 300m Work      05:00 300m Work
+  07:00  60m App Dev   10:00  45m Lunch     10:00  45m Lunch
+  08:00 120m Fam       10:45  60m Fitness   10:45 120m Yard Work
+                       11:45 180m Work
+```
+
+Each block reads `start duration label`. **The start time is computed**, never
+stored — it's the day's start plus everything above it — so dragging a block
+moves every start time below it. Ordering by start time therefore happens by
+itself: the order *is* the schedule.
+
+---
+
+### Three levels, each earning its place
+
+| | What it is | Lives where |
+|---|---|---|
+| **Default week** | Your normal Sunday–Saturday shape | Its own screen, same grid |
+| **Named templates** | "First Saturday", "Holiday" — pulled over one day | The existing layouts |
+| **Dated instances** | What you actually decided for the 21st | The week grid |
+
+Pulling a template over a day changes that day only; the default week is
+untouched. **Days differing from the default get an obvious background**, so
+during planning it's clear what you've changed.
+
+---
+
+### Settled
+
+| Question | Answer |
+|---|---|
+| Orientation | **Locked landscape.** Seven columns need ~114dp each; portrait gives 51dp |
+| Rows visible | **Size for 16 at 10sp**, ~20dp each, and let the column scroll. 20 fits but leaves 3dp between blocks, too tight to drag accurately |
+| Creating a week | **Explicit** — blank until you pull in the default week. Nothing implicit |
+| Week start day | **Configurable, Sunday by default** |
+| History | **Weeks are kept**, not replaced. Small, and the comparison is worth more than tidiness |
+| Layout names | `2026-09-21 Mon` — sorts chronologically. `Sep21Mon` sorts Apr, Aug, Dec… |
+| Drag model | **Vertical moves, horizontal changes duration.** The axis picks the action — no mode to remember |
+| Extensibility | Two dropdowns over **one registry of actions**, so a third is one entry. A guard stops both axes choosing the same one |
+| Showing the mode | `↕ move  ↔ duration` in the header. A gesture whose meaning is invisible while your finger is down is where mistakes come from |
+| Day header, planning | `Mon 05:00 > 16:00h`. Tapping the time opens the same clock picker the main screen uses |
+| Day header, after | `Mon 13:40 / 16:00` — actual over planned, matching the tasks. No percentage; the two figures say it |
+| Past columns | **Lock and show the comparison.** The grid reads as a week in progress |
+| Splitting a label | **Blocks are distinct rows; the main screen sums them.** Four blocks including two Work; the main screen shows `Work 8:00`. No `Work (1)` |
+| Copying a day | An action on the column — set Tuesday up, copy to Thursday |
+| Moving one block | Drag it into another column |
+| Reached from | **`Week` in the bottom row** — `Week \| Settings \| Stop \| Exit`. The header is at ~315dp of 340dp, so a sixth pill doesn't fit; and a pill changes this screen while this opens another. Screen titled `Weekly plan` |
+| Building a day | **Template first, then adjust.** The day header offers pull-a-template, copy-from-another-day, clear. A small `+` adds the odd extra block a template didn't include |
+| Removing a block | **Drag its duration to zero.** It greys out and sinks to the bottom of the column rather than being destroyed — the same treatment completed tasks already get. Drag it back up and it returns. An explicit delete stays in the block's popup for genuine mistakes, but it should be rare |
+| Zero blocks | Cost nothing — no planned hours, no effect on the computed start times. They're a **visible parking space**: "I considered Fitness today and decided against it" is different from Fitness never being there, and a greyed block says so at a glance. A template pulled next week brings them back at full duration, since the zero lives only in that day's instance |
+| Dragging below zero | **Stops at zero.** A detent there, with the block demoting visibly at that point |
+| Setting a duration | **5-minute snapping on horizontal drag**, matching the main screen's sliders, plus **tap a block for exact control** |
+| What tap opens | **A popup for that block** — duration, tasks to tag, later people, delete. One place per block, so the drag dropdowns needn't grow to cover what a popup does better |
+| Template over a day | **Replace, unconditionally.** Merging two schedules has no obvious right answer, and you'd see it happen since the column is on screen |
+| Deliberate gaps | **Not needed.** Padding with the `Other` label does it and does more: the computed times stay right, the day's planned hours stay honest, and time actually spent on `Other` compares properly. A blank gap would be invisible to all three |
+| Default week's first state | **Empty, with "Fill all days from current goals"** — one tap puts your standard day in every column, then thin out the weekend |
+| History depth | **Keep everything.** A week is a few hundred bytes and the comparison gets more interesting with more of it. Idea 81's sweep stays about tasks alone |
+| Sharing | **Share sheet, plain text**, to any app on the phone |
+| Colour | **One style first.** Later, colour scoped to *this screen only* — green and red already mean progress and overage on the main screen, and a label colour there would collide with meaning that's earned |
+| Planning ahead | **Unbounded.** Arrows for next and previous, tap the week for a date picker |
+| A planned future week | **Visibly different** from one generated but untouched — same treatment as a day differing from the default |
+| Deleting a week | **Asks first.** It's a week of planning and nothing else recovers it |
+| Applying a day | **Prompted on first open** — "Apply Monday's plan?" with Apply / Not today. It overwrites goals you may have set deliberately |
+| Days never opened | **Marked unapplied**, shown as such in the comparison. A day that never began isn't a plan you missed |
+| Three figures | **Planned** (grid, frozen), **goal** (main screen, as adjusted), **actual** (log). You adjust goals through the day, so planned and goal diverge — and that divergence is itself worth seeing |
+| Actuals per block | **Not possible honestly.** The log records `Work 09:12–10:03`, not which planned block it was. Matching by time window would work on days that went to plan and mislead on exactly the days worth examining. Actuals attach to the label; per-label detail is the range screen, where a past Monday is a one-day range |
+
+---
+
+### Planning ahead
+
+**Any week, not just the coming one.** Navigate forward and plan several weeks
+out; navigate back and see what you planned against what happened.
+
+This costs almost nothing, because keeping history already built it — weeks
+are dated instances either side of today, so forward is the same operation as
+back.
+
+- **Pull in the default week** applies to whichever week you're viewing, so a
+  future week starts from the same shape.
+- **Deleting a planned week** removes the instances. When that week arrives it
+  falls back to the default, exactly as though it had never been planned.
+- **Changing the default week doesn't rewrite weeks already pulled in.** An
+  instance is what you decided, and silently rewriting it would undo your
+  planning. A default change reaches only weeks not yet created.
+
+
+---
+
+### Task tagging — designed for, built second
+
+Touching a day shows its label's tasks; tag some, in the order you expect to
+do them. Shared output becomes:
+
+```
+  17:00  Yard Work      2h
+           weeding                45m
+           sprinkler work         45m
+           fertilising            30m
+```
+
+The block owns the time; the tasks say what's in it. **Their estimates sum
+against the block's duration**, so whether two hours was realistic answers
+itself at the point you'd ask.
+
+**A tag is intent, not commitment.** It expires with the day; the task stays
+on its label untouched. Otherwise you'd maintain tags as well as tasks.
+
+**Not in the first build.** The grid is already the largest thing here, and
+tagging is the kind of addition that turns a large build into one that's hard
+to finish. But **blocks carry an ordered list of task ids from the outset**,
+empty for now, so there's nothing to migrate.
+
+---
+
+### Still open
+
+| # | Question | Leaning |
+|---|---|---|
+| 90.15 | Does a block's popup also set a note, or do tagged tasks cover that? | Tasks cover it — idea 91 |
+| 90.16 | What duration does a block added by `+` start at? | 30m, then drag |
+
+
+**Supersedes idea 54** (`Work (1)`, `Work (2)` parenthetical) — which was
+solving the split-label problem before this existed.
+
+**Answers idea 7** (scheduled layouts) more directly than idea 7 does: assign
+days on a grid and see the week, rather than attaching `MWF` rules to layouts
+and inferring.
+
+
+---
+
+### Built in v83 — what shipped, and what didn't
+
+**Shipped:** the grid, seven columns, landscape-locked. Both drag axes with
+5-minute snapping and a stop at zero. Parked blocks greyed at the foot of the
+column. Computed start times. Day headers swapping to `actual / planned` once
+a day has passed. Template-first day building, copy-a-day, clear-a-day. The
+default week with fill-from-goals. Pull-in, delete-week, week navigation.
+Prompted apply on first open.
+
+**Deferred, and why:**
+
+- **Cross-column drag.** Dragging a block from Monday into Wednesday means a
+  gesture that leaves one scrolling container and joins another, in a row of
+  seven. It's in the block's popup as *Move to another day* instead — same
+  outcome, and the drag can come later once the rest has proved itself.
+- **Task tagging.** Blocks already carry `task_ids`, empty, so there's nothing
+  to migrate. See idea 91.
+- **The action registry** behind the two drag dropdowns. With exactly two
+  actions, two hardcoded axes are the same thing with less machinery. The
+  registry earns itself when a third arrives — idea 91's people hours.
+
+**Storage:** two files, `week_days.csv` and `week_blocks.csv`, keyed alike so
+the default week and a dated week share every code path. A key is a date
+(`2026-09-21`) or a weekday slot (`D0`–`D6`).
+
+**Column width:** 112dp holds about 18 characters at 10sp. The clock lost its
+leading zero to buy one back — a longer label is worth more than an aligned
+hour. Names past about 12 characters still ellipsise.

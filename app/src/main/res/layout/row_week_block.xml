@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- "05:00 120m Fitness" at 10sp is about 94dp in a 114dp column. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="20dp"
+    android:gravity="center_vertical"
+    android:paddingStart="3dp"
+    android:paddingEnd="3dp"
+    android:fontFamily="monospace"
+    android:textSize="10sp"
+    android:maxLines="1"
+    android:ellipsize="end"
+    android:includeFontPadding="false"
+    android:clickable="true"
+    android:focusable="true" />

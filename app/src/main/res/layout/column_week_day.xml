@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="0dp"
+    android:layout_weight="1"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:layout_marginEnd="2dp"
+    android:background="@drawable/bg_row_track">
+
+    <!-- Planning: "Mon 05:00 > 16:00h". Once the day has passed it swaps to
+         "Mon 13:40 / 16:00" — the start time has done its job by then. -->
+    <TextView
+        android:id="@+id/colHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp"
+        android:paddingStart="3dp"
+        android:paddingEnd="3dp"
+        android:textColor="#E8A33D"
+        android:fontFamily="monospace"
+        android:textSize="10sp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:clickable="true"
+        android:focusable="true" />
+
+    <ScrollView
+        android:id="@+id/colScroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:id="@+id/colBlocks"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </ScrollView>
+
+    <TextView
+        android:id="@+id/colAdd"
+        android:layout_width="match_parent"
+        android:layout_height="22dp"
+        android:gravity="center"
+        android:text="+"
+        android:textColor="#5C736E"
+        android:textSize="14sp"
+        android:clickable="true"
+        android:focusable="true" />
+
+</LinearLayout>

@@ -155,6 +155,9 @@ class MainActivity : AppCompatActivity() {
             offerNote()
             rebuild(); syncService()
         }
+        binding.btnWeek.setOnClickListener {
+            startActivity(Intent(this, WeekActivity::class.java))
+        }
         binding.btnSettings.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
         }
@@ -815,6 +818,42 @@ class MainActivity : AppCompatActivity() {
             val offset = (binding.rowsList.height / 3) - (rowHeightPx / 2)
             lm.scrollToPositionWithOffset(index, offset.coerceAtLeast(0))
         }
+    }
+
+    /**
+     * Offers the day's plan once, on the first open of a new day.
+     *
+     * Prompted rather than silent: applying overwrites goals you may have set
+     * deliberately, and a day's targets changing on their own would be
+     * alarming. A day that's never offered stays marked unapplied, so looking
+     * back it's clear the day never began rather than the plan being missed.
+     */
+    private fun maybeOfferTodaysPlan() {
+        val todayKey = WeekStore.dateKey(System.currentTimeMillis())
+        if (SettingsStore.getLastPlanPrompt(this) == todayKey) return
+
+        val goals = WeekStore.goalsFor(this, todayKey)
+        if (goals.isEmpty()) return                     // nothing planned for today
+
+        SettingsStore.setLastPlanPrompt(this, todayKey)
+
+        val summary = goals.entries
+            .sortedByDescending { it.value }
+            .joinToString("\n") { "   ${it.key}   ${fmtGoal(it.value)}" }
+
+        AlertDialog.Builder(this)
+            .setTitle("Apply today's plan?")
+            .setMessage(summary)
+            .setPositiveButton("Apply") { _, _ ->
+                val library = LabelStore.readLibrary(this).map { e ->
+                    goals[e.name]?.let { e.copy(goalMinutes = it) } ?: e
+                }
+                LabelStore.writeLibrary(this, library)
+                WeekStore.setApplied(this, todayKey, true)
+                rebuild(); syncService()
+            }
+            .setNegativeButton("Not today", null)
+            .show()
     }
 
     // ---- row gestures ------------------------------------------------------
@@ -2051,6 +2090,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        maybeOfferTodaysPlan()
+
         // First open of a new day: yesterday's completions sink below the
         // outstanding work. Here rather than at midnight, so it still happens
         // when the app wasn't running.

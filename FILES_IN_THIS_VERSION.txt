@@ -1,31 +1,72 @@
-Focus v81 — complete file list.
+Focus v83 — complete file list.
 
-Cycling a completed task round to open now asks first.
+THE WEEKLY PLAN (idea 90)
 
-    Reopen this task?
-    It was marked done on 19 Sep 10:03a.
-    Remove that from the log too, or keep it as something you did and are
-    now doing again?
+A "Week" button now sits in the bottom row: Week | Settings | Stop | Exit.
+It opens a LANDSCAPE screen — the only one in the app — showing seven days
+side by side.
 
-        Remove it     Keep it     Cancel
+  Mon 5:00 > 7:45h
+    5:00 300m Work
+   10:00  45m Lunch
+   10:45 120m Yard Work
+     —    Fitness          (parked, greyed, at the foot)
 
-v80 made reopening clear the date, but the LOG ROW stayed — so a mistaken tick
-left a completion in the history that never happened, counted in every future
-range total, and nothing could remove it.
+DRAGGING A BLOCK
+  vertical    moves it within the day
+  horizontal  changes its duration, 5 minutes a step, stopping at zero
 
-Both answers are legitimate, which is why it asks:
-    Remove it — the tick was a mistake and should leave no trace
-    Keep it   — genuinely finished, now being done again, so both belong
+  The axis you move in first locks the gesture, so there's no mode to
+  remember. The header shows "↕ move  ↔ duration" so it's never a guess.
 
-Only the task_done row is removed. The runs stay, so the time worked still
-counts — only the claim that a task was finished is withdrawn.
+  Drag a duration to zero and the block PARKS — greyed, at the foot of the
+  column, costing no hours and shifting no start times. Drag it back up and it
+  returns. Nothing is deleted.
 
-Asked from both places a status can be cycled: the main row and the editor.
-Every other step of the cycle stays silent.
+START TIMES ARE COMPUTED, never stored. A block's start is the day's start
+plus everything above it, so moving a block moves every start time below it,
+and the order IS the schedule.
 
-UPLOAD THESE THREE:
-  app/src/main/java/com/focusledger/timer/LogStore.kt
+TAP
+  a block        duration exactly, move to another day, delete
+  a day header   set the start time, pull in a layout, copy another day, clear
+  +              add a block
+
+THE WEEK MENU
+  Pull in the default week     seven days from your weekday shapes
+  Edit the default week        the same grid, seven weekday slots
+  Delete this week             falls back to the default when it comes round
+
+  In the default week: "Fill all days from current goals" puts your standard
+  day in every column in one tap, then you thin out the weekend.
+
+PAST DAYS lock and swap their header to "Mon 13:40 / 16:00" — actual over
+planned, summed from the log.
+
+APPLYING: on the first open of a new day, if that day has a plan, you're asked
+"Apply today's plan?" with the goals listed. Prompted, never silent — it
+overwrites goals you may have set deliberately.
+
+NOT IN THIS BUILD
+  Cross-column drag. Moving a block between days is in the block's popup for
+  now; dragging out of one scrolling column into another is a bigger piece of
+  work and can come later.
+
+  Task tagging. Blocks already carry an empty task_ids field, so there's
+  nothing to migrate when it arrives.
+
+NEW FILES — make sure all five upload:
+  app/src/main/java/com/focusledger/timer/WeekStore.kt
+  app/src/main/java/com/focusledger/timer/WeekActivity.kt
+  app/src/main/res/layout/activity_week.xml
+  app/src/main/res/layout/column_week_day.xml
+  app/src/main/res/layout/row_week_block.xml
+
+ALSO UPLOAD:
+  app/src/main/AndroidManifest.xml     <- the new activity is registered here
   app/src/main/java/com/focusledger/timer/MainActivity.kt
+  app/src/main/java/com/focusledger/timer/SettingsStore.kt
+  app/src/main/res/layout/activity_main.xml
   app/src/main/res/values/strings.xml
 
 Nothing to delete this version.
@@ -50,6 +91,8 @@ app/src/main/java/com/focusledger/timer/SettingsStore.kt
 app/src/main/java/com/focusledger/timer/TaskStore.kt
 app/src/main/java/com/focusledger/timer/TimerForegroundService.kt
 app/src/main/java/com/focusledger/timer/TimerStore.kt
+app/src/main/java/com/focusledger/timer/WeekActivity.kt
+app/src/main/java/com/focusledger/timer/WeekStore.kt
 app/src/main/res/drawable/bg_button_active.xml
 app/src/main/res/drawable/bg_button_other.xml
 app/src/main/res/drawable/bg_button_small.xml
@@ -65,6 +108,8 @@ app/src/main/res/layout/activity_main.xml
 app/src/main/res/layout/activity_notes.xml
 app/src/main/res/layout/activity_range.xml
 app/src/main/res/layout/activity_settings.xml
+app/src/main/res/layout/activity_week.xml
+app/src/main/res/layout/column_week_day.xml
 app/src/main/res/layout/dialog_label_edit.xml
 app/src/main/res/layout/dialog_layout_picker.xml
 app/src/main/res/layout/dialog_note_edit.xml
@@ -79,6 +124,7 @@ app/src/main/res/layout/row_range_entry.xml
 app/src/main/res/layout/row_task_edit.xml
 app/src/main/res/layout/row_task_line.xml
 app/src/main/res/layout/row_timer.xml
+app/src/main/res/layout/row_week_block.xml
 app/src/main/res/values/strings.xml
 app/src/main/res/values/themes.xml
 app/src/main/res/xml/file_paths.xml
