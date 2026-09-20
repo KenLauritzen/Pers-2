@@ -318,6 +318,41 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
+     * Moves a task within its label, from the main row.
+     *
+     * The same compact picker that moves a label, rather than a drag: the task
+     * lines live in a LinearLayout inside a RecyclerView row, so there's no
+     * ItemTouchHelper to hand, and a nested draggable list fights the outer
+     * scroll. The picker costs one tap and behaves predictably.
+     */
+    private fun moveTaskPicker(task: Task) {
+        val others = TaskStore.forLabel(this, task.label)
+            .filter { it.id != task.id && it.status != TaskStatus.ARCHIVED }
+        if (others.isEmpty()) {
+            Toast.makeText(this, "Nothing to move it above", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val display = others.map { o ->
+            val mark = when (o.status) {
+                TaskStatus.DOING -> "\u25b8 "
+                TaskStatus.DONE -> "\u2713 "
+                else -> ""
+            }
+            "$mark${o.text}"
+        } + "\u2500\u2500  Move to the end"
+
+        pickFromList("Move above\u2026", display) { which ->
+            val ids = TaskStore.forLabel(this, task.label).map { it.id }.toMutableList()
+            ids.remove(task.id)
+            if (which == others.size) ids.add(task.id)
+            else ids.add(ids.indexOf(others[which].id).coerceAtLeast(0), task.id)
+            TaskStore.reorder(this, task.label, ids)
+            rebuild()
+        }
+    }
+
+    /**
      * Cycles a task's status, asking first when that would reopen a completed
      * one.
      *
@@ -480,6 +515,7 @@ class MainActivity : AppCompatActivity() {
             // Status only. No timer is started or stopped: marking the task
             // you're on while reviewing the list shouldn't move the clock.
             line.setOnClickListener { cycleTask(t) { rebuild() } }
+            line.setOnLongClickListener { moveTaskPicker(t); true }
             view.addView(line)
         }
 

@@ -98,19 +98,22 @@ object SettingsStore {
      * deserves. Under 0, 1 and 2 the running row still uses its own count;
      * under the default it isn't a special case at all.
      */
-    const val TASK_PILL_DEFAULT = 3
+    const val TASK_PILL_DEFAULT = 6
 
     val TASK_PILL_NAMES = arrayOf(
         "T0 \u2014 no tasks on any row",
         "T1 \u2014 one task on every row",
-        "T2 \u2014 two tasks on every row",
+        "T2 \u2014 two",
+        "T3 \u2014 three",
+        "T4 \u2014 four",
+        "T5 \u2014 five",
         "Dflt \u2014 each label's own count"
     )
-    val TASK_PILL_SHORT = arrayOf("T0", "T1", "T2", "Dflt")
+    val TASK_PILL_SHORT = arrayOf("T0", "T1", "T2", "T3", "T4", "T5", "Dflt")
 
-    fun getTaskPill(c: Context) = p(c).getInt(KEY_TASK_PILL, 0).coerceIn(0, 3)
+    fun getTaskPill(c: Context) = p(c).getInt(KEY_TASK_PILL, 0).coerceIn(0, 6)
     fun setTaskPill(c: Context, v: Int) =
-        p(c).edit().putInt(KEY_TASK_PILL, v.coerceIn(0, 3)).apply()
+        p(c).edit().putInt(KEY_TASK_PILL, v.coerceIn(0, 6)).apply()
 
     /**
      * The hour the day is planned from, used by the Start column. Persists

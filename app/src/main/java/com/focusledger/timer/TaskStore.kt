@@ -110,9 +110,6 @@ object TaskStore {
     fun forLabel(context: Context, label: String): List<Task> =
         readAll(context).filter { it.label == label }.sortedBy { it.order }
 
-    /** Completed tasks shown on a row beyond the count, at most. */
-    private const val DONE_TODAY_MAX = 2
-
     /**
      * What a row shows: [limit] outstanding tasks, plus anything finished
      * today, in their stored positions.
@@ -122,9 +119,13 @@ object TaskStore {
      * ticks and nothing upcoming — the block would go blank exactly when you'd
      * been productive.
      *
-     * Capped so a heavy day doesn't produce a ten-line row. Yesterday's
-     * completions never show; they sink below the outstanding work at the
-     * first open of a new day.
+     * **Uncapped.** A cap of two made the cross pointless: completions fell
+     * off by themselves, so there was nothing for archiving to do. Row length
+     * is yours to manage — with the T setting, with the cross, and by the day
+     * turning over.
+     *
+     * Yesterday's completions never show; they sink below the outstanding work
+     * at the first open of a new day.
      */
     fun visibleForRow(context: Context, label: String, limit: Int): List<Task> {
         if (limit <= 0) return emptyList()
@@ -138,8 +139,6 @@ object TaskStore {
 
         val doneToday = all
             .filter { it.status == TaskStatus.DONE && isToday(it.completedAt) }
-            .sortedByDescending { it.completedAt }
-            .take(DONE_TODAY_MAX)
             .map { it.id }
             .toSet()
 
@@ -158,14 +157,26 @@ object TaskStore {
 
     // ---- editing ------------------------------------------------------------
 
+    /**
+     * Adds a task at the top of the outstanding work.
+     *
+     * You add a task because it's on your mind now, so the bottom of a long
+     * list is the wrong place. It goes **below anything marked doing** though
+     * — a new task shouldn't displace the one you're actually on.
+     */
     fun add(context: Context, label: String, text: String, estimate: Int): Boolean {
         val all = readAll(context)
-        val nextOrder = (all.filter { it.label == label }.maxOfOrNull { it.order } ?: -1) + 1
-        return writeAll(
-            context,
-            all + Task(newId(), label, text.trim(), estimate.coerceAtLeast(0),
-                       TaskStatus.OPEN, 0L, nextOrder, 0L)
-        )
+        val mine = all.filter { it.label == label }.sortedBy { it.order }
+        val others = all.filter { it.label != label }
+
+        val task = Task(newId(), label, text.trim(), estimate.coerceAtLeast(0),
+                        TaskStatus.OPEN, 0L, 0, 0L)
+
+        val doing = mine.filter { it.status == TaskStatus.DOING }
+        val rest = mine.filter { it.status != TaskStatus.DOING }
+        val reordered = (doing + task + rest).mapIndexed { i, t -> t.copy(order = i) }
+
+        return writeAll(context, others + reordered)
     }
 
     fun update(context: Context, task: Task): Boolean =

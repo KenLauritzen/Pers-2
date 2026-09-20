@@ -2878,3 +2878,55 @@ Both answers are legitimate, which is why it asks rather than deciding:
 - Asked from both places a status can be cycled: the main row and the editor.
 - Only when reopening something that has a date. Every other step of the cycle
   is silent, as before.
+
+---
+
+## 84. T3, T4 and T5  ✅ built in v82
+
+The task pill goes to five. `Dflt` moved from index 3 to 6, so a setting of
+`Dflt` reads as `T3` after upgrading — one tap to put right.
+
+At T5 a row can be tall: five tasks at two lines each, plus wrapping, plus the
+day's completions. That's the point of having the dial.
+
+---
+
+## 85. New tasks go to the top  ✅ built in v82
+
+**What:** A task is added above the open work rather than at the bottom.
+
+**Why:** You add a task because it's on your mind now. The bottom of a long
+list is where it's least likely to be seen.
+
+**But below anything marked doing** — a new task shouldn't displace the one
+you're actually on.
+
+---
+
+## 86. Reorder tasks from the main row  ✅ built in v82
+
+**What:** Long-press a task on a row to move it within its label.
+
+**Why not drag:** the task lines sit in a `LinearLayout` inside a RecyclerView
+row, so there's no `ItemTouchHelper` available, and a nested draggable list
+fights the outer scroll. It uses the same compact picker that moves a label —
+one tap, predictable, and a gesture already familiar.
+
+Dragging still works in the task editor, which is a RecyclerView.
+
+---
+
+## 89. No cap on today's completions  ✅ built in v82
+
+**What:** Every task completed today stays on the row. The cap of two is gone.
+
+**Why it was wrong:** I introduced the cap in v79 to stop a heavy day
+producing a ten-line row, and it made `✕` pointless — completions fell off by
+themselves, so archiving had nothing left to do. That undercut the design we'd
+actually agreed.
+
+Row length is yours to manage, with three dials: the T setting, the cross, and
+the day turning over.
+
+**The lesson:** a default I chose quietly overrode a decision that had been
+made deliberately. It should have been a question.
