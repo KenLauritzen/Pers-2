@@ -1,73 +1,34 @@
-Focus v83 — complete file list.
+Focus v84 — complete file list.
 
-THE WEEKLY PLAN (idea 90)
+Adds "Fill all days from a layout…" to the week menu, in both the dated week
+and the default week.
 
-A "Week" button now sits in the bottom row: Week | Settings | Stop | Exit.
-It opens a LANDSCAPE screen — the only one in the app — showing seven days
-side by side.
+  Pick a saved layout and it goes into all seven columns at once, in the
+  manual order it was saved with.
 
-  Mon 5:00 > 7:45h
-    5:00 300m Work
-   10:00  45m Lunch
-   10:45 120m Yard Work
-     —    Fitness          (parked, greyed, at the foot)
+  Labels with NO GOAL arrive as parked blocks — greyed, at the foot of each
+  column, costing nothing. So every label is present and ready to be dragged
+  up on the days it applies to, rather than being added one at a time on the
+  days that need it.
 
-DRAGGING A BLOCK
-  vertical    moves it within the day
-  horizontal  changes its duration, 5 minutes a step, stopping at zero
+  It asks before replacing if the week already has blocks.
 
-  The axis you move in first locks the gesture, so there's no mode to
-  remember. The header shows "↕ move  ↔ duration" so it's never a guess.
+Everything from v83 is included — see below. If you haven't uploaded v83 yet,
+upload the full set.
 
-  Drag a duration to zero and the block PARKS — greyed, at the foot of the
-  column, costing no hours and shifting no start times. Drag it back up and it
-  returns. Nothing is deleted.
-
-START TIMES ARE COMPUTED, never stored. A block's start is the day's start
-plus everything above it, so moving a block moves every start time below it,
-and the order IS the schedule.
-
-TAP
-  a block        duration exactly, move to another day, delete
-  a day header   set the start time, pull in a layout, copy another day, clear
-  +              add a block
-
-THE WEEK MENU
-  Pull in the default week     seven days from your weekday shapes
-  Edit the default week        the same grid, seven weekday slots
-  Delete this week             falls back to the default when it comes round
-
-  In the default week: "Fill all days from current goals" puts your standard
-  day in every column in one tap, then you thin out the weekend.
-
-PAST DAYS lock and swap their header to "Mon 13:40 / 16:00" — actual over
-planned, summed from the log.
-
-APPLYING: on the first open of a new day, if that day has a plan, you're asked
-"Apply today's plan?" with the goals listed. Prompted, never silent — it
-overwrites goals you may have set deliberately.
-
-NOT IN THIS BUILD
-  Cross-column drag. Moving a block between days is in the block's popup for
-  now; dragging out of one scrolling column into another is a bigger piece of
-  work and can come later.
-
-  Task tagging. Blocks already carry an empty task_ids field, so there's
-  nothing to migrate when it arrives.
-
-NEW FILES — make sure all five upload:
+CHANGED SINCE v83 — only these two:
   app/src/main/java/com/focusledger/timer/WeekStore.kt
   app/src/main/java/com/focusledger/timer/WeekActivity.kt
-  app/src/main/res/layout/activity_week.xml
-  app/src/main/res/layout/column_week_day.xml
-  app/src/main/res/layout/row_week_block.xml
+  app/src/main/res/values/strings.xml
 
-ALSO UPLOAD:
-  app/src/main/AndroidManifest.xml     <- the new activity is registered here
+IF COMING FROM v82, the full v83 set as well:
+  app/src/main/res/layout/activity_week.xml          (new)
+  app/src/main/res/layout/column_week_day.xml        (new)
+  app/src/main/res/layout/row_week_block.xml         (new)
+  app/src/main/AndroidManifest.xml
   app/src/main/java/com/focusledger/timer/MainActivity.kt
   app/src/main/java/com/focusledger/timer/SettingsStore.kt
   app/src/main/res/layout/activity_main.xml
-  app/src/main/res/values/strings.xml
 
 Nothing to delete this version.
 

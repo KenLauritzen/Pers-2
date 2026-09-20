@@ -303,6 +303,33 @@ object WeekStore {
     }
 
     /**
+     * Puts a saved layout into all seven days at once.
+     *
+     * The layout's manual order becomes the block order, and **labels with no
+     * goal come through as parked blocks** — every label present at the foot
+     * of each column, ready to be dragged up on the days it applies to. That's
+     * quicker than adding them one at a time on the days that need them.
+     */
+    fun fillAllDaysFromLayout(c: Context, keys: List<String>, layout: SavedLayout): Boolean {
+        val kept = readBlocks(c).filter { it.key !in keys }
+        val made = mutableListOf<Block>()
+        keys.forEach { key ->
+            layout.entries.forEachIndexed { i, e ->
+                made.add(Block(newId(), key, e.name, e.goalMinutes, i))
+            }
+        }
+        val ok = writeBlocks(c, kept + made)
+        if (ok) {
+            val days = readDays(c).toMutableMap()
+            keys.forEach { k ->
+                days[k] = days[k] ?: PlanDay(k, DEFAULT_START_MINUTES, false)
+            }
+            writeDays(c, days.values)
+        }
+        return ok
+    }
+
+    /**
      * Creates the seven dated days of a week from the default week.
      *
      * Explicit rather than automatic: a week is blank until you ask for it.

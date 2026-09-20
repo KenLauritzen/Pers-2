@@ -270,10 +270,12 @@ class WeekActivity : AppCompatActivity() {
 
     private fun weekMenu() {
         val items = if (editingDefault) listOf(
+            "Fill all days from a layout\u2026",
             "Fill all days from current goals",
             "Back to the week"
         ) else listOf(
             "Pull in the default week",
+            "Fill all days from a layout\u2026",
             "Edit the default week",
             "Delete this week"
         )
@@ -281,20 +283,18 @@ class WeekActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle(if (editingDefault) "Default week" else "This week")
             .setItems(items.toTypedArray()) { _, which ->
-                if (editingDefault) {
-                    when (which) {
-                        0 -> {
-                            if (WeekStore.fillDefaultFromGoals(this)) render()
-                            else Toast.makeText(
-                                this, "No labels with goals to fill from", Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                        1 -> { editingDefault = false; render() }
+                when (items[which]) {
+                    "Fill all days from a layout\u2026" -> fillAllFromLayout()
+                    "Fill all days from current goals" -> {
+                        if (WeekStore.fillDefaultFromGoals(this)) render()
+                        else Toast.makeText(
+                            this, "No labels with goals to fill from", Toast.LENGTH_SHORT
+                        ).show()
                     }
-                } else when (which) {
-                    0 -> confirmPullWeek()
-                    1 -> { editingDefault = true; render() }
-                    2 -> confirmDeleteWeek()
+                    "Back to the week" -> { editingDefault = false; render() }
+                    "Pull in the default week" -> confirmPullWeek()
+                    "Edit the default week" -> { editingDefault = true; render() }
+                    "Delete this week" -> confirmDeleteWeek()
                 }
             }
             .setNegativeButton("Cancel", null)
@@ -359,6 +359,40 @@ class WeekActivity : AppCompatActivity() {
             day.startMinutes / 60, day.startMinutes % 60,
             DateFormat.is24HourFormat(this)
         ).show()
+    }
+
+    /**
+     * One layout into all seven columns, in its saved manual order.
+     *
+     * Labels with no goal arrive parked, so every label is present at the foot
+     * of each day ready to be dragged up where it applies.
+     */
+    private fun fillAllFromLayout() {
+        val layouts = LayoutStore.readAll(this)
+        if (layouts.isEmpty()) {
+            Toast.makeText(this, "No saved layouts yet", Toast.LENGTH_SHORT).show()
+            return
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Fill all seven days from")
+            .setItems(layouts.map { it.name }.toTypedArray()) { _, which ->
+                val keys = currentKeys()
+                val chosen = layouts[which]
+                if (WeekStore.weekHasAnything(this, keys)) {
+                    AlertDialog.Builder(this)
+                        .setTitle("Replace all seven days?")
+                        .setMessage("\u201c${chosen.name}\u201d goes into every day, replacing what's there.")
+                        .setPositiveButton("Replace") { _, _ ->
+                            WeekStore.fillAllDaysFromLayout(this, keys, chosen); render()
+                        }
+                        .setNegativeButton("Cancel", null)
+                        .show()
+                } else {
+                    WeekStore.fillAllDaysFromLayout(this, keys, chosen); render()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     /** Layouts already hold order and goals, so they drop straight into a day. */

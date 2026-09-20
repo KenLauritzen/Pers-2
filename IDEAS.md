@@ -3251,3 +3251,10 @@ the default week and a dated week share every code path. A key is a date
 **Column width:** 112dp holds about 18 characters at 10sp. The clock lost its
 leading zero to buy one back — a longer label is worth more than an aligned
 hour. Names past about 12 characters still ellipsise.
+
+**v84 — one layout into all seven days.** `Fill all days from a layout…` in
+the week menu, in both the dated week and the default week. The layout's
+manual order becomes the block order, and **labels with no goal arrive
+parked** — every label present at the foot of each column, ready to be dragged
+up on the days it applies to. Quicker than adding them one at a time on the
+days that need them.
