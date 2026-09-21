@@ -845,11 +845,7 @@ class MainActivity : AppCompatActivity() {
             .setTitle("Apply today's plan?")
             .setMessage(summary)
             .setPositiveButton("Apply") { _, _ ->
-                val library = LabelStore.readLibrary(this).map { e ->
-                    goals[e.name]?.let { e.copy(goalMinutes = it) } ?: e
-                }
-                LabelStore.writeLibrary(this, library)
-                WeekStore.setApplied(this, todayKey, true)
+                WeekStore.applyToMainScreen(this, todayKey)
                 rebuild(); syncService()
             }
             .setNegativeButton("Not today", null)

@@ -381,6 +381,47 @@ object WeekStore {
             .groupBy { it.label }
             .mapValues { (_, list) -> list.sumOf { it.minutes } }
 
+    /**
+     * Puts a day's plan onto the main screen: its hours as goals, its block
+     * order as the manual order, and the sort switched to Manual so that order
+     * is what you see.
+     *
+     * **A parked block sets its label to zero.** Parking in the plan means "not
+     * today", and applying used to skip it \u2014 so a parked label kept
+     * yesterday's goal. A label the plan doesn't mention at all is different:
+     * that isn't a decision, so it keeps its goal and follows in its existing
+     * order.
+     */
+    fun applyToMainScreen(c: Context, key: String): Boolean {
+        val live = goalsFor(c, key)
+        val parked = blocksFor(c, key)
+            .filter { it.isParked }
+            .map { it.label }
+            .filter { it !in live }              // a label split live-and-parked keeps its live hours
+        val goals = live + parked.associateWith { 0 }
+        val library = LabelStore.readLibrary(c)
+        val names = library.map { it.name }.toSet()
+
+        val planOrder = labelOrderFor(c, key).filter { it in names }
+        val rest = library.sortedBy { it.manualOrder }.map { it.name }.filter { it !in planOrder }
+        val withGoals = library.map { e -> goals[e.name]?.let { e.copy(goalMinutes = it) } ?: e }
+
+        val ok = LabelStore.writeLibrary(c, LabelStore.applyManualOrder(withGoals, planOrder + rest))
+        if (ok) {
+            SettingsStore.setSortMode(c, SettingsStore.SORT_MANUAL)
+            setApplied(c, key, true)
+        }
+        return ok
+    }
+
+    /**
+     * Labels in the order the day's plan has them: live blocks top to bottom,
+     * then parked ones. A label split across several blocks takes the position
+     * of its first.
+     */
+    fun labelOrderFor(c: Context, key: String): List<String> =
+        blocksFor(c, key).map { it.label }.distinct()
+
     // ---- helpers ------------------------------------------------------------
 
     private fun newId(): String =

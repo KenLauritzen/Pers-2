@@ -1,29 +1,47 @@
-Focus v85 — complete file list.
+Focus v87 — complete file list.
 
-FIXES THE CRASH WHEN RELEASING A DRAG ON THE WEEK SCREEN
+WEEK SCREEN
 
-Cause: on release, the screen redrew itself from INSIDE the touch handler. The
-redraw removes every block — including the one still handling your finger.
-Android answers that by sending the removed block a "cancel", which landed in
-the same handler while it still thought a drag was in progress, so it redrew
-again from inside the first redraw. That collision was the crash.
+  Three days at a time, larger text (14sp). About nine blocks show; each day
+  scrolls for the rest.
 
-It was intermittent because it depended on whether Android still counted the
-block as being touched at the exact moment it was removed.
+  ‹ ›  move one day per tap, carrying on into the next or previous week.
+  Tap the dates to jump with a date picker. "Week…" actions (pull in the
+  default week, fill from a layout, delete) act on the week of the leftmost
+  day shown.
 
-Fixed by clearing the drag state first and deferring the redraw until the touch
-event has finished.
+  GESTURES
+    tap                     "Move above…" list, like the main screen
+    hold, then drag ↕       move within the day
+    hold, then drag ↔       change duration, 5 minutes a step
+    hold, and let go        menu: exact duration, move to another day, delete
+    quick swipe             scroll the day
 
-A SECOND BUG IN THE SAME PLACE: release and cancel were handled identically, so
-a cancelled drag would still save. Now a cancel saves nothing.
+  THE HOLD is now a real, short timer — a quarter of a second. When it's
+  ready the block lights up amber and gives a small buzz. Before, there was no
+  deliberate hold; the drag and the scroll were racing for your finger, which
+  is why it felt long and unpredictable.
 
-The main-screen sliders had that second bug too — a cancelled slide committed.
-Fixed there as well. They never crashed, because they already cleared their
-state before saving.
+  WHILE DRAGGING
+    sideways   " +15    45m Fitness"   — change on the left, new total right
+    up/down    "↑2 9:15 45m Fitness"   — places moved, and its new start time
 
-UPLOAD THESE THREE:
+  Parked blocks are in the "Move above…" list, so picking the first parked one
+  puts a block last among the live ones.
+
+APPLYING A PLAN
+
+  A parked block now sets its label's goal to ZERO when the plan is applied —
+  parked means "not today". A label that isn't in the plan at all keeps its
+  goal. (You didn't answer this one, so it went in with the default I
+  suggested. Say if you'd rather it didn't.)
+
+UPLOAD THESE SIX:
   app/src/main/java/com/focusledger/timer/WeekActivity.kt
-  app/src/main/java/com/focusledger/timer/MainActivity.kt
+  app/src/main/java/com/focusledger/timer/WeekStore.kt
+  app/src/main/res/layout/activity_week.xml
+  app/src/main/res/layout/column_week_day.xml
+  app/src/main/res/layout/row_week_block.xml
   app/src/main/res/values/strings.xml
 
 Nothing to delete this version.

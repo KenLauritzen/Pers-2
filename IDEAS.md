@@ -3295,3 +3295,77 @@ now fails the build check.
 
 **The general lesson:** never tear down a view from inside that view's own
 event handler. Post it.
+
+---
+
+## 93. Applying a day's plan kept the old order  ✅ fixed in v86
+
+**The bug:** accepting "Apply today's plan?" set the right hours but left the
+labels in whatever order the main screen already had, so the day arrived
+looking shuffled.
+
+**Cause:** applying set `goalMinutes` and nothing else. Applying a saved layout
+from the main screen had always set the manual order *and* switched the sort
+to Manual — the plan's apply was written without either.
+
+**Fixed:** the day's block order becomes the manual order — live blocks top to
+bottom, then parked ones, then every label the plan doesn't mention in the
+order it already had. A label split across two blocks takes the position of
+its first. The sort switches to Manual, or a Goals or A–Z sort would hide the
+order just set.
+
+**Also: re-apply on demand.** The morning prompt asks once a day, so a fix
+arriving mid-morning couldn't be used until tomorrow. Today's column in the
+week screen now offers *Apply to today's timers*. Both routes share one
+function in `WeekStore`, so they can't drift apart the way this did.
+
+**Open — raised, not decided:**
+
+| # | Question | Leaning |
+|---|---|---|
+| 93.1 | Should a **parked** block set that label's goal to zero today? | Yes | **Yes, from v87.** Went with the suggested default; one line to reverse |
+| 93.2 | Should a label **absent** from the plan keep its goal? | Keep | **Keeps it.** Absent isn't a decision; parked is |
+
+---
+
+## 94. Week screen: three days, a real hold, and showing the change  ✅ built in v87
+
+**Three days at a time**, at 14sp. Each column gets about 265dp instead of
+112dp, so `10:45 120m Social Building` fits whole. Around nine blocks show and
+the day scrolls.
+
+**Arrows, not sideways scrolling.** ‹ › move the view one day per tap and
+carry on across week boundaries; tap the dates for a picker. With nothing
+scrolling sideways, a sideways drag only ever means duration. Week-wide
+actions act on the week of the leftmost day shown.
+
+**A real hold.** Before, there was no hold at all: the drag and the column's
+scroll raced for every movement, and holding still first merely tended to let
+the drag win — which is why it felt long and a little unpredictable. Now it's
+a 250ms timer, about half the system long press. When it fires the block
+lights up amber and buzzes. Move before then and it's a swipe.
+
+**Seeing the change while dragging:**
+
+| Drag | Shows |
+|---|---|
+| sideways | ` +15    45m Fitness` — change on the left, new total on the right |
+| up or down | `↑2 9:15 45m Fitness` — how far it's moved, and its new start |
+
+**Gestures:**
+
+| | |
+|---|---|
+| Tap | "Move above…", as on the main screen |
+| Hold, drag ↕ | Move within the day |
+| Hold, drag ↔ | Duration, 5-minute steps |
+| Hold, let go | Menu: exact duration, move day, delete |
+| Quick swipe | Scroll the day |
+
+Parked blocks are in the move-above list, so choosing the first of them puts a
+block last among the live ones — no separate "move to the end".
+
+**Also: a parked block now sets its label to zero when a plan is applied** —
+93.1, answered with the suggested default. A label absent from the plan keeps
+its goal (93.2). A label that is live in one block and parked in another keeps
+its live hours.

@@ -6,6 +6,8 @@ import android.os.Bundle
 import android.text.format.DateFormat
 import android.view.LayoutInflater
 import android.view.MotionEvent
+import android.view.ViewConfiguration
+import android.view.HapticFeedbackConstants
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -33,85 +35,134 @@ import kotlin.math.abs
  */
 class WeekActivity : AppCompatActivity() {
 
+    companion object {
+        /** Hold before a drag arms. Roughly half the system long press. */
+        private const val HOLD_MS = 250L
+    }
+
     private lateinit var b: ActivityWeekBinding
 
-    /** Any day inside the week being shown. */
-    private var anchorMs = System.currentTimeMillis()
+    /** The leftmost of the three days on screen, at midnight. */
+    private var anchorMs = midnight(System.currentTimeMillis())
 
     /** Set when viewing the seven weekday shapes rather than dated days. */
     private var editingDefault = false
 
+    /** In the default week, the leftmost of the three weekday slots shown. */
+    private var defaultSlot = 0
+
     private val dayFmt = SimpleDateFormat("EEE", Locale.getDefault())
-    private val weekFmt = SimpleDateFormat("d MMM", Locale.getDefault())
+    private val dayNumFmt = SimpleDateFormat("EEE d", Locale.getDefault())
+    private val monthFmt = SimpleDateFormat("MMM", Locale.getDefault())
     private val defaultDayNames =
         arrayOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
+
+    /** Days on screen at once. Three gives each about 260dp in landscape. */
+    private val visibleDays = 3
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         b = ActivityWeekBinding.inflate(layoutInflater)
         setContentView(b.root)
 
-        b.weekPrev.setOnClickListener { shiftWeek(-7) }
-        b.weekNext.setOnClickListener { shiftWeek(7) }
-        b.weekTitle.setOnClickListener { pickWeek() }
+        // One day per tap, carrying on across week boundaries. Arrows rather
+        // than sideways scrolling, so a sideways drag only ever means duration.
+        b.weekPrev.setOnClickListener { shiftDays(-1) }
+        b.weekNext.setOnClickListener { shiftDays(1) }
+        b.weekTitle.setOnClickListener { pickDate() }
         b.weekAction.setOnClickListener { weekMenu() }
         b.weekDone.setOnClickListener { finish() }
 
         render()
     }
 
-    private fun shiftWeek(days: Int) {
-        if (editingDefault) return
-        anchorMs = Calendar.getInstance().apply {
-            timeInMillis = anchorMs
-            add(Calendar.DAY_OF_YEAR, days)
-        }.timeInMillis
+    private fun shiftDays(n: Int) {
+        if (editingDefault) {
+            defaultSlot = (defaultSlot + n).coerceIn(0, 7 - visibleDays)
+        } else {
+            anchorMs = Calendar.getInstance().apply {
+                timeInMillis = anchorMs
+                add(Calendar.DAY_OF_YEAR, n)
+            }.timeInMillis
+        }
         render()
     }
 
-    private fun pickWeek() {
+    private fun pickDate() {
         if (editingDefault) return
         val c = Calendar.getInstance().apply { timeInMillis = anchorMs }
         DatePickerDialog(
             this,
             { _, y, m, d ->
-                anchorMs = Calendar.getInstance().apply { set(y, m, d) }.timeInMillis
+                anchorMs = midnight(Calendar.getInstance().apply { set(y, m, d) }.timeInMillis)
                 render()
             },
             c.get(Calendar.YEAR), c.get(Calendar.MONTH), c.get(Calendar.DAY_OF_MONTH)
         ).show()
     }
 
-    /** The seven keys on screen: dates, or D0..D6 for the default week. */
-    private fun currentKeys(): List<String> =
-        if (editingDefault) (0..6).map { "D$it" }
-        else WeekStore.weekOf(anchorMs, SettingsStore.getWeekStartDow(this))
-            .map { WeekStore.dateKey(it) }
+    /** The three dated days on screen. */
+    private fun visibleDates(): List<Long> = (0 until visibleDays).map { i ->
+        Calendar.getInstance().apply {
+            timeInMillis = anchorMs
+            add(Calendar.DAY_OF_YEAR, i)
+        }.timeInMillis
+    }
 
-    private fun currentDates(): List<Long> =
+    /** The three keys on screen: dates, or weekday slots in the default week. */
+    private fun visibleKeys(): List<String> =
+        if (editingDefault) (defaultSlot until defaultSlot + visibleDays).map { "D$it" }
+        else visibleDates().map { WeekStore.dateKey(it) }
+
+    /**
+     * The whole week containing the leftmost day on screen. Week-wide actions
+     * \u2014 pull in the default, fill from a layout, delete \u2014 act on this.
+     */
+    private fun weekDates(): List<Long> =
         WeekStore.weekOf(anchorMs, SettingsStore.getWeekStartDow(this))
+
+    private fun weekKeys(): List<String> =
+        if (editingDefault) (0..6).map { "D$it" }
+        else weekDates().map { WeekStore.dateKey(it) }
 
     // ---- drawing ------------------------------------------------------------
 
     private fun render() {
-        b.weekTitle.text = if (editingDefault) "Default week" else {
-            val dates = currentDates()
-            "${weekFmt.format(Date(dates.first()))} \u2013 ${weekFmt.format(Date(dates.last()))}"
+        b.weekTitle.text = if (editingDefault) {
+            "Default \u2014 ${defaultDayNames[defaultSlot]} to " +
+                defaultDayNames[defaultSlot + visibleDays - 1]
+        } else {
+            val dates = visibleDates()
+            "${dayNumFmt.format(Date(dates.first()))} \u2013 " +
+                "${dayNumFmt.format(Date(dates.last()))} ${monthFmt.format(Date(dates.last()))}"
         }
-        b.weekPrev.alpha = if (editingDefault) 0.3f else 1f
-        b.weekNext.alpha = if (editingDefault) 0.3f else 1f
+        b.weekPrev.alpha = if (editingDefault && defaultSlot == 0) 0.3f else 1f
+        b.weekNext.alpha =
+            if (editingDefault && defaultSlot == 7 - visibleDays) 0.3f else 1f
 
         b.weekColumns.removeAllViews()
         val inflater = LayoutInflater.from(this)
 
-        currentKeys().forEachIndexed { i, key ->
+        // Fixed widths rather than weights, so three columns share the screen
+        // and each gets room for "10:45 120m Social Building" at 14sp.
+        val gutter = (2 * resources.displayMetrics.density).toInt()
+        val colWidth = (b.weekColumns.width.takeIf { it > 0 }
+            ?: (resources.displayMetrics.widthPixels -
+                (12 * resources.displayMetrics.density).toInt())) / visibleDays - gutter
+
+        visibleKeys().forEachIndexed { i, key ->
             val col = inflater.inflate(R.layout.column_week_day, b.weekColumns, false)
+            col.layoutParams = LinearLayout.LayoutParams(
+                colWidth, LinearLayout.LayoutParams.MATCH_PARENT
+            ).apply { marginEnd = gutter }
+
             val header = col.findViewById<TextView>(R.id.colHeader)
             val list = col.findViewById<LinearLayout>(R.id.colBlocks)
             val add = col.findViewById<TextView>(R.id.colAdd)
 
-            val dateMs = if (editingDefault) null else currentDates()[i]
-            drawHeader(header, key, dateMs, i)
+            val dateMs = if (editingDefault) null else visibleDates()[i]
+            val slot = if (editingDefault) defaultSlot + i else 0
+            drawHeader(header, key, dateMs, slot)
 
             // A day that differs from its default is worth seeing at a glance
             // while planning.
@@ -173,8 +224,7 @@ class WeekActivity : AppCompatActivity() {
             }
 
             if (!locked) {
-                row.setOnClickListener { blockMenu(block, key) }
-                attachDrag(row, block, key, list)
+                attachGestures(row, block, key)
             } else {
                 row.alpha = 0.7f
             }
@@ -185,92 +235,207 @@ class WeekActivity : AppCompatActivity() {
     // ---- the two drag axes --------------------------------------------------
 
     /**
-     * One touch listener, two actions. Whichever axis the finger moves in
-     * first locks the gesture, so nothing is decided by a mode you can't see
-     * while dragging.
+     * Every gesture on a block, in one listener:
+     *
+     *   tap                      "Move above\u2026" list
+     *   hold, then drag \u2195       move within the day
+     *   hold, then drag \u2194       change the duration, 5 minutes a step
+     *   hold, and let go         menu: exact duration, move day, delete
+     *   quick swipe              scrolls the day
+     *
+     * The hold is a real timer, not an accident of which view wins the finger.
+     * Before, a drag and the column's scroll raced for every movement and
+     * holding still first merely tended to let the drag win \u2014 which is why the
+     * hold felt long and a little unpredictable. When the timer fires the
+     * block lights up and buzzes, so it's clear the drag is ready.
      */
-    private fun attachDrag(row: TextView, block: Block, key: String, list: LinearLayout) {
+    private fun attachGestures(row: TextView, block: Block, key: String) {
         val d = resources.displayMetrics.density
-        val slop = 8 * d
-        val stepPx = 18 * d          // one 5-minute step of horizontal travel
-        val rowPx = 20 * d
+        val slop = ViewConfiguration.get(this).scaledTouchSlop
+        val stepPx = 20 * d              // one 5-minute step of sideways travel
+        val rowPx = 28 * d               // matches the block height
 
         var startX = 0f
         var startY = 0f
-        var axis = 0                 // 0 undecided, 1 horizontal, 2 vertical
+        var armed = false
+        var axis = 0                     // 0 undecided, 1 sideways, 2 up/down
         var pendingMinutes = block.minutes
         var pendingIndex = -1
+        var movedBeforeArming = false
+
+        val arm = Runnable {
+            armed = true
+            // Hold the column still: from here the finger belongs to the block.
+            row.parent?.requestDisallowInterceptTouchEvent(true)
+            row.setBackgroundColor(0x40E8A33D)
+            row.setTextColor(0xFFE8A33D.toInt())
+            row.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+        }
 
         row.setOnTouchListener { _, ev ->
             when (ev.actionMasked) {
                 MotionEvent.ACTION_DOWN -> {
                     startX = ev.rawX; startY = ev.rawY
-                    axis = 0
+                    armed = false; axis = 0
+                    movedBeforeArming = false
                     pendingMinutes = block.minutes
                     pendingIndex = -1
-                    false                       // let a tap still reach the click listener
+                    // About half the phone's usual long press.
+                    row.postDelayed(arm, HOLD_MS)
+                    true
                 }
                 MotionEvent.ACTION_MOVE -> {
                     val dx = ev.rawX - startX
                     val dy = ev.rawY - startY
-                    if (axis == 0) {
-                        if (abs(dx) < slop && abs(dy) < slop) return@setOnTouchListener false
-                        axis = if (abs(dx) > abs(dy)) 1 else 2
-                        // Hold the column still for the rest of the gesture.
-                        row.parent?.requestDisallowInterceptTouchEvent(true)
-                    }
-                    if (axis == 1) {
-                        // Five-minute steps, stopping at zero: a block reaching
-                        // zero parks rather than going negative.
-                        val steps = (dx / stepPx).toInt()
-                        pendingMinutes = (block.minutes + steps * 5).coerceAtLeast(0)
-                        row.text = if (pendingMinutes <= 0) "  \u2014   ${block.label}"
-                                   else "  ${pendingMinutes}m ${block.label}"
-                        row.setTextColor(0xFFE8A33D.toInt())
-                    } else {
-                        val live = WeekStore.blocksFor(this, key).filterNot { it.isParked }
-                        val from = live.indexOfFirst { it.id == block.id }
-                        if (from >= 0) {
-                            pendingIndex = (from + (dy / rowPx).toInt())
-                                .coerceIn(0, (live.size - 1).coerceAtLeast(0))
-                            row.setTextColor(0xFFE8A33D.toInt())
+                    if (!armed) {
+                        // Moving before the hold completes is a swipe, not a
+                        // drag \u2014 let the column have it.
+                        if (abs(dx) > slop || abs(dy) > slop) {
+                            movedBeforeArming = true
+                            row.removeCallbacks(arm)
                         }
+                        return@setOnTouchListener false
                     }
+                    if (axis == 0) {
+                        if (abs(dx) < slop && abs(dy) < slop) return@setOnTouchListener true
+                        axis = if (abs(dx) > abs(dy)) 1 else 2
+                    }
+                    if (axis == 1) showDurationPreview(row, block, dx, stepPx) { pendingMinutes = it }
+                    else showMovePreview(row, block, key, dy, rowPx) { pendingIndex = it }
                     true
                 }
                 MotionEvent.ACTION_UP -> {
+                    row.removeCallbacks(arm)
                     row.parent?.requestDisallowInterceptTouchEvent(false)
-                    val dragged = axis != 0
+                    val wasArmed = armed
                     val whichAxis = axis
                     val minutes = pendingMinutes
                     val index = pendingIndex
+                    val moved = movedBeforeArming
 
-                    // Cleared before anything else. Redrawing removes this
-                    // very view while it's still handling the gesture, and
-                    // Android answers that by sending it ACTION_CANCEL —
-                    // which, with the axis still set, used to redraw again
-                    // from inside the first redraw and crash.
-                    axis = 0
+                    // Cleared before anything else. Redrawing removes this view
+                    // while it's still handling the gesture, and Android answers
+                    // with ACTION_CANCEL \u2014 which, with state still set, used to
+                    // redraw again from inside the first redraw and crash.
+                    armed = false; axis = 0
 
-                    if (dragged) {
-                        // Posted, not called directly, so the redraw happens
-                        // after this touch event has finished dispatching.
-                        row.post { commitDrag(block, key, whichAxis, minutes, index) }
+                    // Everything posted, so it runs after this touch event has
+                    // finished dispatching rather than inside it.
+                    when {
+                        wasArmed && whichAxis != 0 ->
+                            row.post { commitDrag(block, key, whichAxis, minutes, index) }
+                        wasArmed ->
+                            row.post { render(); blockMenu(block, key) }
+                        !moved ->
+                            row.post {
+                                if (block.isParked) blockMenu(block, key)
+                                else moveAbovePicker(block, key)
+                            }
                     }
-                    dragged                     // consume only if a drag happened
+                    true
                 }
                 MotionEvent.ACTION_CANCEL -> {
-                    // Abandoned, not finished — nothing is saved. Previously
-                    // this shared the release branch and committed anyway.
+                    // Abandoned: the column took the gesture, or something
+                    // interrupted it. Nothing is saved.
+                    row.removeCallbacks(arm)
                     row.parent?.requestDisallowInterceptTouchEvent(false)
-                    val dragged = axis != 0
-                    axis = 0
-                    if (dragged) row.post { render() }
-                    dragged
+                    val wasArmed = armed
+                    armed = false; axis = 0
+                    if (wasArmed) row.post { render() }
+                    true
                 }
                 else -> false
             }
         }
+    }
+
+    /**
+     * "+15   45m Fitness" while dragging sideways: the change on the left, the
+     * new total on the right. Stops at zero, where the block parks.
+     */
+    private fun showDurationPreview(
+        row: TextView, block: Block, dx: Float, stepPx: Float, onValue: (Int) -> Unit
+    ) {
+        val minutes = (block.minutes + (dx / stepPx).toInt() * 5).coerceAtLeast(0)
+        onValue(minutes)
+        val delta = minutes - block.minutes
+        val sign = when {
+            delta > 0 -> "+$delta"
+            delta < 0 -> "\u2212${-delta}"
+            else -> "  0"
+        }
+        val total = if (minutes <= 0) "  \u2014 " else "${minutes}m"
+        row.text = "${sign.padStart(4)}  ${total.padStart(5)} ${block.label}"
+    }
+
+    /** The block's new start time, shown as it moves up or down. */
+    private fun showMovePreview(
+        row: TextView, block: Block, key: String, dy: Float, rowPx: Float, onIndex: (Int) -> Unit
+    ) {
+        if (block.isParked) return                 // parked blocks stay at the foot
+        val live = WeekStore.blocksFor(this, key).filterNot { it.isParked }
+        val from = live.indexOfFirst { it.id == block.id }
+        if (from < 0) return
+        val to = (from + (dy / rowPx).toInt()).coerceIn(0, live.size - 1)
+        onIndex(to)
+
+        val reordered = live.toMutableList().apply { add(to, removeAt(from)) }
+        var t = WeekStore.day(this, key).startMinutes
+        for (b2 in reordered) {
+            if (b2.id == block.id) break
+            t += b2.minutes
+        }
+        val arrow = when {
+            to < from -> "\u2191${from - to}"
+            to > from -> "\u2193${to - from}"
+            else -> "  "
+        }
+        row.text = "$arrow ${clock(t)} ${block.minutes}m ${block.label}"
+    }
+
+    /**
+     * Tap a block to put it above another, as on the main screen. Parked
+     * blocks are in the list too, so choosing the first of them puts a block
+     * last among the live ones \u2014 no separate "move to the end" needed.
+     */
+    private fun moveAbovePicker(block: Block, key: String) {
+        val all = WeekStore.blocksFor(this, key)
+        val others = all.filter { it.id != block.id }
+        if (others.isEmpty()) return
+        val day = WeekStore.day(this, key)
+        val starts = WeekStore.startTimes(day, all)
+
+        val items = others.map { o ->
+            if (o.isParked) "        \u2014   ${o.label}"
+            else "${clock(starts[o.id] ?: day.startMinutes).padStart(5)}  ${o.minutes}m  ${o.label}"
+        }
+        pickFromList("Move \u201c${block.label}\u201d above\u2026", items) { which ->
+            val target = others[which]
+            val ids = all.map { it.id }.toMutableList()
+            ids.remove(block.id)
+            ids.add(ids.indexOf(target.id).coerceAtLeast(0), block.id)
+            WeekStore.reorder(this, key, ids)
+            render()
+        }
+    }
+
+    /** The compact chooser the main screen uses, for the same reasons. */
+    private fun pickFromList(title: String, items: List<String>, onPick: (Int) -> Unit) {
+        val view = LayoutInflater.from(this).inflate(R.layout.dialog_pick_list, null)
+        view.findViewById<TextView>(R.id.pickTitle).text = title
+        val list = view.findViewById<LinearLayout>(R.id.pickList)
+        val dialog = AlertDialog.Builder(this).setView(view).create()
+        val inflater = LayoutInflater.from(this)
+        items.forEachIndexed { i, text ->
+            val r = inflater.inflate(R.layout.row_pick_item, list, false) as TextView
+            r.text = text
+            r.typeface = android.graphics.Typeface.MONOSPACE
+            r.setOnClickListener { dialog.dismiss(); onPick(i) }
+            list.addView(r)
+        }
+        view.findViewById<android.widget.Button>(R.id.pickCancel)
+            .setOnClickListener { dialog.dismiss() }
+        dialog.show()
     }
 
     /**
@@ -332,7 +497,7 @@ class WeekActivity : AppCompatActivity() {
     }
 
     private fun confirmPullWeek() {
-        val dates = currentDates()
+        val dates = weekDates()
         val already = WeekStore.weekHasAnything(this, dates.map { WeekStore.dateKey(it) })
         if (!already) { WeekStore.pullDefaultWeek(this, dates); render(); return }
 
@@ -354,7 +519,7 @@ class WeekActivity : AppCompatActivity() {
                     "to the default, as though it had never been planned."
             )
             .setPositiveButton("Delete") { _, _ ->
-                WeekStore.deleteWeek(this, currentKeys()); render()
+                WeekStore.deleteWeek(this, weekKeys()); render()
             }
             .setNegativeButton("Cancel", null)
             .show()
@@ -362,6 +527,11 @@ class WeekActivity : AppCompatActivity() {
 
     private fun dayMenu(key: String, dateMs: Long?) {
         val items = mutableListOf("Set the day's start time", "Pull in a layout\u2026")
+        // Today only: re-apply on demand, since the morning prompt asks once.
+        if (dateMs != null && WeekStore.dateKey(dateMs) ==
+            WeekStore.dateKey(System.currentTimeMillis())) {
+            items.add(0, "Apply to today's timers")
+        }
         if (!editingDefault) items.add("Copy from another day\u2026")
         items.add("Clear the day")
 
@@ -369,6 +539,10 @@ class WeekActivity : AppCompatActivity() {
             .setTitle(if (editingDefault) "Day" else dayFmt.format(Date(dateMs!!)))
             .setItems(items.toTypedArray()) { _, which ->
                 when (items[which]) {
+                    "Apply to today's timers" -> {
+                        if (WeekStore.applyToMainScreen(this, key))
+                            Toast.makeText(this, "Applied to today", Toast.LENGTH_SHORT).show()
+                    }
                     "Set the day's start time" -> pickDayStart(key)
                     "Pull in a layout\u2026" -> pickLayout(key)
                     "Copy from another day\u2026" -> pickDayToCopyFrom(key)
@@ -406,7 +580,7 @@ class WeekActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle("Fill all seven days from")
             .setItems(layouts.map { it.name }.toTypedArray()) { _, which ->
-                val keys = currentKeys()
+                val keys = weekKeys()
                 val chosen = layouts[which]
                 if (WeekStore.weekHasAnything(this, keys)) {
                     AlertDialog.Builder(this)
@@ -446,7 +620,7 @@ class WeekActivity : AppCompatActivity() {
     }
 
     private fun pickDayToCopyFrom(toKey: String) {
-        val dates = currentDates()
+        val dates = weekDates()
         val names = dates.map { dayFmt.format(Date(it)) }
         AlertDialog.Builder(this)
             .setTitle("Copy from")
@@ -500,7 +674,7 @@ class WeekActivity : AppCompatActivity() {
     }
 
     private fun pickDayToMoveTo(block: Block) {
-        val dates = currentDates()
+        val dates = weekDates()
         AlertDialog.Builder(this)
             .setTitle("Move to")
             .setItems(dates.map { dayFmt.format(Date(it)) }.toTypedArray()) { _, which ->
@@ -511,6 +685,12 @@ class WeekActivity : AppCompatActivity() {
     }
 
     // ---- helpers ------------------------------------------------------------
+
+    private fun midnight(ms: Long): Long = Calendar.getInstance().apply {
+        timeInMillis = ms
+        set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+    }.timeInMillis
 
     private fun startOfToday(): Long = Calendar.getInstance().apply {
         set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)

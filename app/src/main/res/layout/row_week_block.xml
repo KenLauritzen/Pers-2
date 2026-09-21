@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- "05:00 120m Fitness" at 10sp is about 94dp in a 114dp column. -->
+<!-- Three days at a time gives each column about 260dp, so 14sp fits
+     "10:45 120m Social Building" with room to spare. -->
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="20dp"
+    android:layout_height="28dp"
     android:gravity="center_vertical"
-    android:paddingStart="3dp"
+    android:paddingStart="6dp"
     android:paddingEnd="3dp"
     android:fontFamily="monospace"
-    android:textSize="10sp"
+    android:textSize="14sp"
     android:maxLines="1"
     android:ellipsize="end"
     android:includeFontPadding="false"
