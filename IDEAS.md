@@ -3365,6 +3365,11 @@ lights up amber and buzzes. Move before then and it's a swipe.
 Parked blocks are in the move-above list, so choosing the first of them puts a
 block last among the live ones — no separate "move to the end".
 
+**v88: text 20% larger, 14sp → 17sp**, with the row kept at 28dp so the same
+nine blocks stay visible. The text now fills the column; only the longest
+names with a four-digit time, like `10:45 120m Social Building`, trim a
+character or two.
+
 **Also: a parked block now sets its label to zero when a plan is applied** —
 93.1, answered with the suggested default. A label absent from the plan keeps
 its goal (93.2). A label that is live in one block and parked in another keeps
