@@ -908,7 +908,14 @@ class MainActivity : AppCompatActivity() {
                     refreshValues()
                     true
                 }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                MotionEvent.ACTION_CANCEL -> {
+                    // Abandoned, not finished: nothing is saved.
+                    timeSlideLabel = null
+                    binding.rowsList.requestDisallowInterceptTouchEvent(false)
+                    refreshValues()
+                    true
+                }
+                MotionEvent.ACTION_UP -> {
                     val label = entry.name
                     val minutes = timeSlidePendingMinutes
                     timeSlideLabel = null
@@ -963,7 +970,14 @@ class MainActivity : AppCompatActivity() {
                     refreshValues()
                     true
                 }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                MotionEvent.ACTION_CANCEL -> {
+                    // Abandoned, not finished: nothing is saved.
+                    slideLabel = null
+                    binding.rowsList.requestDisallowInterceptTouchEvent(false)
+                    refreshValues()
+                    true
+                }
+                MotionEvent.ACTION_UP -> {
                     val label = entry.name
                     val newGoal = slidePendingGoal
                     val changed = newGoal != slideStartGoal

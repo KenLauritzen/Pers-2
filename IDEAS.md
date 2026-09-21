@@ -3258,3 +3258,40 @@ manual order becomes the block order, and **labels with no goal arrive
 parked** — every label present at the foot of each column, ready to be dragged
 up on the days it applies to. Quicker than adding them one at a time on the
 days that need them.
+
+---
+
+## 92. Crash after dragging a block in the week grid  ✅ fixed in v85
+
+**The bug:** releasing a drag on the week screen crashed the app most of the
+time — "Focus keeps stopping" — and dropped back to the main screen.
+
+**Cause — re-entrant redraw.** On release, `render()` ran *synchronously
+inside the touch handler*. `render()` removes every block view to redraw,
+including the one still handling the gesture. Android answers the removal of
+a view that's mid-gesture by sending it `ACTION_CANCEL` — which arrived in the
+same handler, where the drag's axis was still set, so it called `render()`
+*again*, nested inside the first one while it was halfway through removing
+views.
+
+**Why intermittent:** it depended on whether Android still counted the view
+as an active touch target at the moment it was removed.
+
+**A second fault in the same place:** release and cancel shared one branch, so
+a cancelled gesture committed as if it had finished.
+
+**Fixed:**
+- The axis is cleared *before* anything else, so a re-entrant cancel does
+  nothing.
+- The commit and redraw are **posted**, so they run after the touch event has
+  finished dispatching rather than inside it.
+- Release and cancel are separate branches; cancel saves nothing.
+- The main-screen sliders had the same shared branch. They never crashed —
+  they already cleared their state before committing — but a cancelled slide
+  committed. Split too.
+
+**New check in the sweep:** `ACTION_UP` and `ACTION_CANCEL` sharing a branch
+now fails the build check.
+
+**The general lesson:** never tear down a view from inside that view's own
+event handler. Post it.

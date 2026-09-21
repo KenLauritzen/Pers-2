@@ -1,34 +1,30 @@
-Focus v84 — complete file list.
+Focus v85 — complete file list.
 
-Adds "Fill all days from a layout…" to the week menu, in both the dated week
-and the default week.
+FIXES THE CRASH WHEN RELEASING A DRAG ON THE WEEK SCREEN
 
-  Pick a saved layout and it goes into all seven columns at once, in the
-  manual order it was saved with.
+Cause: on release, the screen redrew itself from INSIDE the touch handler. The
+redraw removes every block — including the one still handling your finger.
+Android answers that by sending the removed block a "cancel", which landed in
+the same handler while it still thought a drag was in progress, so it redrew
+again from inside the first redraw. That collision was the crash.
 
-  Labels with NO GOAL arrive as parked blocks — greyed, at the foot of each
-  column, costing nothing. So every label is present and ready to be dragged
-  up on the days it applies to, rather than being added one at a time on the
-  days that need it.
+It was intermittent because it depended on whether Android still counted the
+block as being touched at the exact moment it was removed.
 
-  It asks before replacing if the week already has blocks.
+Fixed by clearing the drag state first and deferring the redraw until the touch
+event has finished.
 
-Everything from v83 is included — see below. If you haven't uploaded v83 yet,
-upload the full set.
+A SECOND BUG IN THE SAME PLACE: release and cancel were handled identically, so
+a cancelled drag would still save. Now a cancel saves nothing.
 
-CHANGED SINCE v83 — only these two:
-  app/src/main/java/com/focusledger/timer/WeekStore.kt
+The main-screen sliders had that second bug too — a cancelled slide committed.
+Fixed there as well. They never crashed, because they already cleared their
+state before saving.
+
+UPLOAD THESE THREE:
   app/src/main/java/com/focusledger/timer/WeekActivity.kt
-  app/src/main/res/values/strings.xml
-
-IF COMING FROM v82, the full v83 set as well:
-  app/src/main/res/layout/activity_week.xml          (new)
-  app/src/main/res/layout/column_week_day.xml        (new)
-  app/src/main/res/layout/row_week_block.xml         (new)
-  app/src/main/AndroidManifest.xml
   app/src/main/java/com/focusledger/timer/MainActivity.kt
-  app/src/main/java/com/focusledger/timer/SettingsStore.kt
-  app/src/main/res/layout/activity_main.xml
+  app/src/main/res/values/strings.xml
 
 Nothing to delete this version.
 

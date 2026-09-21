@@ -25,7 +25,7 @@ import kotlin.math.abs
  * **Vertical drag moves a block; horizontal drag changes its duration.** The
  * axis you start moving in picks the action, so there's no mode to remember
  * mid-gesture. Durations step 5 minutes, matching the main screen's sliders,
- * and stop at zero \u2014 a zeroed block greys out and sinks to the foot of the
+ * and stop at zero — a zeroed block greys out and sinks to the foot of the
  * column rather than being deleted.
  *
  * Start times are computed, never stored, so moving a block moves every start
@@ -238,32 +238,62 @@ class WeekActivity : AppCompatActivity() {
                     }
                     true
                 }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                MotionEvent.ACTION_UP -> {
                     row.parent?.requestDisallowInterceptTouchEvent(false)
-                    when {
-                        axis == 1 && pendingMinutes != block.minutes -> {
-                            WeekStore.setMinutes(this, block.id, pendingMinutes)
-                            render()
-                        }
-                        axis == 2 && pendingIndex >= 0 -> {
-                            val live = WeekStore.blocksFor(this, key)
-                                .filterNot { it.isParked }.map { it.id }.toMutableList()
-                            val from = live.indexOf(block.id)
-                            if (from >= 0 && from != pendingIndex) {
-                                live.add(pendingIndex, live.removeAt(from))
-                                val parked = WeekStore.blocksFor(this, key)
-                                    .filter { it.isParked }.map { it.id }
-                                WeekStore.reorder(this, key, live + parked)
-                                render()
-                            } else render()
-                        }
-                        axis != 0 -> render()
+                    val dragged = axis != 0
+                    val whichAxis = axis
+                    val minutes = pendingMinutes
+                    val index = pendingIndex
+
+                    // Cleared before anything else. Redrawing removes this
+                    // very view while it's still handling the gesture, and
+                    // Android answers that by sending it ACTION_CANCEL —
+                    // which, with the axis still set, used to redraw again
+                    // from inside the first redraw and crash.
+                    axis = 0
+
+                    if (dragged) {
+                        // Posted, not called directly, so the redraw happens
+                        // after this touch event has finished dispatching.
+                        row.post { commitDrag(block, key, whichAxis, minutes, index) }
                     }
-                    axis != 0                   // consume only if a drag happened
+                    dragged                     // consume only if a drag happened
+                }
+                MotionEvent.ACTION_CANCEL -> {
+                    // Abandoned, not finished — nothing is saved. Previously
+                    // this shared the release branch and committed anyway.
+                    row.parent?.requestDisallowInterceptTouchEvent(false)
+                    val dragged = axis != 0
+                    axis = 0
+                    if (dragged) row.post { render() }
+                    dragged
                 }
                 else -> false
             }
         }
+    }
+
+    /**
+     * Applies a finished drag. Runs posted, after the touch event has fully
+     * dispatched, so the redraw can't re-enter the gesture that caused it.
+     */
+    private fun commitDrag(block: Block, key: String, axis: Int, minutes: Int, index: Int) {
+        when {
+            axis == 1 && minutes != block.minutes ->
+                WeekStore.setMinutes(this, block.id, minutes)
+            axis == 2 && index >= 0 -> {
+                val live = WeekStore.blocksFor(this, key)
+                    .filterNot { it.isParked }.map { it.id }.toMutableList()
+                val from = live.indexOf(block.id)
+                if (from >= 0 && from != index) {
+                    live.add(index.coerceIn(0, live.size - 1), live.removeAt(from))
+                    val parked = WeekStore.blocksFor(this, key)
+                        .filter { it.isParked }.map { it.id }
+                    WeekStore.reorder(this, key, live + parked)
+                }
+            }
+        }
+        render()
     }
 
     // ---- menus --------------------------------------------------------------
