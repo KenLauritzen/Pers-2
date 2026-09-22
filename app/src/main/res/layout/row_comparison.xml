@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="38dp"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:weightSum="10">
+
+    <TextView android:id="@+id/cmpLabel"
+        android:layout_width="0dp" android:layout_weight="3.4"
+        android:layout_height="match_parent" android:gravity="center_vertical"
+        android:textColor="#F1EDE3" android:textSize="15sp"
+        android:maxLines="1" android:ellipsize="end" />
+    <TextView android:id="@+id/cmpMe"
+        android:layout_width="0dp" android:layout_weight="1.65"
+        android:layout_height="match_parent" android:gravity="center_vertical|end"
+        android:fontFamily="monospace" android:textSize="14sp" />
+    <TextView android:id="@+id/cmpThem"
+        android:layout_width="0dp" android:layout_weight="1.65"
+        android:layout_height="match_parent" android:gravity="center_vertical|end"
+        android:fontFamily="monospace" android:textSize="14sp" />
+    <TextView android:id="@+id/cmpDiff"
+        android:layout_width="0dp" android:layout_weight="1.65"
+        android:layout_height="match_parent" android:gravity="center_vertical|end"
+        android:fontFamily="monospace" android:textSize="14sp" />
+    <TextView android:id="@+id/cmpTog"
+        android:layout_width="0dp" android:layout_weight="1.65"
+        android:layout_height="match_parent" android:gravity="center_vertical|end"
+        android:fontFamily="monospace" android:textSize="14sp" />
+</LinearLayout>

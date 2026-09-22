@@ -97,7 +97,7 @@
     <!-- Export sits with Cancel and Save -->
     <LinearLayout
         android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:orientation="horizontal" android:weightSum="3"
+        android:orientation="horizontal" android:weightSum="4"
         android:layout_marginTop="10dp">
         <Button
             android:id="@+id/btnRange"

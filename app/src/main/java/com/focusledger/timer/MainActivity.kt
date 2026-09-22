@@ -880,7 +880,10 @@ class MainActivity : AppCompatActivity() {
      */
     private fun attachTimeSlider(holder: TimerAdapter.Holder, entry: LabelEntry) {
         val timeView = holder.time ?: return
-        val stepPx = 24 * resources.displayMetrics.density
+        // 16dp per 5-minute step, down from 24: 50% faster, so less
+        // travel for each click. Still twice the touch slop, so a steady
+        // finger doesn't tick by accident.
+        val stepPx = 16 * resources.displayMetrics.density
 
         timeView.setOnLongClickListener {
             timeSlideLabel = entry.name
@@ -940,7 +943,10 @@ class MainActivity : AppCompatActivity() {
      */
     private fun attachGoalSlider(holder: TimerAdapter.Holder, entry: LabelEntry) {
         val goalView = holder.goal ?: return
-        val stepPx = 24 * resources.displayMetrics.density
+        // 16dp per 5-minute step, down from 24: 50% faster, so less
+        // travel for each click. Still twice the touch slop, so a steady
+        // finger doesn't tick by accident.
+        val stepPx = 16 * resources.displayMetrics.density
 
         goalView.setOnLongClickListener {
             val current = LabelStore.readLibrary(this)

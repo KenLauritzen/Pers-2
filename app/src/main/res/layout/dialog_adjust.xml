@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Exact control: minus on the top row, plus beneath, as the label popup does. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#1A2C2A"
+    android:padding="16dp">
+
+    <TextView android:id="@+id/adjTitle"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:textColor="#8FA39E" android:textSize="15sp" />
+    <TextView android:id="@+id/adjValue"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="4dp" android:layout_marginBottom="12dp"
+        android:textColor="#E8A33D" android:fontFamily="monospace" android:textSize="30sp" />
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:weightSum="4">
+        <Button android:id="@+id/adjM5h" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="50dp" android:layout_marginEnd="4dp" android:text="\u22125h"
+            android:textAllCaps="false" android:textColor="#C97064" android:textSize="17sp"
+            android:padding="0dp" android:background="@drawable/bg_button_small" />
+        <Button android:id="@+id/adjM1h" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="50dp" android:layout_marginEnd="4dp" android:text="\u22121h"
+            android:textAllCaps="false" android:textColor="#C97064" android:textSize="17sp"
+            android:padding="0dp" android:background="@drawable/bg_button_small" />
+        <Button android:id="@+id/adjM15" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="50dp" android:layout_marginEnd="4dp" android:text="\u221215m"
+            android:textAllCaps="false" android:textColor="#C97064" android:textSize="17sp"
+            android:padding="0dp" android:background="@drawable/bg_button_small" />
+        <Button android:id="@+id/adjM5" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="50dp" android:text="\u22125m"
+            android:textAllCaps="false" android:textColor="#C97064" android:textSize="17sp"
+            android:padding="0dp" android:background="@drawable/bg_button_small" />
+    </LinearLayout>
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="5dp" android:orientation="horizontal" android:weightSum="4">
+        <Button android:id="@+id/adjP5" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="50dp" android:layout_marginEnd="4dp" android:text="+5m"
+            android:textAllCaps="false" android:textColor="#7DBE7A" android:textSize="17sp"
+            android:padding="0dp" android:background="@drawable/bg_button_small" />
+        <Button android:id="@+id/adjP15" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="50dp" android:layout_marginEnd="4dp" android:text="+15m"
+            android:textAllCaps="false" android:textColor="#7DBE7A" android:textSize="17sp"
+            android:padding="0dp" android:background="@drawable/bg_button_small" />
+        <Button android:id="@+id/adjP1h" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="50dp" android:layout_marginEnd="4dp" android:text="+1h"
+            android:textAllCaps="false" android:textColor="#7DBE7A" android:textSize="17sp"
+            android:padding="0dp" android:background="@drawable/bg_button_small" />
+        <Button android:id="@+id/adjP5h" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="50dp" android:text="+5h"
+            android:textAllCaps="false" android:textColor="#7DBE7A" android:textSize="17sp"
+            android:padding="0dp" android:background="@drawable/bg_button_small" />
+    </LinearLayout>
+
+    <Button android:id="@+id/adjDone"
+        android:layout_width="match_parent" android:layout_height="46dp"
+        android:layout_marginTop="14dp" android:text="Done" android:textAllCaps="false"
+        android:textColor="#E8A33D" android:textSize="16sp"
+        android:background="@drawable/bg_button_small" />
+</LinearLayout>

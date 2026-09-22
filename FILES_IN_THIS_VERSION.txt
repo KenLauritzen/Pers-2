@@ -1,18 +1,54 @@
-Focus v88 — complete file list.
+Focus v93 — complete file list.
 
-Week screen text is 20% larger: 14sp -> 17sp, for the blocks and the day
-headers.
+THE COMPARISON SHEET (idea 91, first half)
 
-The blocks stay 28dp tall, so you still see the same nine — only the text
-grows to fill the column's width. The header's padding was trimmed slightly so
-the bigger header text doesn't cost a row.
+Week screen → Week… → "Planning with someone…"
 
-The longest names trim a character or two when paired with a four-digit start
-time — "10:45 120m Social Building", for instance. Shorter ones fit whole.
+The first time, it asks who you're planning with.
 
-UPLOAD THESE THREE:
-  app/src/main/res/layout/row_week_block.xml
-  app/src/main/res/layout/column_week_day.xml
+                 You    Janice    Diff    Tog.
+  Home Org      6:00     4:00    +2:00    2:00
+  Yard Work     4:00     5:00    −1:00    3:00
+  Gardening        —     3:00    −3:00       —     ← hers only, lavender
+
+  You 110:30 of 112:00 · 1:30 left
+  Janice 96:00 of 119:00 · 23:00 left
+
+SEED…     fill your column from a 7-day range, or every label at zero.
+          From a range: planned and actual side by side, planned chosen.
+          Tap a row to take the other figure for that label only.
+
+HAND OVER hides your column, the difference and Together, so Janice fills
+          hers without seeing yours. "Show both" brings them back.
+
+MORE…     add a label only Janice has · sleep goals for each of you ·
+          plan with someone else
+
+ADJUSTING ANY FIGURE
+  tap             exact: −5h −1h −15m −5m / +5m +15m +1h +5h
+  hold, drag ↔    15 minutes a step; the change and new total show under
+                  the title while you drag
+
+COLOURS
+  teal = you, lavender = Janice, amber = Together
+  Diff is coloured by whoever wants more — a difference isn't a problem.
+  Together goes RED, along with the figure it outruns, when it's more than
+  either of you planned for that label.
+
+Nothing here touches a timer. Placing together time on blocks in the week
+(Janice mode) is the next part, not yet built.
+
+NEW FILES — make sure all five upload:
+  app/src/main/java/com/focusledger/timer/TogetherStore.kt
+  app/src/main/java/com/focusledger/timer/ComparisonActivity.kt
+  app/src/main/res/layout/activity_comparison.xml
+  app/src/main/res/layout/row_comparison.xml
+  app/src/main/res/layout/dialog_adjust.xml
+
+ALSO UPLOAD:
+  app/src/main/AndroidManifest.xml     <- the new screen is registered here
+  app/src/main/java/com/focusledger/timer/WeekActivity.kt
+  app/src/main/java/com/focusledger/timer/SettingsStore.kt
   app/src/main/res/values/strings.xml
 
 Nothing to delete this version.
@@ -26,6 +62,7 @@ app/build.gradle
 app/proguard-rules.pro
 app/src/main/AndroidManifest.xml
 app/src/main/java/com/focusledger/timer/AppState.kt
+app/src/main/java/com/focusledger/timer/ComparisonActivity.kt
 app/src/main/java/com/focusledger/timer/LabelStore.kt
 app/src/main/java/com/focusledger/timer/LayoutStore.kt
 app/src/main/java/com/focusledger/timer/LogStore.kt
@@ -37,6 +74,7 @@ app/src/main/java/com/focusledger/timer/SettingsStore.kt
 app/src/main/java/com/focusledger/timer/TaskStore.kt
 app/src/main/java/com/focusledger/timer/TimerForegroundService.kt
 app/src/main/java/com/focusledger/timer/TimerStore.kt
+app/src/main/java/com/focusledger/timer/TogetherStore.kt
 app/src/main/java/com/focusledger/timer/WeekActivity.kt
 app/src/main/java/com/focusledger/timer/WeekStore.kt
 app/src/main/res/drawable/bg_button_active.xml
@@ -50,12 +88,14 @@ app/src/main/res/drawable/bg_row_idle.xml
 app/src/main/res/drawable/bg_row_track.xml
 app/src/main/res/drawable/ic_launcher.xml
 app/src/main/res/drawable/ic_note.xml
+app/src/main/res/layout/activity_comparison.xml
 app/src/main/res/layout/activity_main.xml
 app/src/main/res/layout/activity_notes.xml
 app/src/main/res/layout/activity_range.xml
 app/src/main/res/layout/activity_settings.xml
 app/src/main/res/layout/activity_week.xml
 app/src/main/res/layout/column_week_day.xml
+app/src/main/res/layout/dialog_adjust.xml
 app/src/main/res/layout/dialog_label_edit.xml
 app/src/main/res/layout/dialog_layout_picker.xml
 app/src/main/res/layout/dialog_note_edit.xml
@@ -63,6 +103,7 @@ app/src/main/res/layout/dialog_pick_list.xml
 app/src/main/res/layout/dialog_tasks.xml
 app/src/main/res/layout/dialog_text_input.xml
 app/src/main/res/layout/row_add_label.xml
+app/src/main/res/layout/row_comparison.xml
 app/src/main/res/layout/row_layout_entry.xml
 app/src/main/res/layout/row_note_entry.xml
 app/src/main/res/layout/row_pick_item.xml

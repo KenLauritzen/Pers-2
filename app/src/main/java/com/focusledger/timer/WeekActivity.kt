@@ -10,6 +10,7 @@ import android.view.ViewConfiguration
 import android.view.HapticFeedbackConstants
 import android.view.View
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
@@ -57,6 +58,13 @@ class WeekActivity : AppCompatActivity() {
     private val defaultDayNames =
         arrayOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
 
+    /**
+     * How far each day was scrolled, by key. Every change redraws the whole
+     * week, and a rebuilt column starts at the top \u2014 so without this, adjusting
+     * a block near the bottom of a day threw it out of view on release.
+     */
+    private val scrollPositions = mutableMapOf<String, Int>()
+
     /** Days on screen at once. Three gives each about 260dp in landscape. */
     private val visibleDays = 3
 
@@ -74,6 +82,13 @@ class WeekActivity : AppCompatActivity() {
         b.weekDone.setOnClickListener { finish() }
 
         render()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // A label added on the main screen since the week was filled joins
+        // every planned day as a parked block, ready to be dragged up.
+        if (WeekStore.addMissingLabelsAsParked(this)) render()
     }
 
     private fun shiftDays(n: Int) {
@@ -140,6 +155,15 @@ class WeekActivity : AppCompatActivity() {
         b.weekNext.alpha =
             if (editingDefault && defaultSlot == 7 - visibleDays) 0.3f else 1f
 
+        // Note where each visible day was scrolled before tearing it down.
+        for (i in 0 until b.weekColumns.childCount) {
+            val old = b.weekColumns.getChildAt(i)
+            val oldKey = old.tag as? String ?: continue
+            old.findViewById<ScrollView>(R.id.colScroll)?.let {
+                scrollPositions[oldKey] = it.scrollY
+            }
+        }
+
         b.weekColumns.removeAllViews()
         val inflater = LayoutInflater.from(this)
 
@@ -174,7 +198,17 @@ class WeekActivity : AppCompatActivity() {
 
             header.setOnClickListener { dayMenu(key, dateMs) }
             add.setOnClickListener { addBlock(key) }
+            col.tag = key
             b.weekColumns.addView(col)
+
+            // Put the day back where it was. Posted, because a ScrollView can't
+            // scroll until its content has been laid out. Keyed by day rather
+            // than column, so a day keeps its place as the arrows shift it.
+            val y = scrollPositions[key] ?: 0
+            if (y > 0) {
+                val sv = col.findViewById<ScrollView>(R.id.colScroll)
+                sv.post { sv.scrollTo(0, y) }
+            }
         }
     }
 
@@ -252,7 +286,7 @@ class WeekActivity : AppCompatActivity() {
     private fun attachGestures(row: TextView, block: Block, key: String) {
         val d = resources.displayMetrics.density
         val slop = ViewConfiguration.get(this).scaledTouchSlop
-        val stepPx = 20 * d              // one 5-minute step of sideways travel
+        val stepPx = 13 * d              // one 5-minute step: 13dp, down from 20
         val rowPx = 28 * d               // matches the block height
 
         var startX = 0f
@@ -472,6 +506,7 @@ class WeekActivity : AppCompatActivity() {
             "Pull in the default week",
             "Fill all days from a layout\u2026",
             "Edit the default week",
+            "Planning with someone\u2026",
             "Delete this week"
         )
 
@@ -489,6 +524,8 @@ class WeekActivity : AppCompatActivity() {
                     "Back to the week" -> { editingDefault = false; render() }
                     "Pull in the default week" -> confirmPullWeek()
                     "Edit the default week" -> { editingDefault = true; render() }
+                    "Planning with someone\u2026" ->
+                        startActivity(android.content.Intent(this, ComparisonActivity::class.java))
                     "Delete this week" -> confirmDeleteWeek()
                 }
             }

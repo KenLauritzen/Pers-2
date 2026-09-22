@@ -270,6 +270,43 @@ object WeekStore {
     fun weekHasAnything(c: Context, keys: List<String>): Boolean =
         readBlocks(c).any { it.key in keys }
 
+    /**
+     * Adds any label a planned day is missing, as a parked block.
+     *
+     * A day's blocks are fixed when it's filled, so a label created afterwards
+     * never appeared in it \u2014 there was no way to drag it into the schedule.
+     * This puts it at the foot of every planned day from today onwards, greyed
+     * and costing nothing, ready to be dragged up. The default week gets it too,
+     * so weeks pulled in later include it.
+     *
+     * Only days that already have blocks: an unplanned day stays empty.
+     * Past days are left alone \u2014 they're a record of what was planned then.
+     * Returns true if anything was added.
+     */
+    fun addMissingLabelsAsParked(c: Context): Boolean {
+        val library = LabelStore.readLibrary(c).sortedBy { it.manualOrder }
+        if (library.isEmpty()) return false
+        val today = dateKey(System.currentTimeMillis())
+
+        val all = readBlocks(c)
+        val byKey = all.groupBy { it.key }
+        val added = mutableListOf<Block>()
+
+        byKey.forEach { (key, blocks) ->
+            // Dated keys sort as text, so a plain comparison finds today onwards.
+            val eligible = isDefaultKey(key) || key >= today
+            if (!eligible || blocks.isEmpty()) return@forEach
+
+            val present = blocks.map { it.label }.toSet()
+            var next = (blocks.maxOfOrNull { it.order } ?: -1) + 1
+            library.filter { it.name !in present }.forEach { e ->
+                added.add(Block(newId(), key, e.name, 0, next++))
+            }
+        }
+        if (added.isEmpty()) return false
+        return writeBlocks(c, all + added)
+    }
+
     // ---- the default week ---------------------------------------------------
 
     /**

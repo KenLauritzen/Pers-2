@@ -248,7 +248,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_marginTop="6dp"
-        android:weightSum="4">
+        android:weightSum="5">
 
         <Button
             android:id="@+id/btnWeek"

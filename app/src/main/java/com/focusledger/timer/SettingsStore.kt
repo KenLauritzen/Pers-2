@@ -20,6 +20,7 @@ object SettingsStore {
     private const val KEY_SECONDARY = "column_mode_secondary"
     private const val KEY_TASK_PILL = "task_pill_rows"
     private const val KEY_WEEK_START_DOW = "week_start_dow"
+    private const val KEY_MY_SLEEP = "my_sleep_minutes"
     private const val KEY_LAST_PLAN_PROMPT = "last_plan_prompt_day"
     private const val KEY_START_HOUR = "day_start_hour"
     private const val KEY_START_MINUTE = "day_start_minute"
@@ -116,6 +117,14 @@ object SettingsStore {
     fun getTaskPill(c: Context) = p(c).getInt(KEY_TASK_PILL, 0).coerceIn(0, 6)
     fun setTaskPill(c: Context, v: Int) =
         p(c).edit().putInt(KEY_TASK_PILL, v.coerceIn(0, 6)).apply()
+
+    /**
+     * Your weekly sleep goal. Your waking week, which the comparison sheet
+     * fills to, is 168 hours less this.
+     */
+    fun getMySleepMinutes(c: Context) = p(c).getInt(KEY_MY_SLEEP, 56 * 60)
+    fun setMySleepMinutes(c: Context, v: Int) =
+        p(c).edit().putInt(KEY_MY_SLEEP, v.coerceIn(0, 168 * 60)).apply()
 
     /** Which day the weekly plan starts on. 0 is Sunday. */
     fun getWeekStartDow(c: Context) = p(c).getInt(KEY_WEEK_START_DOW, 0).coerceIn(0, 6)

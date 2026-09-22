@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#12201E"
+    android:padding="12dp">
+
+    <TextView
+        android:id="@+id/compTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#E8A33D"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:clickable="true"
+        android:focusable="true" />
+
+    <!-- The drag preview lives here: a cell is too narrow to show the change
+         and the new total side by side. -->
+    <TextView
+        android:id="@+id/compStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:minHeight="20dp"
+        android:textColor="#8FA39E"
+        android:fontFamily="monospace"
+        android:textSize="13sp" />
+
+    <TextView
+        android:id="@+id/compTotalMe"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:textColor="#5FBFB3"
+        android:fontFamily="monospace"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/compTotalThem"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#B9A6D8"
+        android:fontFamily="monospace"
+        android:textSize="14sp" />
+
+    <!-- Column headings, weighted exactly as the rows are. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal"
+        android:weightSum="10">
+
+        <TextView android:id="@+id/compHeadLabel"
+            android:layout_width="0dp" android:layout_weight="3.4"
+            android:layout_height="wrap_content" android:text="Label"
+            android:textColor="#8FA39E" android:textSize="13sp" />
+        <TextView android:id="@+id/compHeadMe"
+            android:layout_width="0dp" android:layout_weight="1.65"
+            android:layout_height="wrap_content" android:gravity="end" android:text="You"
+            android:textColor="#5FBFB3" android:textSize="13sp" />
+        <TextView android:id="@+id/compHeadThem"
+            android:layout_width="0dp" android:layout_weight="1.65"
+            android:layout_height="wrap_content" android:gravity="end"
+            android:textColor="#B9A6D8" android:textSize="13sp"
+            android:maxLines="1" android:ellipsize="end" />
+        <TextView android:id="@+id/compHeadDiff"
+            android:layout_width="0dp" android:layout_weight="1.65"
+            android:layout_height="wrap_content" android:gravity="end" android:text="Diff"
+            android:textColor="#8FA39E" android:textSize="13sp" />
+        <TextView android:id="@+id/compHeadTog"
+            android:layout_width="0dp" android:layout_weight="1.65"
+            android:layout_height="wrap_content" android:gravity="end" android:text="Tog."
+            android:textColor="#E8A33D" android:textSize="13sp" />
+    </LinearLayout>
+
+    <ScrollView
+        android:id="@+id/compScroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="4dp">
+
+        <LinearLayout
+            android:id="@+id/compRows"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </ScrollView>
+
+    <!-- Four buttons, weightSum 4. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        android:weightSum="4">
+
+        <Button android:id="@+id/compSeed"
+            android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="44dp" android:layout_marginEnd="4dp"
+            android:text="Seed\u2026" android:textAllCaps="false"
+            android:textColor="#5FBFB3" android:textSize="13sp"
+            android:padding="0dp" android:background="@drawable/bg_button_small" />
+        <Button android:id="@+id/compHandOver"
+            android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="44dp" android:layout_marginEnd="4dp"
+            android:textAllCaps="false"
+            android:textColor="#B9A6D8" android:textSize="13sp"
+            android:padding="0dp" android:background="@drawable/bg_button_small" />
+        <Button android:id="@+id/compMore"
+            android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="44dp" android:layout_marginEnd="4dp"
+            android:text="More\u2026" android:textAllCaps="false"
+            android:textColor="#A9BDB8" android:textSize="13sp"
+            android:padding="0dp" android:background="@drawable/bg_button_small" />
+        <Button android:id="@+id/compDone"
+            android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="44dp"
+            android:text="Done" android:textAllCaps="false"
+            android:textColor="#E8A33D" android:textSize="13sp"
+            android:padding="0dp" android:background="@drawable/bg_button_small" />
+    </LinearLayout>
+
+</LinearLayout>

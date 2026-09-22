@@ -510,98 +510,108 @@ show as corrections, but it is an edit to your recorded day.
 
 ## 91. Planning time with other people
 
-**What:** Tag a person to a block in the week grid with a number of hours —
-4h of Home Org, 1h of it with Janice — so the schedule you share shows where
-your time overlaps.
+*Rewritten from the design conversation. The first draft started at the level
+of blocks; this starts where the real conversation starts \u2014 each person's
+week, compared \u2014 and only then reaches the planner.*
 
-**The one rule that keeps this simple: people never affect timing.** You tap
-the task as you always do. A person is a tag on the *plan*, not something the
-timer knows about. Nothing to start, nothing to switch between, no question
-of whether you tap the person or the task.
+### The flow
 
----
-
-### The model
-
-**Hours live on the block.** `Home Org 4h`, and against it `Janice 1h`. That's
-the target figure, deliberately vague about *which* hour — she knows the day
-and the block, which is how the arrangement actually works.
-
-**People are tags, and tags carry no hours.** Tag someone to the block, or to
-two of the five tasks under it, or both. Tagging a task says "she's involved
-in this", not "she's doing 45 minutes of it".
-
-**Tagging tasks is optional refinement.** No tags and her hour is somewhere in
-the block. Tags and she can see which parts concern her.
-
-This is clean because **each number lives in exactly one place**. Task
-estimates are about fitting the block; a person's hours are about a target.
-They never need reconciling — which they would if both sat on tasks.
-
-**Her hour is inside your four, not added to them.** If people and tasks ever
-shared a mechanism, that would have to be explicit or the sums would be wrong.
-
----
-
-### Minimum viable version — build this first
-
-1. A list of people, maintained like labels
-2. Tag one to a block, with hours
-3. A weekly total per person, per label, against a target
-4. Share or print the week showing where the overlap falls
-
-Nothing else. **This is three nested planning structures deep** — your week,
-your default week, and the same pair per person — which either becomes
-indispensable or collapses under its own maintenance. A small version answers
-that cheaply.
-
----
-
-### Kept for later, if it proves useful
-
-**The comparison view**, per label and total:
+Based on how it's already been done by hand:
 
 ```
-  Janice          planned    goal
-    Home Org         1:00    2:00
-    Yard Work        2:30    2:00
-    Fam              0:30    2:00
-    ────────────────────────────
-                     4:00    6:00
+                 Me    Janice    Diff    Together
+  Home Org      6:00    4:00    +2:00     2:00
+  Yard Work     4:00    5:00    \u22121:00     3:00
+  Fam           8:00    8:00       0      6:00
+  Gardening       \u2014     3:00    \u22123:00       \u2014      \u2190 hers only
+  \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+               112:00  119:00              11:00
 ```
 
-Two hours short, and where. **"Goal" rather than "agreed"** — a target to aim
-at, not a commitment to answer for.
+1. **Me** \u2014 your weekly hours per label, filled up to your waking week
+2. **Janice** \u2014 hers, entered without seeing yours
+3. **Diff** \u2014 who wants more, and by how much
+4. **Together** \u2014 a goal for time spent together, per label
+5. **Planner** \u2014 together hours placed on blocks in the week, measured
+   against those goals
 
-**Per-person defaults and weekly overrides**, mirroring layouts: a default
-spread of hours across labels, overridable for a particular week, prompted
-when it differs from the default.
-
-**Tagging people to individual tasks**, so a shared schedule can be filtered —
-her tasks only, or everything with hers highlighted for context.
-
-**Adding a third drag action** for setting a person's hours. This would be the
-first case where idea 90's action registry earns itself, and the first where a
-mode is genuinely necessary rather than a convenience.
-
-**Calendar integration**, eventually. Worth noting the target is really
-*hers*, not yours — you'd be recording a shared commitment in your own app.
-If it ever became something she could see or edit, those figures want to live
-somewhere you both reach. That's where this points.
+**People never affect timing.** You tap a task or label as always. Everything
+here is planning.
 
 ---
 
-### Open questions
+### Settled
+
+| | |
+|---|---|
+| Seeding your column | From **any 7-day range**, or **every label at zero** |
+| Range seeding | Shows **planned and actual side by side**; you choose. **Use planned** is the default. Tap a single row to take that one from the other column |
+| After seeding | Yours to adjust \u2014 no ongoing link to the source |
+| Running target | `110:30 of 112:00 \u00b7 1:30 left` |
+| Sleep goal | **Per person**, a setting. You 56h (112 waking), her perhaps 49h (119). Each column fills to that person's own week; the diff still compares label by label |
+| Adjusting \u2014 drag | Hold, then drag, **15-minute steps** at the faster 16dp spacing. Shows `+1:30   37:30 Work` while dragging |
+| Adjusting \u2014 tap | A popup: `\u22125h \u22121h \u221215m \u22125m` in red above `+5m +15m +1h +5h` in green. The drag nudges; the popup handles large corrections and exact values |
+| Her entry | **Hand-over mode** \u2014 your column hidden while she fills hers, so she doesn't anchor on your numbers |
+| Her extra labels | Exist **only in the comparison**, never on your main screen |
+| Diff | **Me \u2212 Janice.** `+2` means you want two more hours than she does. A label only one person has shows their full amount |
+| Diff colours | **By person, not by sign** \u2014 **teal** for you, **lavender** for her. A difference isn't a problem, so neither colour reads as a warning. Her lavender carries through the whole app |
+| Together | A **goal**, not a commitment. Set by the same drag and tap |
+| Together over a goal | **Allowed, flagged red** \u2014 on the Together value *and* the personal goal it exceeds, so it's clear which needs to move. Red here because it's a real inconsistency, not a difference of view |
+| Standing or weekly | **Standing**, adjustable when you sit down together again |
+
+---
+
+### Reaching the planner
+
+A **Janice mode** on the week screen, using the drag-action slot idea 90 kept
+for a third action:
+
+```
+Mode: normal      \u2195 move   \u2194 duration
+Mode: Janice      \u2195 move   \u2194 Janice's hours in this block
+```
+
+Blocks show her share in lavender, vague on purpose \u2014 she knows the day and
+the block, not which hour:
+
+```
+  5:00 300m Work
+ 10:00 240m Home Org     J 1:00
+ 14:00  60m Fam          J 1:00
+```
+
+- Her hours can't exceed the block's own duration; the drag stops there.
+- **Several blocks a week for one label** is expected \u2014 three Home Org
+  sessions together, say.
+- A strip shows the week's progress against the Together goals, so what's
+  left to place is visible without a prompt:
+
+```
+Janice this week   Home Org 1:00 / 2:00   Yard Work 0:00 / 3:00   Fam 3:00 / 6:00
+```
+
+---
+
+### Still open
 
 | # | Question | Leaning |
 |---|---|---|
-| 91.1 | Can more than one person be on a block? | Yes, from the start — retrofitting a list is worse than starting with one |
-| 91.2 | Where do people come from? | A maintained list, like labels. Typed per block risks "Janice" and "janice" |
-| 91.3 | Does a person's time show on the main screen while you work? | No. It's a planning figure; the main screen is for working |
-| 91.4 | Does anything compare planned overlap against what happened? | Not initially. The log doesn't know who was there, and nothing could tell it without asking |
-| 91.5 | Share as text, or a file? | Text to a share sheet, as with the other exports |
+| 91.1 | Where is the comparison reached? | From the week screen's menu \u2014 it's planning, and it feeds the planner |
+| 91.2 | Keep past versions when the sheet is revised? | Yes, cheaply \u2014 "what did we agree in March" is worth being able to answer |
+| 91.3 | One person, or a list? | Built for a list, used with one. Each person gets a colour |
+| 91.4 | Sharing the week with together blocks highlighted | Share sheet, plain text, together blocks marked |
+| 91.5 | A share-of-week view (percentages) beside hours? | Not in the table. Worth remembering when talking a row through \u2014 different waking weeks make raw hours partly a measure of time available |
 
-**Depends on idea 90.** There is nothing to tag until the week grid exists.
+---
+
+### Build order
+
+1. **The comparison sheet** \u2014 seeding, both columns, diff, Together, hand-over
+   mode. Useful on its own for the conversation you already have.
+2. **Janice mode in the planner** \u2014 placing together hours on blocks, with
+   the progress strip.
+
+**Depends on idea 90**, which is built.
 
 ---
 
@@ -3370,7 +3380,75 @@ nine blocks stay visible. The text now fills the column; only the longest
 names with a four-digit time, like `10:45 120m Social Building`, trim a
 character or two.
 
+**v89: every 5-minute slider 50% faster** — two-thirds the travel per step.
+Main screen goal and time sliders 24dp → 16dp; week screen duration 20dp →
+13dp. An hour on the main screen is now about 1.2 inches of drag rather than
+1.8. Both remain comfortably above the touch slop, so a steady finger doesn't
+tick over by accident.
+
+**v90: each day keeps its scroll position.** Every change redraws the whole
+week, and a rebuilt column started at the top — so adjusting a block low in a
+day threw it out of view the moment you let go. Each day's position is now
+noted before the redraw and restored after, keyed by day rather than column so
+a day keeps its place as the arrows shift it. The one exception is a block
+dragged to zero: it parks at the foot of the day, so it leaves the view by
+design.
+
 **Also: a parked block now sets its label to zero when a plan is applied** —
 93.1, answered with the suggested default. A label absent from the plan keeps
 its goal (93.2). A label that is live in one block and parked in another keeps
 its live hours.
+
+---
+
+## 95. Buttons pushed off screen by a stale weightSum  ✅ fixed in v91
+
+**The bug:** Exit disappeared from the main screen's bottom row.
+
+**Cause:** the row had `weightSum="4"`, set when it held Settings, Stop and
+Exit (1 + 2 + 1). v83 added Week without updating it, so the children summed
+to 5. The first three took the whole width and Exit was laid out past the
+right edge — present, but off screen.
+
+**The same fault, found while fixing it:** the Settings screen's button row.
+v69 added Totals to a row weighted for three; its `weightSum` stayed 3 against
+children summing to 4, so **Save** had been off the edge since then. It went
+unreported, probably because leaving Settings with changes prompts to save.
+
+A third, harmless: the week screen's column container still carried
+`weightSum="7"` from before v87, when columns became fixed-width. Removed.
+
+**New check in the sweep:** every `weightSum` must equal the sum of its
+children's weights. Confirmed it flags the Exit case when reintroduced.
+
+**The lesson:** adding to a weighted row is two edits — the new child and the
+sum. The sweep had been checking code and never layout arithmetic, which is
+how two of these lived for weeks.
+
+---
+
+## 96. New labels join the plan as parked blocks  ✅ built in v92
+
+**What:** A label created after a day was filled now appears in that day —
+parked, greyed at the foot, ready to drag up.
+
+**Why:** a day's blocks were fixed when it was filled, so a new label had no
+way into the schedule for days already planned.
+
+**How:** each time the week screen opens or is returned to, every planned day
+from today onwards gains any label it's missing, as a zero-minute block. The
+default week gets them too, so weeks pulled in later include them.
+
+- **Only days with blocks.** An unplanned day stays empty.
+- **Not past days.** They're a record of what was planned then.
+
+**A consequence to know:** every planned day now always holds every label,
+live or parked. So deleting the *only* block for a label effectively parks it
+— it returns greyed next time the week opens. Delete still means something
+for extra blocks, such as the second Work block in a split day, because the
+label is still present.
+
+| # | Question | Leaning |
+|---|---|---|
+| 96.1 | Should deleting a label's only block keep it out of that day for good? | No — parked already means "not today", and a label missing from a day has no way back in |
+| 96.2 | Should blocks for a *deleted* label be removed from today onwards? | Probably. They can't be applied and just clutter the day |
