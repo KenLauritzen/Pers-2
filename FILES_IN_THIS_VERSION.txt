@@ -1,18 +1,23 @@
-Focus v94 — complete file list.
+Focus v95 — complete file list.
 
-Seeding your column now rounds to the nearest quarter hour.
+Two fixes on the comparison sheet.
 
-  Each label's weekly total is rounded — planned and actual alike — so
-  34:23 becomes 34:30 and 21:47 becomes 21:45. The seed preview shows the
-  rounded figures, so what you choose is exactly what goes in.
+  1. The totals line has a space after the name again.
+     Names were padded to a fixed six characters so the two lines lined up,
+     and "Janice" is exactly six — nothing was left between her name and her
+     figures. Both names now pad to whichever is longer, plus a gap.
 
-  Anything under 8 minutes rounds to nothing.
+  2. The adjust popup's buttons line up by size.
 
-  Adjusting afterwards is unchanged: the drag moves in 15 minutes, and a tap
-  still offers ±5m for fine changes.
+        −5h    −1h   −15m    −5m
+        +5h    +1h   +15m    +5m
 
-UPLOAD THESE TWO:
+     Each column is one amount, so the minus is always directly above its
+     matching plus.
+
+UPLOAD THESE THREE:
   app/src/main/java/com/focusledger/timer/ComparisonActivity.kt
+  app/src/main/res/layout/dialog_adjust.xml
   app/src/main/res/values/strings.xml
 
 Nothing to delete this version.

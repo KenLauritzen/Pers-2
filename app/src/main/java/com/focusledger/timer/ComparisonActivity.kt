@@ -124,8 +124,12 @@ class ComparisonActivity : AppCompatActivity() {
         val theirTotal = rows.sumOf { it.them }
         val togTotal = rows.sumOf { it.together }
 
-        b.compTotalMe.text = "You   ${runningLine(myTotal, myWaking)}"
-        b.compTotalThem.text = "${person.take(6).padEnd(6)}${runningLine(theirTotal, theirWaking)}"
+        // Both names padded to the longer of the two, then a gap, so the
+        // figures line up and never run into the name. Padding to a fixed six
+        // left no space at all after "Janice".
+        val nameWidth = maxOf("You".length, person.length) + 2
+        b.compTotalMe.text = "You".padEnd(nameWidth) + runningLine(myTotal, myWaking)
+        b.compTotalThem.text = person.padEnd(nameWidth) + runningLine(theirTotal, theirWaking)
 
         b.compStatus.text = when {
             handedOver -> "Your figures are hidden. Tap \u201cShow both\u201d when done."
