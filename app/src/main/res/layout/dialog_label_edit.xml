@@ -61,8 +61,10 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- Goal: green adds, red subtracts. Four per row rather than five, so
-         the larger type has room. -->
+    <!-- Goal and Time share one pattern with every other adjust popup:
+         plus on top, minus underneath, largest first, so each column is one
+         amount. Daily figures step 1h / 15m / 5m; the weekly comparison adds
+         5h. Time stays blue, to tell it from the goal at a glance. -->
     <LinearLayout
         android:layout_width="match_parent" android:layout_height="wrap_content"
         android:orientation="horizontal" android:gravity="center_vertical"
@@ -70,50 +72,40 @@
         <TextView
             android:layout_width="52dp" android:layout_height="wrap_content"
             android:text="Goal" android:textColor="#8FA39E" android:textSize="17sp" />
-        <Button android:id="@+id/eG1" android:layout_width="0dp" android:layout_weight="1"
-            android:layout_height="52dp" android:layout_marginEnd="4dp" android:text="+1"
+        <Button android:id="@+id/eGp60" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="52dp" android:layout_marginEnd="4dp" android:text="+1h"
             android:textAllCaps="false" android:textColor="#7DBE7A" android:textSize="18sp"
             android:padding="0dp" android:background="@drawable/bg_button_small" />
-        <Button android:id="@+id/eG5" android:layout_width="0dp" android:layout_weight="1"
-            android:layout_height="52dp" android:layout_marginEnd="4dp" android:text="+5"
+        <Button android:id="@+id/eGp15" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="52dp" android:layout_marginEnd="4dp" android:text="+15m"
             android:textAllCaps="false" android:textColor="#7DBE7A" android:textSize="18sp"
             android:padding="0dp" android:background="@drawable/bg_button_small" />
-        <Button android:id="@+id/eG15" android:layout_width="0dp" android:layout_weight="1"
-            android:layout_height="52dp" android:layout_marginEnd="4dp" android:text="+15"
-            android:textAllCaps="false" android:textColor="#7DBE7A" android:textSize="18sp"
-            android:padding="0dp" android:background="@drawable/bg_button_small" />
-        <Button android:id="@+id/eG60" android:layout_width="0dp" android:layout_weight="1"
-            android:layout_height="52dp" android:text="+60"
+        <Button android:id="@+id/eGp5" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="52dp" android:text="+5m"
             android:textAllCaps="false" android:textColor="#7DBE7A" android:textSize="18sp"
             android:padding="0dp" android:background="@drawable/bg_button_small" />
     </LinearLayout>
-
     <LinearLayout
         android:layout_width="match_parent" android:layout_height="wrap_content"
         android:orientation="horizontal" android:gravity="center_vertical"
         android:layout_marginTop="5dp">
         <TextView
             android:layout_width="52dp" android:layout_height="wrap_content"
-            android:text="" android:textSize="17sp" />
-        <Button android:id="@+id/eGm1" android:layout_width="0dp" android:layout_weight="1"
-            android:layout_height="52dp" android:layout_marginEnd="4dp" android:text="-1"
-            android:textAllCaps="false" android:textColor="#C97064" android:textSize="18sp"
-            android:padding="0dp" android:background="@drawable/bg_button_small" />
-        <Button android:id="@+id/eGm5" android:layout_width="0dp" android:layout_weight="1"
-            android:layout_height="52dp" android:layout_marginEnd="4dp" android:text="-5"
+            android:text="" android:textColor="#8FA39E" android:textSize="17sp" />
+        <Button android:id="@+id/eGm60" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="52dp" android:layout_marginEnd="4dp" android:text="\u22121h"
             android:textAllCaps="false" android:textColor="#C97064" android:textSize="18sp"
             android:padding="0dp" android:background="@drawable/bg_button_small" />
         <Button android:id="@+id/eGm15" android:layout_width="0dp" android:layout_weight="1"
-            android:layout_height="52dp" android:layout_marginEnd="4dp" android:text="-15"
+            android:layout_height="52dp" android:layout_marginEnd="4dp" android:text="\u221215m"
             android:textAllCaps="false" android:textColor="#C97064" android:textSize="18sp"
             android:padding="0dp" android:background="@drawable/bg_button_small" />
-        <Button android:id="@+id/eGm60" android:layout_width="0dp" android:layout_weight="1"
-            android:layout_height="52dp" android:text="-60"
+        <Button android:id="@+id/eGm5" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="52dp" android:text="\u22125m"
             android:textAllCaps="false" android:textColor="#C97064" android:textSize="18sp"
             android:padding="0dp" android:background="@drawable/bg_button_small" />
     </LinearLayout>
 
-    <!-- Today's recorded time; applies immediately and is written to the log -->
     <LinearLayout
         android:layout_width="match_parent" android:layout_height="wrap_content"
         android:orientation="horizontal" android:gravity="center_vertical"
@@ -121,20 +113,36 @@
         <TextView
             android:layout_width="52dp" android:layout_height="wrap_content"
             android:text="Time" android:textColor="#8FA39E" android:textSize="17sp" />
+        <Button android:id="@+id/eTp60" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="52dp" android:layout_marginEnd="4dp" android:text="+1h"
+            android:textAllCaps="false" android:textColor="#6FAFC4" android:textSize="18sp"
+            android:padding="0dp" android:background="@drawable/bg_button_small" />
+        <Button android:id="@+id/eTp15" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="52dp" android:layout_marginEnd="4dp" android:text="+15m"
+            android:textAllCaps="false" android:textColor="#6FAFC4" android:textSize="18sp"
+            android:padding="0dp" android:background="@drawable/bg_button_small" />
+        <Button android:id="@+id/eTp5" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="52dp" android:text="+5m"
+            android:textAllCaps="false" android:textColor="#6FAFC4" android:textSize="18sp"
+            android:padding="0dp" android:background="@drawable/bg_button_small" />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:gravity="center_vertical"
+        android:layout_marginTop="5dp">
+        <TextView
+            android:layout_width="52dp" android:layout_height="wrap_content"
+            android:text="" android:textColor="#8FA39E" android:textSize="17sp" />
+        <Button android:id="@+id/eTm60" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="52dp" android:layout_marginEnd="4dp" android:text="\u22121h"
+            android:textAllCaps="false" android:textColor="#6FAFC4" android:textSize="18sp"
+            android:padding="0dp" android:background="@drawable/bg_button_small" />
         <Button android:id="@+id/eTm15" android:layout_width="0dp" android:layout_weight="1"
-            android:layout_height="52dp" android:layout_marginEnd="4dp" android:text="-15"
+            android:layout_height="52dp" android:layout_marginEnd="4dp" android:text="\u221215m"
             android:textAllCaps="false" android:textColor="#6FAFC4" android:textSize="18sp"
             android:padding="0dp" android:background="@drawable/bg_button_small" />
         <Button android:id="@+id/eTm5" android:layout_width="0dp" android:layout_weight="1"
-            android:layout_height="52dp" android:layout_marginEnd="4dp" android:text="-5"
-            android:textAllCaps="false" android:textColor="#6FAFC4" android:textSize="18sp"
-            android:padding="0dp" android:background="@drawable/bg_button_small" />
-        <Button android:id="@+id/eT5" android:layout_width="0dp" android:layout_weight="1"
-            android:layout_height="52dp" android:layout_marginEnd="4dp" android:text="+5"
-            android:textAllCaps="false" android:textColor="#6FAFC4" android:textSize="18sp"
-            android:padding="0dp" android:background="@drawable/bg_button_small" />
-        <Button android:id="@+id/eT15" android:layout_width="0dp" android:layout_weight="1"
-            android:layout_height="52dp" android:text="+15"
+            android:layout_height="52dp" android:text="\u22125m"
             android:textAllCaps="false" android:textColor="#6FAFC4" android:textSize="18sp"
             android:padding="0dp" android:background="@drawable/bg_button_small" />
     </LinearLayout>

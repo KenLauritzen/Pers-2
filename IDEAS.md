@@ -3452,3 +3452,31 @@ label is still present.
 |---|---|---|
 | 96.1 | Should deleting a label's only block keep it out of that day for good? | No — parked already means "not today", and a label missing from a day has no way back in |
 | 96.2 | Should blocks for a *deleted* label be removed from today onwards? | Probably. They can't be applied and just clutter the day |
+
+---
+
+## 97. One pattern for every adjust popup  ✅ built in v96
+
+**What:** Everywhere a figure is set by steps, the buttons follow one layout:
+**plus on top, minus underneath, largest first**, so each column is a single
+amount with its plus directly above its minus.
+
+| Popup | Steps |
+|---|---|
+| Label popup — Goal | `+1h +15m +5m` / `−1h −15m −5m` |
+| Label popup — Time | the same, in blue to tell it from the goal |
+| Week screen — a block's exact duration | the same |
+| Comparison sheet (weekly figures) | adds `±5h` for the larger weekly totals |
+
+**Why:** four popups had drifted into four arrangements — small-to-large,
+large-to-small, a single mixed row, and a plain list.
+
+**Notes:**
+- **The Goal row lost its 1-minute button**, since 1m isn't in the shared set.
+  Easy to restore if a goal ever needs it.
+- **Time gained 1h**, which it never had.
+- **The week screen's exact duration** was a list of half-hour steps; it's the
+  same popup now, and still parks a block at zero.
+- One layout, `dialog_adjust.xml`, serves the week screen and the comparison.
+  Its button rows carry **no weightSum** on purpose: the daily version hides
+  the 5h buttons, and a fixed sum of 4 would leave an empty quarter.

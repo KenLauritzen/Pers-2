@@ -699,15 +699,36 @@ class WeekActivity : AppCompatActivity() {
             .show()
     }
 
+    /**
+     * Exact duration, in the same popup the rest of the app uses: plus above
+     * minus, largest first. Daily sizes, so no 5h \u2014 that's for the weekly
+     * comparison. Stops at zero, where the block parks.
+     */
     private fun pickDuration(block: Block) {
-        val choices = (0..16).map { it * 30 }        // 0 to 8 hours in half hours
-        AlertDialog.Builder(this)
-            .setTitle("Duration")
-            .setItems(choices.map { if (it == 0) "\u2014  parked" else hm(it) }.toTypedArray()) { _, w ->
-                WeekStore.setMinutes(this, block.id, choices[w]); render()
+        val view = LayoutInflater.from(this).inflate(R.layout.dialog_adjust, null)
+        view.findViewById<TextView>(R.id.adjTitle).text = block.label
+        val value = view.findViewById<TextView>(R.id.adjValue)
+        var current = block.minutes
+        fun show() { value.text = if (current <= 0) "\u2014  parked" else hm(current) }
+        show()
+
+        view.findViewById<android.widget.Button>(R.id.adjP5h).visibility = View.GONE
+        view.findViewById<android.widget.Button>(R.id.adjM5h).visibility = View.GONE
+
+        val dialog = AlertDialog.Builder(this).setView(view).create()
+        mapOf(
+            R.id.adjP1h to 60, R.id.adjP15 to 15, R.id.adjP5 to 5,
+            R.id.adjM1h to -60, R.id.adjM15 to -15, R.id.adjM5 to -5
+        ).forEach { (id, delta) ->
+            view.findViewById<android.widget.Button>(id).setOnClickListener {
+                current = (current + delta).coerceAtLeast(0)
+                WeekStore.setMinutes(this, block.id, current)
+                show()
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+        }
+        view.findViewById<android.widget.Button>(R.id.adjDone).setOnClickListener { dialog.dismiss() }
+        dialog.setOnDismissListener { render() }
+        dialog.show()
     }
 
     private fun pickDayToMoveTo(block: Block) {

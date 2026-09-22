@@ -1,22 +1,28 @@
-Focus v95 — complete file list.
+Focus v96 — complete file list.
 
-Two fixes on the comparison sheet.
+Every adjust popup now uses one layout: PLUS ON TOP, MINUS UNDERNEATH, largest
+first, so each column is one amount.
 
-  1. The totals line has a space after the name again.
-     Names were padded to a fixed six characters so the two lines lined up,
-     and "Janice" is exactly six — nothing was left between her name and her
-     figures. Both names now pad to whichever is longer, plus a gap.
+  Label popup, Goal        +1h  +15m  +5m      green
+                           −1h  −15m  −5m      red
 
-  2. The adjust popup's buttons line up by size.
+  Label popup, Time        the same, in blue
 
-        −5h    −1h   −15m    −5m
-        +5h    +1h   +15m    +5m
+  Week screen, a block's   the same — this was a list of half-hour steps;
+  exact duration           it's now the same popup, and still parks at zero
 
-     Each column is one amount, so the minus is always directly above its
-     matching plus.
+  Comparison sheet         +5h  +1h  +15m  +5m
+  (weekly figures)         −5h  −1h  −15m  −5m
 
-UPLOAD THESE THREE:
-  app/src/main/java/com/focusledger/timer/ComparisonActivity.kt
+TWO CHANGES TO NOTICE
+  The Goal row no longer has a 1-minute button, since 1m isn't in the shared
+  set. Easy to put back if you miss it.
+  The Time row gains ±1h, which it never had.
+
+UPLOAD THESE FIVE:
+  app/src/main/java/com/focusledger/timer/MainActivity.kt
+  app/src/main/java/com/focusledger/timer/WeekActivity.kt
+  app/src/main/res/layout/dialog_label_edit.xml
   app/src/main/res/layout/dialog_adjust.xml
   app/src/main/res/values/strings.xml
 

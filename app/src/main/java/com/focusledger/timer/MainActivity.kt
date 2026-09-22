@@ -1071,19 +1071,16 @@ class MainActivity : AppCompatActivity() {
             refresh(); refreshValues()
         }
 
-        view.findViewById<Button>(R.id.eG1).setOnClickListener { changeGoal(1) }
-        view.findViewById<Button>(R.id.eG5).setOnClickListener { changeGoal(5) }
-        view.findViewById<Button>(R.id.eG15).setOnClickListener { changeGoal(15) }
-        view.findViewById<Button>(R.id.eG60).setOnClickListener { changeGoal(60) }
-        view.findViewById<Button>(R.id.eGm1).setOnClickListener { changeGoal(-1) }
-        view.findViewById<Button>(R.id.eGm5).setOnClickListener { changeGoal(-5) }
-        view.findViewById<Button>(R.id.eGm15).setOnClickListener { changeGoal(-15) }
-        view.findViewById<Button>(R.id.eGm60).setOnClickListener { changeGoal(-60) }
-
-        view.findViewById<Button>(R.id.eTm15).setOnClickListener { changeTime(-15) }
-        view.findViewById<Button>(R.id.eTm5).setOnClickListener { changeTime(-5) }
-        view.findViewById<Button>(R.id.eT5).setOnClickListener { changeTime(5) }
-        view.findViewById<Button>(R.id.eT15).setOnClickListener { changeTime(15) }
+        // Plus above minus, largest first \u2014 the same pattern as every other
+        // adjust popup. Daily figures step 1h, 15m and 5m.
+        mapOf(
+            R.id.eGp60 to 60, R.id.eGp15 to 15, R.id.eGp5 to 5,
+            R.id.eGm60 to -60, R.id.eGm15 to -15, R.id.eGm5 to -5
+        ).forEach { (id, m) -> view.findViewById<Button>(id).setOnClickListener { changeGoal(m) } }
+        mapOf(
+            R.id.eTp60 to 60, R.id.eTp15 to 15, R.id.eTp5 to 5,
+            R.id.eTm60 to -60, R.id.eTm15 to -15, R.id.eTm5 to -5
+        ).forEach { (id, m) -> view.findViewById<Button>(id).setOnClickListener { changeTime(m) } }
 
         view.findViewById<Button>(R.id.eDelete).setOnClickListener {
             dialog.dismiss(); confirmDeleteLabel(label)

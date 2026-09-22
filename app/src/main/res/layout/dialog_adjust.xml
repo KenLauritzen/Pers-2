@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Exact control. Each column is one size, largest to smallest, so
-     −5h sits directly above +5h. -->
+<!--
+  One popup for setting a value exactly, used everywhere a figure is adjusted
+  by steps. Plus on top, minus underneath, largest first, so each column is
+  one amount and its plus sits directly above its minus.
+
+  Weekly figures show all four sizes; daily ones hide 5h. The rows carry no
+  weightSum for that reason: hiding a button lets the rest share the width,
+  where a fixed sum of 4 would leave an empty quarter.
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -17,27 +24,7 @@
         android:textColor="#E8A33D" android:fontFamily="monospace" android:textSize="30sp" />
 
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:orientation="horizontal" android:weightSum="4">
-        <Button android:id="@+id/adjM5h" android:layout_width="0dp" android:layout_weight="1"
-            android:layout_height="50dp" android:layout_marginEnd="4dp" android:text="\u22125h"
-            android:textAllCaps="false" android:textColor="#C97064" android:textSize="17sp"
-            android:padding="0dp" android:background="@drawable/bg_button_small" />
-        <Button android:id="@+id/adjM1h" android:layout_width="0dp" android:layout_weight="1"
-            android:layout_height="50dp" android:layout_marginEnd="4dp" android:text="\u22121h"
-            android:textAllCaps="false" android:textColor="#C97064" android:textSize="17sp"
-            android:padding="0dp" android:background="@drawable/bg_button_small" />
-        <Button android:id="@+id/adjM15" android:layout_width="0dp" android:layout_weight="1"
-            android:layout_height="50dp" android:layout_marginEnd="4dp" android:text="\u221215m"
-            android:textAllCaps="false" android:textColor="#C97064" android:textSize="17sp"
-            android:padding="0dp" android:background="@drawable/bg_button_small" />
-        <Button android:id="@+id/adjM5" android:layout_width="0dp" android:layout_weight="1"
-            android:layout_height="50dp" android:text="\u22125m"
-            android:textAllCaps="false" android:textColor="#C97064" android:textSize="17sp"
-            android:padding="0dp" android:background="@drawable/bg_button_small" />
-    </LinearLayout>
-
-    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-        android:layout_marginTop="5dp" android:orientation="horizontal" android:weightSum="4">
+        android:orientation="horizontal">
         <Button android:id="@+id/adjP5h" android:layout_width="0dp" android:layout_weight="1"
             android:layout_height="50dp" android:layout_marginEnd="4dp" android:text="+5h"
             android:textAllCaps="false" android:textColor="#7DBE7A" android:textSize="17sp"
@@ -53,6 +40,26 @@
         <Button android:id="@+id/adjP5" android:layout_width="0dp" android:layout_weight="1"
             android:layout_height="50dp" android:text="+5m"
             android:textAllCaps="false" android:textColor="#7DBE7A" android:textSize="17sp"
+            android:padding="0dp" android:background="@drawable/bg_button_small" />
+    </LinearLayout>
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="5dp" android:orientation="horizontal">
+        <Button android:id="@+id/adjM5h" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="50dp" android:layout_marginEnd="4dp" android:text="\u22125h"
+            android:textAllCaps="false" android:textColor="#C97064" android:textSize="17sp"
+            android:padding="0dp" android:background="@drawable/bg_button_small" />
+        <Button android:id="@+id/adjM1h" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="50dp" android:layout_marginEnd="4dp" android:text="\u22121h"
+            android:textAllCaps="false" android:textColor="#C97064" android:textSize="17sp"
+            android:padding="0dp" android:background="@drawable/bg_button_small" />
+        <Button android:id="@+id/adjM15" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="50dp" android:layout_marginEnd="4dp" android:text="\u221215m"
+            android:textAllCaps="false" android:textColor="#C97064" android:textSize="17sp"
+            android:padding="0dp" android:background="@drawable/bg_button_small" />
+        <Button android:id="@+id/adjM5" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="50dp" android:text="\u22125m"
+            android:textAllCaps="false" android:textColor="#C97064" android:textSize="17sp"
             android:padding="0dp" android:background="@drawable/bg_button_small" />
     </LinearLayout>
 
