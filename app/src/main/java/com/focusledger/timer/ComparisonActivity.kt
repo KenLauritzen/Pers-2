@@ -370,8 +370,15 @@ class ComparisonActivity : AppCompatActivity() {
                 planned[label] = (planned[label] ?: 0) + m
             }
         }
-        val actual = LogStore.sumByLabel(this, startMs, startMs + 7 * 86_400_000L)
+        val actualRaw = LogStore.sumByLabel(this, startMs, startMs + 7 * 86_400_000L)
             .mapValues { (it.value / 60_000L).toInt() }
+
+        // Both rounded to the nearest quarter hour, per label for the week.
+        // Actual time arrives as odd minutes \u2014 34:23 \u2014 which clutters a table
+        // meant for comparing. The preview shows the rounded figures, so what's
+        // chosen is exactly what goes in.
+        planned.replaceAll { _, m -> quarter(m) }
+        val actual = actualRaw.mapValues { quarter(it.value) }
 
         val labels = LabelStore.readLibrary(this).sortedBy { it.manualOrder }.map { it.name }
         val useActual = mutableSetOf<String>()
@@ -559,6 +566,9 @@ class ComparisonActivity : AppCompatActivity() {
     // ---- helpers ------------------------------------------------------------
 
     private fun pad(dp: Int) = (dp * resources.displayMetrics.density).toInt()
+
+    /** Nearest 15 minutes: 7 rounds down, 8 rounds up. */
+    private fun quarter(minutes: Int): Int = Math.round(minutes / 15.0).toInt() * 15
 
     private fun hm(minutes: Int): String = String.format("%d:%02d", minutes / 60, minutes % 60)
 

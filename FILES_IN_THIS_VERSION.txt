@@ -1,54 +1,18 @@
-Focus v93 — complete file list.
+Focus v94 — complete file list.
 
-THE COMPARISON SHEET (idea 91, first half)
+Seeding your column now rounds to the nearest quarter hour.
 
-Week screen → Week… → "Planning with someone…"
+  Each label's weekly total is rounded — planned and actual alike — so
+  34:23 becomes 34:30 and 21:47 becomes 21:45. The seed preview shows the
+  rounded figures, so what you choose is exactly what goes in.
 
-The first time, it asks who you're planning with.
+  Anything under 8 minutes rounds to nothing.
 
-                 You    Janice    Diff    Tog.
-  Home Org      6:00     4:00    +2:00    2:00
-  Yard Work     4:00     5:00    −1:00    3:00
-  Gardening        —     3:00    −3:00       —     ← hers only, lavender
+  Adjusting afterwards is unchanged: the drag moves in 15 minutes, and a tap
+  still offers ±5m for fine changes.
 
-  You 110:30 of 112:00 · 1:30 left
-  Janice 96:00 of 119:00 · 23:00 left
-
-SEED…     fill your column from a 7-day range, or every label at zero.
-          From a range: planned and actual side by side, planned chosen.
-          Tap a row to take the other figure for that label only.
-
-HAND OVER hides your column, the difference and Together, so Janice fills
-          hers without seeing yours. "Show both" brings them back.
-
-MORE…     add a label only Janice has · sleep goals for each of you ·
-          plan with someone else
-
-ADJUSTING ANY FIGURE
-  tap             exact: −5h −1h −15m −5m / +5m +15m +1h +5h
-  hold, drag ↔    15 minutes a step; the change and new total show under
-                  the title while you drag
-
-COLOURS
-  teal = you, lavender = Janice, amber = Together
-  Diff is coloured by whoever wants more — a difference isn't a problem.
-  Together goes RED, along with the figure it outruns, when it's more than
-  either of you planned for that label.
-
-Nothing here touches a timer. Placing together time on blocks in the week
-(Janice mode) is the next part, not yet built.
-
-NEW FILES — make sure all five upload:
-  app/src/main/java/com/focusledger/timer/TogetherStore.kt
+UPLOAD THESE TWO:
   app/src/main/java/com/focusledger/timer/ComparisonActivity.kt
-  app/src/main/res/layout/activity_comparison.xml
-  app/src/main/res/layout/row_comparison.xml
-  app/src/main/res/layout/dialog_adjust.xml
-
-ALSO UPLOAD:
-  app/src/main/AndroidManifest.xml     <- the new screen is registered here
-  app/src/main/java/com/focusledger/timer/WeekActivity.kt
-  app/src/main/java/com/focusledger/timer/SettingsStore.kt
   app/src/main/res/values/strings.xml
 
 Nothing to delete this version.
