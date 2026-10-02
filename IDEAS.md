@@ -3480,3 +3480,48 @@ large-to-small, a single mixed row, and a plain list.
 - One layout, `dialog_adjust.xml`, serves the week screen and the comparison.
   Its button rows carry **no weightSum** on purpose: the daily version hides
   the 5h buttons, and a fixed sum of 4 would leave an empty quarter.
+
+---
+
+## 98. A progress bar under each task's figures  ✅ built in v98
+
+**What:** a slim bar under the top line of every task — on the main row and
+in the task editor — showing time spent against the estimate.
+
+| Colour | Means |
+|---|---|
+| **Blue** | fills by the share of the estimate used |
+| **Yellow** | full width: past the estimate, so the schedule may need moving |
+| **Red** | full width: no estimate to measure against |
+
+**Under the text, never behind it.** The first idea was to tint the whole line.
+Measured, it failed: even at 30% strength, yellow behind the amber "doing"
+text fell to 1.85 contrast and blue behind mint on a green row to 2.2 — the
+same daylight problem fixed in v76. A 3dp strip below the glyphs leaves the
+text exactly as legible as before.
+
+**On a dark track.** Drawn straight onto a main-screen row's green bar, blue
+and red reached only 2–2.7 contrast. A dark track drawn first, full width,
+lifts them to 7.6 and 5.9 whatever the row beneath is doing — and makes the
+unfilled share visible, which is what lets the width read as a fraction.
+
+**Notes:**
+- `TaskBarSpan` is a `LineBackgroundSpan`, a paragraph style, so it covers the
+  marker-and-figures line up to and including its newline.
+- Finished tasks keep their bar, so a task that overran shows yellow.
+
+---
+
+## 99. The build checker, rebuilt  ✅ v98
+
+The sandbox's working folder was cleared between sessions, and the checker
+went with it. Only an early version survived in the transcript. Rebuilt with
+every check since, and **kept in the project at `tools/check.py`** so a reset
+can't lose it again. Not part of the Android build; it needn't go to GitHub.
+
+Calibrated against v97, which is known to compile: the first draft raised seven
+false alarms — a name declared again in a sibling block, `packageName`
+inherited from Android, words inside quoted strings. Each was fixed, then every
+historical mistake was reintroduced to confirm it's still caught: `$prefix0:00`,
+a double-escaped `\\u`, a shared UP/CANCEL branch, a bad cross-file member, a
+missing id, a stale weightSum, and a value used before its declaration.

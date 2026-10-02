@@ -1,30 +1,34 @@
-Focus v96 — complete file list.
+Focus v98 — complete file list.
 
-Every adjust popup now uses one layout: PLUS ON TOP, MINUS UNDERNEATH, largest
-first, so each column is one amount.
+A PROGRESS BAR UNDER EACH TASK'S FIGURES
 
-  Label popup, Goal        +1h  +15m  +5m      green
-                           −1h  −15m  −5m      red
+A slim bar sits under the top line of every task — on the main screen rows
+and in the task editor — showing time spent against the estimate.
 
-  Label popup, Time        the same, in blue
+    ▸ 30m / 45m  66%
+    ████████████████░░░░░░░░   blue: two-thirds of the estimate used
 
-  Week screen, a block's   the same — this was a list of half-hour steps;
-  exact duration           it's now the same popup, and still parks at zero
+    ✓ 56m / 30m  186%
+    ████████████████████████   yellow: past the estimate
 
-  Comparison sheet         +5h  +1h  +15m  +5m
-  (weekly figures)         −5h  −1h  −15m  −5m
+    · min?
+    ████████████████████████   red: no estimate yet
 
-TWO CHANGES TO NOTICE
-  The Goal row no longer has a 1-minute button, since 1m isn't in the shared
-  set. Easy to put back if you miss it.
-  The Time row gains ±1h, which it never had.
+The bar sits UNDER the text rather than behind it, so the figures stay exactly
+as readable as before — tinting behind the text was measured first and made it
+hard to read in daylight. It's drawn on a dark track so it shows clearly on
+both green and dark rows.
 
-UPLOAD THESE FIVE:
+NEW FILE — make sure this uploads:
+  app/src/main/java/com/focusledger/timer/TaskBarSpan.kt
+
+ALSO UPLOAD:
   app/src/main/java/com/focusledger/timer/MainActivity.kt
-  app/src/main/java/com/focusledger/timer/WeekActivity.kt
-  app/src/main/res/layout/dialog_label_edit.xml
-  app/src/main/res/layout/dialog_adjust.xml
   app/src/main/res/values/strings.xml
+
+NOT NEEDED IN GITHUB:
+  tools/check.py — my build checker, kept in the project so it isn't lost
+  again. It's harmless if you do upload it; Android ignores it.
 
 Nothing to delete this version.
 
@@ -46,6 +50,7 @@ app/src/main/java/com/focusledger/timer/NotesActivity.kt
 app/src/main/java/com/focusledger/timer/RangeActivity.kt
 app/src/main/java/com/focusledger/timer/SettingsActivity.kt
 app/src/main/java/com/focusledger/timer/SettingsStore.kt
+app/src/main/java/com/focusledger/timer/TaskBarSpan.kt
 app/src/main/java/com/focusledger/timer/TaskStore.kt
 app/src/main/java/com/focusledger/timer/TimerForegroundService.kt
 app/src/main/java/com/focusledger/timer/TimerStore.kt
@@ -94,3 +99,4 @@ app/workledger.keystore
 build.gradle
 gradle.properties
 settings.gradle
+tools/check.py

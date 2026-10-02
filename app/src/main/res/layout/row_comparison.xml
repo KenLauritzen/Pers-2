@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 18sp labels, 16sp figures, in the same 38dp row and the same column
+     widths. 16sp is the largest at which "+40:00" — a full working week
+     against none — still fits its ~59dp column. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="38dp"
@@ -9,22 +12,26 @@
     <TextView android:id="@+id/cmpLabel"
         android:layout_width="0dp" android:layout_weight="3.4"
         android:layout_height="match_parent" android:gravity="center_vertical"
-        android:textColor="#F1EDE3" android:textSize="15sp"
+        android:textColor="#F1EDE3" android:textSize="18sp"
         android:maxLines="1" android:ellipsize="end" />
     <TextView android:id="@+id/cmpMe"
         android:layout_width="0dp" android:layout_weight="1.65"
         android:layout_height="match_parent" android:gravity="center_vertical|end"
-        android:fontFamily="monospace" android:textSize="14sp" />
+        android:fontFamily="monospace" android:textSize="16sp"
+        android:maxLines="1" />
     <TextView android:id="@+id/cmpThem"
         android:layout_width="0dp" android:layout_weight="1.65"
         android:layout_height="match_parent" android:gravity="center_vertical|end"
-        android:fontFamily="monospace" android:textSize="14sp" />
+        android:fontFamily="monospace" android:textSize="16sp"
+        android:maxLines="1" />
     <TextView android:id="@+id/cmpDiff"
         android:layout_width="0dp" android:layout_weight="1.65"
         android:layout_height="match_parent" android:gravity="center_vertical|end"
-        android:fontFamily="monospace" android:textSize="14sp" />
+        android:fontFamily="monospace" android:textSize="16sp"
+        android:maxLines="1" />
     <TextView android:id="@+id/cmpTog"
         android:layout_width="0dp" android:layout_weight="1.65"
         android:layout_height="match_parent" android:gravity="center_vertical|end"
-        android:fontFamily="monospace" android:textSize="14sp" />
+        android:fontFamily="monospace" android:textSize="16sp"
+        android:maxLines="1" />
 </LinearLayout>

@@ -14,6 +14,7 @@ import android.text.style.LeadingMarginSpan
 import android.text.style.RelativeSizeSpan
 import android.text.format.DateFormat
 import android.text.Editable
+import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
 import android.text.TextWatcher
@@ -512,6 +513,19 @@ class MainActivity : AppCompatActivity() {
                 0, sb.length, SPAN_EXCLUSIVE_EXCLUSIVE
             )
 
+            // A slim bar under the figures line: blue fills toward the
+            // estimate, yellow once past it, red when there's no estimate.
+            // A paragraph span, so it covers the first line through its newline.
+            val firstLineEnd = sb.indexOf('\n').let { if (it < 0) sb.length else it + 1 }
+            sb.setSpan(
+                TaskBarSpan.forTask(
+                    (TaskStore.liveMs(this, t) / 60_000L).toInt(),
+                    t.estimateMinutes,
+                    3 * resources.displayMetrics.density
+                ),
+                0, firstLineEnd, SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+
             line.text = sb
             line.setTextColor(0xFFDCE6E3.toInt())
 
@@ -684,7 +698,14 @@ class MainActivity : AppCompatActivity() {
             // already showing one.
             val done = if (t.completedAt > 0L)
                 "   ${doneFmt.format(java.util.Date(t.completedAt))}" else ""
-            holder.times.text = taskTimes(t).ifEmpty { "min?" } + done
+            holder.times.text = SpannableString(taskTimes(t).ifEmpty { "min?" } + done).apply {
+                setSpan(
+                    TaskBarSpan.forTask(
+                        actualMin, t.estimateMinutes, 3 * resources.displayMetrics.density
+                    ),
+                    0, length, SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+            }
             holder.times.setTextColor(
                 when {
                     finished -> colGoal
