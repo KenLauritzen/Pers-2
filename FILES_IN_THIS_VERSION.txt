@@ -1,34 +1,41 @@
-Focus v98 — complete file list.
+Focus v99 — complete file list.
 
-A PROGRESS BAR UNDER EACH TASK'S FIGURES
+FIXES A TIMER LEFT RUNNING PAST MIDNIGHT
 
-A slim bar sits under the top line of every task — on the main screen rows
-and in the task editor — showing time spent against the estimate.
+The bug: a timer running overnight put ALL of its time — last night's hours
+too — on the next day. The log entry was dated the night before, so Notes
+showed nothing for today, and deleting it said "today's totals are
+unaffected" and took nothing off.
 
-    ▸ 30m / 45m  66%
-    ████████████████░░░░░░░░   blue: two-thirds of the estimate used
+Why: the midnight cut relied on the background service remembering the date
+in memory. Samsung phones restart background services overnight, and a
+restarted service thought it was already today, so midnight went unnoticed.
 
-    ✓ 56m / 30m  186%
-    ████████████████████████   yellow: past the estimate
+Now:
+  - A running timer is cut at every midnight it crossed, worked out from when
+    the run started — a restart can't hide it. Last night's part goes to
+    yesterday; the part after midnight is today's, with its own entry in
+    Notes.
+  - This is checked when the app opens, while the timer runs, and before
+    starting or stopping a timer.
+  - Deleting an entry in Notes goes by when the run ENDED, so an older
+    overnight entry stopped today comes off today's total.
 
-    · min?
-    ████████████████████████   red: no estimate yet
+TODAY'S 8 HOURS: this build stops it happening again but doesn't rewrite
+today's figure. Either:
+  - long-press the right-hand column of that row and tap −1h in the blue
+    Time row until it's right, or
+  - after installing v99, delete last night's entry in that label's Notes
+    (it's dated yesterday) — it will now come off today.
 
-The bar sits UNDER the text rather than behind it, so the figures stay exactly
-as readable as before — tinting behind the text was measured first and made it
-hard to read in daylight. It's drawn on a dark track so it shows clearly on
-both green and dark rows.
-
-NEW FILE — make sure this uploads:
-  app/src/main/java/com/focusledger/timer/TaskBarSpan.kt
-
-ALSO UPLOAD:
-  app/src/main/java/com/focusledger/timer/MainActivity.kt
+UPLOAD THESE FOUR:
+  app/src/main/java/com/focusledger/timer/TimerStore.kt
+  app/src/main/java/com/focusledger/timer/TimerForegroundService.kt
+  app/src/main/java/com/focusledger/timer/NotesActivity.kt
   app/src/main/res/values/strings.xml
 
-NOT NEEDED IN GITHUB:
-  tools/check.py — my build checker, kept in the project so it isn't lost
-  again. It's harmless if you do upload it; Android ignores it.
+ALSO WORTH UPLOADING:
+  tools/check.py — my build checker, so it's kept in GitHub
 
 Nothing to delete this version.
 

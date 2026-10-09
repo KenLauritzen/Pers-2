@@ -12,7 +12,6 @@ import android.os.Looper
 import android.media.AudioAttributes
 import android.provider.Settings
 import androidx.core.app.NotificationCompat
-import java.util.Calendar
 
 /**
  * Keeps the ongoing tracker notification alive, handles the midnight split,
@@ -48,7 +47,6 @@ class TimerForegroundService : Service() {
     }
 
     private val handler = Handler(Looper.getMainLooper())
-    private var lastKnownDay = -1
 
     private val tickRunnable = object : Runnable {
         override fun run() {
@@ -64,7 +62,6 @@ class TimerForegroundService : Service() {
     override fun onCreate() {
         super.onCreate()
         createChannels()
-        lastKnownDay = Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -104,18 +101,20 @@ class TimerForegroundService : Service() {
         stopSelf()
     }
 
-    /** If the day rolled over while a timer ran, split the run at midnight. */
+    /**
+     * Cuts a running timer at any midnight it has crossed.
+     *
+     * This used to compare against a date held in memory, set when the
+     * service started. If the phone restarted the service after midnight, the
+     * remembered date was already "today" and the cut never happened. The
+     * check now works from the run's own start time and the saved date, so a
+     * restart can't hide a midnight.
+     */
     private fun checkMidnightSplit() {
-        val today = Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
-        if (lastKnownDay != -1 && today != lastKnownDay) {
-            val midnight = Calendar.getInstance().apply {
-                set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
-            }.timeInMillis
-            TimerStore.splitAtMidnight(this, midnight)
-            cancelReminder()
-        }
-        lastKnownDay = today
+        val before = TimerStore.msSinceReminderBase(this)
+        TimerStore.rolloverDayCountersIfNeeded(this)
+        // A cut resets the reminder base to midnight; drop any stale reminder.
+        if (TimerStore.msSinceReminderBase(this) < before) cancelReminder()
     }
 
     private fun checkReminder() {

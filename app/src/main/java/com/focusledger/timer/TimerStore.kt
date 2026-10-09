@@ -92,7 +92,29 @@ object TimerStore {
         return cal.get(Calendar.YEAR) * 1000 + cal.get(Calendar.DAY_OF_YEAR)
     }
 
+    /**
+     * Brings the counters up to date with the calendar. Safe to call often;
+     * it does nothing unless a midnight has passed.
+     *
+     * Two things, in this order:
+     *
+     *  1. **A running timer is cut at every midnight it has crossed**, judged
+     *     from the run's own start time. Each finished day becomes its own log
+     *     row and the run carries on from the latest midnight. This used to
+     *     happen only in the background service, which kept the date in
+     *     memory \u2014 so when the phone restarted the service overnight, as
+     *     Samsung phones do to save battery, midnight went unnoticed and a
+     *     whole night's run was counted against the next day.
+     *
+     *  2. **The day counters are zeroed** if the saved date isn't today.
+     *
+     * The cut banks only into the session total, never the day counters: by
+     * the time it runs the day counters may already belong to today, and
+     * yesterday's hours must not land there.
+     */
     fun rolloverDayCountersIfNeeded(c: Context) {
+        catchUpMidnights(c)
+
         val today = dayStamp()
         if (!p(c).contains(KEY_COUNTER_DAY)) {
             p(c).edit().putInt(KEY_COUNTER_DAY, today).apply()
@@ -105,6 +127,44 @@ object TimerStore {
                 .apply()
         }
     }
+
+    /** Cuts a running timer at each midnight between its start and now. */
+    private fun catchUpMidnights(c: Context) {
+        val label = getActiveLabel(c)
+        if (label == NONE) return
+        var runStart = p(c).getLong(KEY_RUN_START_TS, 0L)
+        if (runStart <= 0L) return
+        val todayMidnight = midnightOf(System.currentTimeMillis())
+        if (runStart >= todayMidnight) return
+
+        // A run left going for several days is cut at each midnight, so every
+        // day it covered gets its own row. Capped as a guard against a
+        // corrupt start time producing thousands of rows.
+        var boundary = midnightOf(runStart) + DAY_MS
+        var cuts = 0
+        while (boundary <= todayMidnight && cuts < 60) {
+            addMapValue(c, KEY_SESSION_MAP, label, boundary - runStart)
+            LogStore.logRun(
+                c, getSessionStartMs(c), runStart, boundary, label,
+                takePendingAdjustment(c), takePendingNote(c)
+            )
+            runStart = boundary
+            boundary += DAY_MS
+            cuts++
+        }
+        p(c).edit()
+            .putLong(KEY_RUN_START_TS, runStart)
+            .putLong(KEY_REMINDER_BASE_TS, maxOf(runStart, p(c).getLong(KEY_REMINDER_BASE_TS, runStart)))
+            .apply()
+    }
+
+    private fun midnightOf(ms: Long): Long = Calendar.getInstance().apply {
+        timeInMillis = ms
+        set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+    }.timeInMillis
+
+    private const val DAY_MS = 86_400_000L
 
     // ---- reminders ---------------------------------------------------------
 
@@ -127,6 +187,7 @@ object TimerStore {
 
     /** Starts [label]. Starting the already-running label is a no-op. */
     fun start(c: Context, label: String) {
+        rolloverDayCountersIfNeeded(c)
         // Settle against the outgoing label before the active one changes.
         TaskStore.settleDoing(c)
         if (getActiveLabel(c) == label) return
@@ -149,6 +210,7 @@ object TimerStore {
     /** Stops the running timer, banking its time and writing a log row. */
     fun stop(c: Context) {
         if (!isRunning(c)) return
+        rolloverDayCountersIfNeeded(c)
         // Fold any task time accrued during this run before the label stops,
         // or it would be counted against a timer that is no longer going.
         TaskStore.settleDoing(c)
@@ -175,27 +237,12 @@ object TimerStore {
     }
 
     /**
-     * Splits an in-flight run at midnight: logs the finished portion, zeroes
-     * the day counters, and restarts the run and reminder from midnight.
+     * Kept for the service's call. Everything it did is now in
+     * [rolloverDayCountersIfNeeded], which judges midnight from the run's own
+     * start time rather than from a date held in memory.
      */
-    fun splitAtMidnight(c: Context, boundaryMs: Long) {
-        val label = getActiveLabel(c)
-        if (label != NONE) {
-            val runStart = p(c).getLong(KEY_RUN_START_TS, boundaryMs)
-            if (runStart < boundaryMs) {
-                bank(c, label, (boundaryMs - runStart).coerceAtLeast(0L))
-                LogStore.logRun(
-                    c, getSessionStartMs(c), runStart, boundaryMs, label,
-                    takePendingAdjustment(c), takePendingNote(c)
-                )
-                p(c).edit()
-                    .putLong(KEY_RUN_START_TS, boundaryMs)
-                    .putLong(KEY_REMINDER_BASE_TS, boundaryMs)
-                    .apply()
-            }
-        }
+    fun splitAtMidnight(c: Context, @Suppress("UNUSED_PARAMETER") boundaryMs: Long) =
         rolloverDayCountersIfNeeded(c)
-    }
 
     // ---- adjustments -------------------------------------------------------
 
@@ -265,6 +312,7 @@ object TimerStore {
     fun getSessionMs(c: Context, label: String): Long = totalFor(c, KEY_SESSION_MAP, label)
 
     private fun totalFor(c: Context, mapKey: String, label: String): Long {
+        if (mapKey == KEY_DAY_MAP) rolloverDayCountersIfNeeded(c)
         var total = getMapValue(c, mapKey, label)
         if (getActiveLabel(c) == label) {
             val runStart = p(c).getLong(KEY_RUN_START_TS, System.currentTimeMillis())

@@ -3525,3 +3525,38 @@ inherited from Android, words inside quoted strings. Each was fixed, then every
 historical mistake was reintroduced to confirm it's still caught: `$prefix0:00`,
 a double-escaped `\\u`, a shared UP/CANCEL branch, a bad cross-file member, a
 missing id, a stale weightSum, and a value used before its declaration.
+
+---
+
+## 100. A run past midnight counted against the next day  ✅ fixed in v99
+
+**The bug:** a timer left running overnight put the whole run — last night's
+hours too — on the next day's total. The log row was dated the night
+before, so Notes showed nothing for today, and deleting that row said
+"today's totals are unaffected" and took nothing off.
+
+**Cause:** the midnight cut lived only in the background service, which held
+the date **in memory**, set when the service started. Samsung phones restart
+background services overnight to save battery; a service restarted after
+midnight already believed it was today, so it never saw midnight pass. The
+app then zeroed the day counters on opening, and the run's full length since
+last night was counted as today's.
+
+**Fixed:**
+- The midnight check works from the **run's own start time** and the saved
+  date, so a restart can't hide it. A run is cut at **every** midnight it
+  crossed, so one left going for days gets a row per day.
+- The check runs when the app opens, on every service tick, before starting
+  or stopping a timer, and whenever today's total is read.
+- The cut's earlier portion goes to the session total only, never the day
+  counters, which may already belong to today.
+- **Deleting an entry is judged by when the run ended**, not when it started.
+  An older row that spans midnight was counted whole on the day it was
+  stopped, so the whole of it now comes off today.
+
+**What it doesn't do:** repair a total already wrong from before v99. That
+takes a Time adjustment in the label popup, or deleting the row in Notes once
+v99 is installed.
+
+**The lesson:** anything about "what day is it" belongs in saved state, never
+in a variable that lives only as long as a process the phone may kill.
