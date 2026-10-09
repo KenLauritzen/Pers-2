@@ -539,6 +539,29 @@ object LogStore {
         }
     }
 
+    /**
+     * Whether a logged row's time sits in today's total.
+     *
+     * A run counts by when it **ended**: runs are cut at midnight now, so a
+     * new row never spans one, and an older row that does was counted whole
+     * on the day it was stopped. A row ending exactly at midnight is
+     * yesterday's half of a cut run. An adjustment counts on the day it was
+     * made.
+     */
+    fun countsTowardToday(run: RunEntry, now: Long = System.currentTimeMillis()): Boolean {
+        val startOfToday = java.util.Calendar.getInstance().apply {
+            timeInMillis = now
+            set(java.util.Calendar.HOUR_OF_DAY, 0); set(java.util.Calendar.MINUTE, 0)
+            set(java.util.Calendar.SECOND, 0); set(java.util.Calendar.MILLISECOND, 0)
+        }.timeInMillis
+        return if (run.isAdjustment) run.runStartMs >= startOfToday
+               else run.runStartMs + run.durationMs > startOfToday
+    }
+
+    /** Today's recorded time for [label] according to the log alone, in ms. */
+    fun todayMsFor(context: Context, label: String): Long =
+        readRunsForLabel(context, label).filter { countsTowardToday(it) }.sumOf { it.totalMs }
+
     fun exists(context: Context) = file(context).exists()
     fun path(context: Context): String = file(context).absolutePath
 }

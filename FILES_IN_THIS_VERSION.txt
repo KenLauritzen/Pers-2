@@ -1,41 +1,31 @@
-Focus v99 — complete file list.
+Focus v100 — complete file list.
 
-FIXES A TIMER LEFT RUNNING PAST MIDNIGHT
+FIXING TODAY'S FIGURE (long-press the right-hand column of a row)
 
-The bug: a timer running overnight put ALL of its time — last night's hours
-too — on the next day. The log entry was dated the night before, so Notes
-showed nothing for today, and deleting it said "today's totals are
-unaffected" and took nothing off.
+  Match log…   Shows today's figure next to what the log has for today, then
+               sets today to the log's figure. Writes NOTHING to the log.
+               This is the fix for Brain Exer: today 17:49, log 0:00, so it
+               becomes 0:00 plus the run going now.
 
-Why: the midnight cut relied on the background service remembering the date
-in memory. Samsung phones restart background services overnight, and a
-restarted service thought it was already today, so midnight went unnoticed.
+  Set today…   Type what today should read (1:30, or 90) and the difference
+               is recorded as an adjustment. One step instead of tapping.
 
-Now:
-  - A running timer is cut at every midnight it crossed, worked out from when
-    the run started — a restart can't hide it. Last night's part goes to
-    yesterday; the part after midnight is today's, with its own entry in
-    Notes.
-  - This is checked when the app opens, while the timer runs, and before
-    starting or stopping a timer.
-  - Deleting an entry in Notes goes by when the run ENDED, so an older
-    overnight entry stopped today comes off today's total.
+  Time row     Plus is now green and minus red, like Goal, so +1h and −1h
+               can't be mixed up. The word "Time" stays blue.
 
-TODAY'S 8 HOURS: this build stops it happening again but doesn't rewrite
-today's figure. Either:
-  - long-press the right-hand column of that row and tap −1h in the blue
-    Time row until it's right, or
-  - after installing v99, delete last night's entry in that label's Notes
-    (it's dated yesterday) — it will now come off today.
+Deleting an entry in Notes and Match log now use the same rule for what counts
+as today, so they always agree.
 
-UPLOAD THESE FOUR:
+UPLOAD THESE SIX:
+  app/src/main/java/com/focusledger/timer/MainActivity.kt
   app/src/main/java/com/focusledger/timer/TimerStore.kt
-  app/src/main/java/com/focusledger/timer/TimerForegroundService.kt
+  app/src/main/java/com/focusledger/timer/LogStore.kt
   app/src/main/java/com/focusledger/timer/NotesActivity.kt
+  app/src/main/res/layout/dialog_label_edit.xml
   app/src/main/res/values/strings.xml
 
 ALSO WORTH UPLOADING:
-  tools/check.py — my build checker, so it's kept in GitHub
+  tools/check.py — updated
 
 Nothing to delete this version.
 

@@ -64,7 +64,9 @@
     <!-- Goal and Time share one pattern with every other adjust popup:
          plus on top, minus underneath, largest first, so each column is one
          amount. Daily figures step 1h / 15m / 5m; the weekly comparison adds
-         5h. Time stays blue, to tell it from the goal at a glance. -->
+         5h. Plus is green and minus red in both rows: when Time's buttons
+         were all blue, +1h and −1h looked alike and a correction could go
+         the wrong way. The word "Time" stays blue to tell the rows apart. -->
     <LinearLayout
         android:layout_width="match_parent" android:layout_height="wrap_content"
         android:orientation="horizontal" android:gravity="center_vertical"
@@ -112,18 +114,18 @@
         android:layout_marginTop="16dp">
         <TextView
             android:layout_width="52dp" android:layout_height="wrap_content"
-            android:text="Time" android:textColor="#8FA39E" android:textSize="17sp" />
+            android:text="Time" android:textColor="#6FAFC4" android:textSize="17sp" />
         <Button android:id="@+id/eTp60" android:layout_width="0dp" android:layout_weight="1"
             android:layout_height="52dp" android:layout_marginEnd="4dp" android:text="+1h"
-            android:textAllCaps="false" android:textColor="#6FAFC4" android:textSize="18sp"
+            android:textAllCaps="false" android:textColor="#7DBE7A" android:textSize="18sp"
             android:padding="0dp" android:background="@drawable/bg_button_small" />
         <Button android:id="@+id/eTp15" android:layout_width="0dp" android:layout_weight="1"
             android:layout_height="52dp" android:layout_marginEnd="4dp" android:text="+15m"
-            android:textAllCaps="false" android:textColor="#6FAFC4" android:textSize="18sp"
+            android:textAllCaps="false" android:textColor="#7DBE7A" android:textSize="18sp"
             android:padding="0dp" android:background="@drawable/bg_button_small" />
         <Button android:id="@+id/eTp5" android:layout_width="0dp" android:layout_weight="1"
             android:layout_height="52dp" android:text="+5m"
-            android:textAllCaps="false" android:textColor="#6FAFC4" android:textSize="18sp"
+            android:textAllCaps="false" android:textColor="#7DBE7A" android:textSize="18sp"
             android:padding="0dp" android:background="@drawable/bg_button_small" />
     </LinearLayout>
     <LinearLayout
@@ -135,15 +137,35 @@
             android:text="" android:textColor="#8FA39E" android:textSize="17sp" />
         <Button android:id="@+id/eTm60" android:layout_width="0dp" android:layout_weight="1"
             android:layout_height="52dp" android:layout_marginEnd="4dp" android:text="\u22121h"
-            android:textAllCaps="false" android:textColor="#6FAFC4" android:textSize="18sp"
+            android:textAllCaps="false" android:textColor="#C97064" android:textSize="18sp"
             android:padding="0dp" android:background="@drawable/bg_button_small" />
         <Button android:id="@+id/eTm15" android:layout_width="0dp" android:layout_weight="1"
             android:layout_height="52dp" android:layout_marginEnd="4dp" android:text="\u221215m"
-            android:textAllCaps="false" android:textColor="#6FAFC4" android:textSize="18sp"
+            android:textAllCaps="false" android:textColor="#C97064" android:textSize="18sp"
             android:padding="0dp" android:background="@drawable/bg_button_small" />
         <Button android:id="@+id/eTm5" android:layout_width="0dp" android:layout_weight="1"
             android:layout_height="52dp" android:text="\u22125m"
-            android:textAllCaps="false" android:textColor="#6FAFC4" android:textSize="18sp"
+            android:textAllCaps="false" android:textColor="#C97064" android:textSize="18sp"
+            android:padding="0dp" android:background="@drawable/bg_button_small" />
+    </LinearLayout>
+
+    <!-- Two ways to correct today's figure without counting taps.
+         "Set today" records the difference as an adjustment, so it shows in
+         the log. "Match log" rebuilds today from the log and writes nothing,
+         for when the counter has drifted from what the log supports. -->
+    <LinearLayout
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:layout_marginTop="8dp"
+        android:paddingStart="52dp">
+        <Button android:id="@+id/eSetToday" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="46dp" android:layout_marginEnd="4dp"
+            android:text="Set today\u2026" android:textAllCaps="false"
+            android:textColor="#6FAFC4" android:textSize="15sp"
+            android:padding="0dp" android:background="@drawable/bg_button_small" />
+        <Button android:id="@+id/eMatchLog" android:layout_width="0dp" android:layout_weight="1"
+            android:layout_height="46dp"
+            android:text="Match log\u2026" android:textAllCaps="false"
+            android:textColor="#6FAFC4" android:textSize="15sp"
             android:padding="0dp" android:background="@drawable/bg_button_small" />
     </LinearLayout>
 

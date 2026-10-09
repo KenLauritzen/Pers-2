@@ -36,6 +36,21 @@ def code_only(line):
     return re.sub(r'"(?:[^"\\]|\\.)*"', keep_templates, line)
 
 
+def trailing_lambda_names(code):
+    """Names that take a trailing lambda: `name {` or `name(...) {`, with the
+    brackets matched properly so nested calls in the arguments don't hide it."""
+    names = set(re.findall(r'(\w+)\s*\{', code))
+    for m in re.finditer(r'(\w+)\s*\(', code):
+        i, depth = m.end(), 1
+        while i < len(code) and depth:
+            if code[i] == '(': depth += 1
+            elif code[i] == ')': depth -= 1
+            i += 1
+        if re.match(r'\s*\{', code[i:i + 40]):
+            names.add(m.group(1))
+    return names
+
+
 def section(name):
     print(name)
 
@@ -163,7 +178,7 @@ ok_if('esc')
 section("lambda return labels")
 for f, s in files.items():
     for base, body in fn_bodies(strip_comments(s)):
-        labels = set(re.findall(r'(?:\.|\b)(\w+)\s*(?:\([^()]*\))?\s*\{', body))
+        labels = trailing_lambda_names(body)
         for m in re.finditer(r'return@(\w+)', body):
             if m.group(1) not in labels:
                 line = base + body[:m.start()].count('\n')

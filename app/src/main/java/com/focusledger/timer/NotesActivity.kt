@@ -233,7 +233,8 @@ class NotesActivity : AppCompatActivity() {
      * belonged to has long since rolled over — so only the line goes.
      */
     private fun confirmDeleteRun(run: LogStore.RunEntry) {
-        val isToday = countsTowardToday(run)
+        // One rule, shared with "Match today to the log", so the two can't drift.
+        val isToday = LogStore.countsTowardToday(run)
         val notePart = if (run.note.isBlank()) "" else "\n\n\u201c${run.note}\u201d"
 
         val what = if (run.isAdjustment)
@@ -270,27 +271,6 @@ class NotesActivity : AppCompatActivity() {
         }
         renderHistory()
         updateHeader()
-    }
-
-    /**
-     * Whether this row's time sits in today's total \u2014 judged by when the run
-     * **ended**, not when it started.
-     *
-     * Judging by the start missed a run that began last night and was stopped
-     * this morning: it was dated yesterday, so deleting it said "today's
-     * totals are unaffected" while its hours stayed on today. Runs are now cut
-     * at midnight, so a new row never spans one; for an older row that does,
-     * the whole run was counted to the day it was stopped, so the whole run
-     * comes off today.
-     */
-    private fun countsTowardToday(run: LogStore.RunEntry): Boolean {
-        val startOfToday = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
-        val end = run.runStartMs + run.durationMs
-        // A row ending exactly at midnight is yesterday's half of a cut run.
-        return if (run.isAdjustment) run.runStartMs >= startOfToday else end > startOfToday
     }
 
     /** "Sun 7 Sep  6:41a" — lowercase suffix, no space, to save width. */

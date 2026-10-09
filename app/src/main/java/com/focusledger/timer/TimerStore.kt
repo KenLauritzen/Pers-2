@@ -305,6 +305,44 @@ object TimerStore {
         addMapValue(c, KEY_SESSION_MAP, label, -ms)
     }
 
+    /**
+     * What today's total for [label] would be if rebuilt from the log: every
+     * row that counts toward today, plus — for the running label — any
+     * adjustment waiting to be written with the run. Excludes the run in
+     * progress, which is added live on top as usual.
+     */
+    fun todayFromLogMs(c: Context, label: String): Long {
+        rolloverDayCountersIfNeeded(c)
+        val pending = if (getActiveLabel(c) == label)
+            p(c).getInt(KEY_PENDING_ADJ, 0) * 60_000L else 0L
+        return LogStore.todayMsFor(c, label) + pending
+    }
+
+    /** Today's stored total for [label], without the run in progress. */
+    fun todayStoredMs(c: Context, label: String): Long {
+        rolloverDayCountersIfNeeded(c)
+        return getMapValue(c, KEY_DAY_MAP, label)
+    }
+
+    /**
+     * Makes today's total agree with the log, **without writing anything to
+     * the log**.
+     *
+     * The counters and the log can drift apart — most painfully when a run
+     * from last night was deleted under v98, which took nothing off today. A
+     * minus adjustment would bring today right but leave a negative row behind
+     * with nothing to cancel it, so the day would later read as negative
+     * hours. Resetting the counter to what the log supports leaves no trace,
+     * because there's nothing true to record. The session total moves by the
+     * same amount.
+     */
+    fun matchTodayToLog(c: Context, label: String) {
+        val delta = todayFromLogMs(c, label) - todayStoredMs(c, label)
+        if (delta == 0L) return
+        addMapValue(c, KEY_DAY_MAP, label, delta)
+        addMapValue(c, KEY_SESSION_MAP, label, delta)
+    }
+
     // ---- totals ------------------------------------------------------------
 
     fun getDayMs(c: Context, label: String): Long = totalFor(c, KEY_DAY_MAP, label)

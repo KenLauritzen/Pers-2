@@ -3560,3 +3560,35 @@ v99 is installed.
 
 **The lesson:** anything about "what day is it" belongs in saved state, never
 in a variable that lives only as long as a process the phone may kill.
+
+---
+
+## 101. Correcting today's figure  ✅ built in v100
+
+Three changes, from the morning Brain Exer showed 17:49 with nothing in the
+log behind it — last night's run deleted under v98, which took nothing off.
+
+**Match log…** — label popup. Shows today's stored figure beside what the
+log supports for today, then sets today to the log's figure. **Writes nothing
+to the log.** A minus adjustment would have brought today right but left a
+negative row with nothing to cancel it, so the day would later read as minus
+seventeen hours in Totals. Includes any adjustment waiting on the running run;
+the run in progress stays on top either way. The session total moves by the
+same amount.
+
+**Set today…** — type the figure today should read (`1:30` or `90`) and the
+difference is recorded as an adjustment. One step instead of counting taps.
+It *does* leave a log row, so it's for genuine corrections.
+
+**Time buttons green and red.** They were all blue, so +1h and −1h looked
+alike and a correction could go the wrong way. Plus green, minus red, as in
+Goal; the word "Time" keeps the blue.
+
+**One rule for "counts toward today"** — `LogStore.countsTowardToday`, used by
+both Match log and deleting in Notes, so they can't disagree. A run counts by
+when it ended; an adjustment by when it was made.
+
+**Checker:** the lambda-label check couldn't see past nested brackets in a
+call's arguments (`textInputDialog(... hmOf(current) ...) {`) and flagged a
+valid label. It now matches brackets properly; confirmed it still catches a
+bad one.

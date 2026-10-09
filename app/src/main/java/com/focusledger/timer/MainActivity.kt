@@ -1053,6 +1053,84 @@ class MainActivity : AppCompatActivity() {
      * and are written to the log, since a correction to recorded time isn't a
      * setting.
      */
+    /** "17:49" from milliseconds, rounded down to the minute. */
+    private fun hmOf(ms: Long): String {
+        val m = (ms / 60_000L).toInt()
+        val sign = if (m < 0) "\u2212" else ""
+        val a = kotlin.math.abs(m)
+        return "$sign${a / 60}:${String.format("%02d", a % 60)}"
+    }
+
+    /**
+     * Type the figure today should read, and the difference is recorded as an
+     * adjustment \u2014 one step instead of counting taps. It shows in the log like
+     * any adjustment, so use it for a real correction; for a counter that has
+     * drifted from the log, "Match log" is the right tool.
+     */
+    private fun setTodayDialog(label: String, onDone: () -> Unit) {
+        val current = TimerStore.getDayMs(this, label)
+        textInputDialog(
+            title = "Set today \u2014 $label",
+            initial = "",
+            hint = "h:mm, now ${hmOf(current)}"
+        ) { text, _ ->
+            val target = parseHm(text) ?: run {
+                Toast.makeText(this, "Use h:mm, such as 1:30, or minutes", Toast.LENGTH_LONG).show()
+                return@textInputDialog
+            }
+            val delta = target - (TimerStore.getDayMs(this, label) / 60_000L).toInt()
+            TimerStore.adjust(this, label, delta)
+            onDone()
+        }
+    }
+
+    /** "1:30" or "90" as minutes. Null if it's neither. */
+    private fun parseHm(text: String): Int? {
+        val t = text.trim()
+        if (t.isEmpty()) return null
+        if (':' in t) {
+            val (h, m) = t.split(':', limit = 2)
+            val hh = h.trim().toIntOrNull() ?: return null
+            val mm = m.trim().toIntOrNull() ?: return null
+            if (hh < 0 || mm !in 0..59) return null
+            return hh * 60 + mm
+        }
+        return t.toIntOrNull()?.takeIf { it >= 0 }
+    }
+
+    /**
+     * Rebuilds today's figure from the log, after showing both numbers.
+     * Writes nothing to the log \u2014 see TimerStore.matchTodayToLog.
+     */
+    private fun matchLogDialog(label: String, onDone: () -> Unit) {
+        val stored = TimerStore.todayStoredMs(this, label)
+        val fromLog = TimerStore.todayFromLogMs(this, label)
+        val running = TimerStore.getDayMs(this, label) - stored
+        val runLine = if (running > 0) "\n\nPlus the run going now, ${hmOf(running)}, either way." else ""
+
+        if (kotlin.math.abs(stored - fromLog) < 60_000L) {
+            AlertDialog.Builder(this)
+                .setTitle("Already matching")
+                .setMessage("Today and the log agree for $label: ${hmOf(fromLog)}.$runLine")
+                .setPositiveButton("OK", null)
+                .show()
+            return
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Match today to the log?")
+            .setMessage(
+                "$label today shows ${hmOf(stored)}.\n" +
+                    "The log has ${hmOf(fromLog)} for today.$runLine\n\n" +
+                    "Today will be set to the log's figure. Nothing is written to the log."
+            )
+            .setPositiveButton("Use the log's figure") { _, _ ->
+                TimerStore.matchTodayToLog(this, label)
+                onDone(); syncService()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
     private fun showLabelPopup(label: String) {
         val view = LayoutInflater.from(this).inflate(R.layout.dialog_label_edit, null)
         view.findViewById<TextView>(R.id.editHeading).text = "Label \u2014 $label"
@@ -1102,6 +1180,13 @@ class MainActivity : AppCompatActivity() {
             R.id.eTp60 to 60, R.id.eTp15 to 15, R.id.eTp5 to 5,
             R.id.eTm60 to -60, R.id.eTm15 to -15, R.id.eTm5 to -5
         ).forEach { (id, m) -> view.findViewById<Button>(id).setOnClickListener { changeTime(m) } }
+
+        view.findViewById<Button>(R.id.eSetToday).setOnClickListener {
+            setTodayDialog(label) { refresh(); refreshValues() }
+        }
+        view.findViewById<Button>(R.id.eMatchLog).setOnClickListener {
+            matchLogDialog(label) { refresh(); refreshValues() }
+        }
 
         view.findViewById<Button>(R.id.eDelete).setOnClickListener {
             dialog.dismiss(); confirmDeleteLabel(label)
